@@ -407,27 +407,26 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-box">
     <div class="auth-logo"><div class="logo-dot" style="width:10px;height:10px;flex-shrink:0"></div>VocabFlow</div>
-    <div class="auth-sub">VOKABELTRAINER</div>
+    <div class="auth-sub">Lernhilfe</div>
 
     <!-- Step 1: Choose mode -->
     <div id="auth-step-choose">
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
         <button class="btn btn-primary" style="justify-content:center;padding:12px;font-size:13px;" onclick="showAuthStep('login')">
-          🔑 Anmelden
+          Anmelden
         </button>
         <button class="btn btn-ghost" style="justify-content:center;padding:12px;font-size:13px;border-color:var(--a4);color:var(--a4);" onclick="showAuthStep('reg')">
-          ✨ Konto erstellen
+          Konto erstellen
         </button>
         <div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
           <div style="flex:1;height:1px;background:var(--bd)"></div>
           <span style="font-size:10px;color:var(--tx3)">oder</span>
           <div style="flex:1;height:1px;background:var(--bd)"></div>
         </div>
-        <button class="btn btn-ghost" style="justify-content:center;padding:10px;" onclick="skipAuth()">
-          💾 Lokal (kein Sync)
+        <button class="btn btn-ghost" style="justify-content:center;padding:10px;color:var(--tx3);" onclick="skipAuth()">
+          Ohne Konto fortfahren
         </button>
       </div>
-      <div id="auth-server-status-box" style="text-align:center;font-size:10px;color:var(--tx3);padding:6px 0;"></div>
     </div>
 
     <!-- Step 2: Login / Register form -->
@@ -438,7 +437,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
         <button class="auth-tab" id="atab-reg" onclick="switchAuthTab('reg')">Registrieren</button>
       </div>
       <div id="a-login-form">
-        <div class="form-group"><div class="form-label">Nutzername oder E-Mail</div><input class="form-input" id="a-login" placeholder="name oder email@..." onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="form-group"><div class="form-label">E-Mail <span style="color:var(--tx3);font-size:9px">(oder Nutzername falls eingerichtet)</span></div><input class="form-input" id="a-login" placeholder="deine@email.de" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <div class="form-group"><div class="form-label">Passwort</div><input class="form-input" type="password" id="a-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       </div>
       <div id="a-reg-form" style="display:none">
@@ -478,7 +477,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 <aside class="sidebar" id="sidebar">
   <div class="s-logo">
     <div class="logo-mark"><div class="logo-dot"></div>VocabFlow</div>
-    <div class="logo-sub">VOKABELTRAINER</div>
+    <div class="logo-sub">Lernhilfe</div>
   </div>
   <nav class="s-nav">
     <div class="nav-sec">Lernen</div>
@@ -669,19 +668,15 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
   <div class="modal" style="max-width:560px">
     <div class="modal-head"><div class="modal-title">📷 Vokabeln per Foto hinzufügen</div><button class="modal-close" onclick="closePhoto()">✕</button></div>
     <div class="modal-body">
+      <div id="photo-login-required" style="display:none;text-align:center;padding:28px 20px;">
+        <div style="font-size:36px;margin-bottom:12px">🔒</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:18px;color:var(--tx);margin-bottom:8px">Anmeldung erforderlich</div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:20px;line-height:1.6;">Der Foto-Import benötigt ein Konto.<br>Melde dich an um diese Funktion zu nutzen.</div>
+        <button class="btn btn-primary" onclick="closePhoto();showAuthOverlay()">Jetzt anmelden</button>
+      </div>
+      <div id="photo-main-content">
       <div style="font-size:11px;color:var(--tx2);margin-bottom:14px;padding:9px 13px;background:var(--sur2);border-radius:9px;line-height:1.6;">
         Lade ein Foto deines Vokabelhefts oder einer Schulbuchseite hoch. Die KI erkennt automatisch alle Vokabelpaare.
-        <span id="photo-server-hint" style="color:var(--a);display:none"> ✓ Angemeldet — Key auf Server gesichert.</span>
-        <span id="photo-key-hint" style="color:var(--a3)"> ⚡ Powered by NVIDIA Llama 3.2 Vision</span>
-      </div>
-      <div id="photo-key-section">
-        <div class="form-group">
-          <div class="form-label">NVIDIA API Key <span style="color:var(--tx3);font-size:9px">(kostenlos auf build.nvidia.com)</span></div>
-          <div style="display:flex;gap:6px">
-            <input class="form-input" id="nv-key" type="password" placeholder="nvapi-..." style="flex:1">
-            <button class="btn btn-ghost btn-sm" onclick="var i=document.getElementById('nv-key');i.type=i.type==='password'?'text':'password'">👁</button>
-          </div>
-        </div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <div class="form-group" style="flex:1"><div class="form-label">Sprache / Fach</div><input class="form-input" id="nv-lang" placeholder="z.B. Englisch"></div>
@@ -710,9 +705,10 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
       </div>
       <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="closePhoto()">Abbrechen</button>
-        <button class="btn btn-ghost" id="nv-scan-btn" onclick="nvScan()">🔍 KI scannen</button>
-        <button class="btn btn-primary" id="nv-import-btn" onclick="nvImport()" style="display:none">⬇ Pool erstellen</button>
+        <button class="btn btn-ghost" id="nv-scan-btn" onclick="nvScan()">Scannen</button>
+        <button class="btn btn-primary" id="nv-import-btn" onclick="nvImport()" style="display:none">Pool erstellen</button>
       </div>
+      </div><!-- /photo-main-content -->
     </div>
   </div>
 </div>
@@ -1531,6 +1527,18 @@ async function revokeShare(pid){ try{ await apiFetch('/api/pools/'+pid+'/share',
 let nvBase64=null, nvMimeType='image/jpeg';
 
 function openPhoto() {
+  // If not logged in → show login required message, hide main content
+  const loginRequired = document.getElementById('photo-login-required');
+  const mainContent = document.getElementById('photo-main-content');
+  if (!currentUser) {
+    if(loginRequired) loginRequired.style.display = 'block';
+    if(mainContent) mainContent.style.display = 'none';
+    document.getElementById('photo-modal').classList.add('open');
+    return;
+  }
+  if(loginRequired) loginRequired.style.display = 'none';
+  if(mainContent) mainContent.style.display = 'block';
+  // Reset state
   document.getElementById('nv-preview').style.display='none';
   document.getElementById('nv-result').style.display='none';
   document.getElementById('nv-import-btn').style.display='none';
@@ -1540,12 +1548,6 @@ function openPhoto() {
   document.getElementById('nv-pool').value='';
   document.getElementById('nv-cat').value='';
   nvBase64=null;
-  const saved=localStorage.getItem('vf3_nvkey')||'';
-  document.getElementById('nv-key').value=saved;
-  const serverHint=document.getElementById('photo-server-hint');
-  const keySection=document.getElementById('photo-key-section');
-  if(authToken){ serverHint.style.display=''; keySection.style.display='none'; }
-  else { serverHint.style.display='none'; keySection.style.display='block'; }
   document.getElementById('photo-modal').classList.add('open');
 }
 
@@ -1857,7 +1859,7 @@ async function checkServerStatus() {
     const {error} = await sb.from('pools').select('id').limit(1);
     // RLS will block unauthenticated, but a 401 still means server is up
     serverOnline = true;
-    setStatus('online','Supabase verbunden ✓');
+    setStatus('online','Verbunden');
     return true;
   } catch(e) {
     serverOnline = false;
@@ -1873,19 +1875,29 @@ async function doLogin() {
   if(!login||!pw) { document.getElementById('auth-err').textContent='Alle Felder ausfüllen'; return; }
   const btn=document.getElementById('auth-btn'); btn.disabled=true; btn.textContent='…';
   try {
-    // Try email login first, then username lookup
     let email = login;
     if(!login.includes('@')) {
-      // Username → look up email via profiles table
-      const {data} = await sb.from('profiles').select('email').eq('username',login).single();
-      if(data) email = data.email;
-      else { document.getElementById('auth-err').textContent='Nutzername nicht gefunden'; btn.disabled=false; btn.textContent='Anmelden'; return; }
+      // Username login: look up email from profiles table
+      const {data, error: lookupErr} = await sb.from('profiles').select('email').eq('username', login).maybeSingle();
+      if(lookupErr || !data || !data.email) {
+        document.getElementById('auth-err').textContent = 'Nutzername nicht gefunden — bitte E-Mail verwenden';
+        btn.disabled=false; btn.textContent='Anmelden';
+        return;
+      }
+      email = data.email;
     }
-    const {data,error} = await sb.auth.signInWithPassword({email, password:pw});
+    const {data, error} = await sb.auth.signInWithPassword({email, password: pw});
     if(error) throw error;
     await onLoginSuccess(data.session, data.user);
   } catch(e) {
-    document.getElementById('auth-err').textContent = e.message==='Invalid login credentials'?'Falsche Zugangsdaten':e.message;
+    const msg = e.message;
+    if(msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
+      document.getElementById('auth-err').textContent = 'Falsche Zugangsdaten';
+    } else if(msg.includes('Email not confirmed')) {
+      document.getElementById('auth-err').textContent = 'E-Mail noch nicht bestätigt — bitte prüfe dein Postfach';
+    } else {
+      document.getElementById('auth-err').textContent = msg;
+    }
   }
   btn.disabled=false; btn.textContent='Anmelden';
 }
@@ -1926,12 +1938,7 @@ async function onLoginSuccess(session, user) {
   await syncFromServer();
 }
 
-function skipAuth() {
-  document.getElementById('auth-overlay').classList.add('hidden');
-  document.getElementById('login-hint-btn').style.display='flex';
-  updateAcctBtn(false);
-  toast('Lokaler Modus — kein Cloud-Sync');
-}
+
 
 function doLogout() {
   sb.auth.signOut();
@@ -2161,17 +2168,17 @@ async function initAuth() {
   document.getElementById('auth-overlay').classList.remove('hidden');
   showAuthStep('choose');
   const statusBox=document.getElementById('auth-server-status-box');
-  if(statusBox) statusBox.innerHTML='<span style="color:var(--a3)">⏳ Verbinde mit Supabase...</span>';
+  
 
   await checkServerStatus();
 
   if(!serverOnline) {
-    if(statusBox) statusBox.innerHTML='<span style="color:var(--tx3)">⚫ Offline — nur lokaler Modus</span>';
+    
     const btns=document.querySelectorAll('#auth-step-choose button:not(:last-child)');
     btns.forEach(b=>{b.disabled=true;b.style.opacity='.4';b.style.cursor='not-allowed';});
     return;
   }
-  if(statusBox) statusBox.innerHTML='<span style="color:var(--a)">🟢 Supabase verbunden</span>';
+  
 
   // Try to restore session
   const {data:{session}} = await sb.auth.getSession();
