@@ -362,6 +362,15 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 .status-url{color:var(--tx3);opacity:.6;font-size:9px;margin-left:2px;}
 
 
+
+/* FILL-IN-THE-BLANK */
+.fill-in-wrap{background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:12px;}
+.fill-in-pre{font-family:'Geist Mono',monospace;font-size:12px;line-height:1.8;white-space:pre-wrap;color:var(--tx);}
+.fill-blank{display:inline-block;background:var(--sur2);border:2px solid var(--a4);border-radius:6px;padding:1px 6px;min-width:60px;font-family:'Geist Mono',monospace;font-size:12px;outline:none;color:var(--tx);transition:all .2s;}
+.fill-blank:focus{border-color:var(--a);background:var(--ad);}
+.fill-blank.fb-ok{border-color:var(--a)!important;background:var(--ad)!important;color:var(--a)!important;}
+.fill-blank.fb-no{border-color:var(--a2)!important;background:var(--a2d)!important;color:var(--a2)!important;}
+
 /* CODING AREA */
 .code-block{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin:10px 0;position:relative;}
 .code-block pre{margin:0;white-space:pre;}
@@ -437,8 +446,22 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
         <button class="auth-tab" id="atab-reg" onclick="switchAuthTab('reg')">Registrieren</button>
       </div>
       <div id="a-login-form">
-        <div class="form-group"><div class="form-label">E-Mail <span style="color:var(--tx3);font-size:9px">(oder Nutzername falls eingerichtet)</span></div><input class="form-input" id="a-login" placeholder="deine@email.de" onkeydown="if(event.key==='Enter')doLogin()"></div>
-        <div class="form-group"><div class="form-label">Passwort</div><input class="form-input" type="password" id="a-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="form-group">
+          <div class="form-label">E-Mail</div>
+          <input class="form-input" id="a-login" placeholder="deine@email.de" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div class="form-group">
+          <div class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+            Passwort
+            <span style="font-size:9px;color:var(--a4);cursor:pointer;text-decoration:underline;" onclick="showForgotPassword()">Vergessen?</span>
+          </div>
+          <input class="form-input" type="password" id="a-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div style="margin-bottom:10px">
+          <button type="button" class="btn btn-ghost" style="width:100%;justify-content:center;font-size:11px;color:var(--a4);border-color:var(--a4);" onclick="showMagicLink()">
+            Anmelden ohne Passwort (Magic Link)
+          </button>
+        </div>
       </div>
       <div id="a-reg-form" style="display:none">
         <div class="form-group"><div class="form-label">Nutzername</div><input class="form-input" id="a-user" placeholder="dein_name"></div>
@@ -447,6 +470,33 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
       </div>
       <div class="auth-err" id="auth-err"></div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;" id="auth-btn" onclick="authSubmit()">Anmelden</button>
+
+      <!-- Forgot password sub-view -->
+      <div id="auth-forgot" style="display:none;margin-top:12px;padding:12px;background:var(--sur2);border-radius:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--tx);margin-bottom:8px;">Passwort zurücksetzen</div>
+        <div class="form-group">
+          <div class="form-label">E-Mail</div>
+          <input class="form-input" id="forgot-email" placeholder="deine@email.de">
+        </div>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('auth-forgot').style.display='none'">Abbrechen</button>
+          <button class="btn btn-primary btn-sm" onclick="sendPasswordReset()">Link senden</button>
+        </div>
+      </div>
+
+      <!-- Magic link sub-view -->
+      <div id="auth-magic" style="display:none;margin-top:12px;padding:12px;background:var(--sur2);border-radius:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--tx);margin-bottom:4px;">Magic Link</div>
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:8px;">Du bekommst einen Einmal-Link per E-Mail.</div>
+        <div class="form-group">
+          <div class="form-label">E-Mail</div>
+          <input class="form-input" id="magic-email" placeholder="deine@email.de">
+        </div>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('auth-magic').style.display='none'">Abbrechen</button>
+          <button class="btn btn-primary btn-sm" onclick="sendMagicLink()">Magic Link senden</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -546,7 +596,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
             <div id="cc-chip" class="known-chip" style="display:none">✓ GEKONNT</div>
           </div>
           <div class="card-face card-back">
-            <div class="card-tag">Englisch</div>
+            <div class="card-tag" id="cc-tag-back">Übersetzung</div>
             <div class="card-word" id="cc-back">–</div>
           </div>
         </div>
@@ -621,8 +671,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
       <div class="pg-sub">8 Paare · links anklicken, dann rechts</div>
       <div style="font-size:11px;color:var(--tx3);text-align:center;margin-bottom:10px"><span id="mc-cnt">0</span> / 8 Paare gefunden</div>
       <div class="match-grid">
-        <div><div class="m-col-head">🇩🇪 Deutsch</div><div class="m-items" id="ml"></div></div>
-        <div><div class="m-col-head">🇬🇧 Englisch</div><div class="m-items" id="mr"></div></div>
+        <div><div class="m-col-head" id="match-lang-de">Begriff</div><div class="m-items" id="ml"></div></div>
+        <div><div class="m-col-head" id="match-lang-en">Übersetzung</div><div class="m-items" id="mr"></div></div>
       </div>
       <div style="display:flex;gap:7px;justify-content:center">
         <button class="btn btn-primary" onclick="startMatch()">🔀 Neue Runde</button>
@@ -636,8 +686,9 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
       <div class="pg-sub">Lerne Programmieren mit interaktiven Lektionen & Quizzen</div>
       <div class="lang-selector" id="coding-lang-selector">
         <button class="lang-sel-btn active" data-clang="cpp" onclick="selectCodingLang('cpp',this)">⚙️ C++</button>
-        <button class="lang-sel-btn" data-clang="python" onclick="selectCodingLang('python',this)" style="opacity:.5;cursor:not-allowed" disabled title="Kommt bald">🐍 Python <span style="font-size:9px;color:var(--tx3)">bald</span></button>
-        <button class="lang-sel-btn" data-clang="js" onclick="selectCodingLang('js',this)" style="opacity:.5;cursor:not-allowed" disabled title="Kommt bald">🌐 JS <span style="font-size:9px;color:var(--tx3)">bald</span></button>
+        <button class="lang-sel-btn" data-clang="python" onclick="selectCodingLang('python',this)">🐍 Python</button>
+        <button class="lang-sel-btn" data-clang="html" onclick="selectCodingLang('html',this)">🌐 HTML</button>
+        <button class="lang-sel-btn" data-clang="js" onclick="selectCodingLang('js',this)">📜 JS <span style="font-size:9px;color:var(--tx3)">bald</span></button>
       </div>
       <!-- Chapter list -->
       <div id="coding-chapters"></div>
@@ -679,9 +730,13 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
         Lade ein Foto deines Vokabelhefts oder einer Schulbuchseite hoch. Die KI erkennt automatisch alle Vokabelpaare.
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <div class="form-group" style="flex:1"><div class="form-label">Sprache / Fach</div><input class="form-input" id="nv-lang" placeholder="z.B. Englisch"></div>
-        <div class="form-group" style="flex:1"><div class="form-label">Pool-Name</div><input class="form-input" id="nv-pool" placeholder="z.B. Klausur 3"></div>
-        <div class="form-group" style="flex:1"><div class="form-label">Kategorie</div><input class="form-input" id="nv-cat" placeholder="optional"></div>
+        <div class="form-group" style="flex:1">
+          <div class="form-label">Pool-Name <span style="color:var(--tx3);font-size:9px">von dir</span></div>
+          <input class="form-input" id="nv-pool" placeholder="z.B. Klausur 3">
+        </div>
+      </div>
+      <div id="nv-ai-result-info" style="display:none;padding:8px 12px;background:var(--sur2);border-radius:8px;font-size:11px;color:var(--tx2);margin-bottom:10px;">
+        KI hat erkannt: <strong id="nv-detected-lang">–</strong> · Unterkategorien: <span id="nv-detected-cats">–</span>
       </div>
       <div class="form-group">
         <div class="form-label">Bild hochladen</div>
@@ -931,6 +986,24 @@ function toggleTheme() {
 (function(){ const t = lsGet('vf3_theme', '"dark"'); document.documentElement.setAttribute('data-theme', t); })();
 
 // ===================== NAV =====================
+
+// ── Language labels for active pool ──────────────────────────────────────
+const LANG_LABELS = {
+  'Englisch':   {from:'Deutsch', to:'Englisch',  fromFlag:'🇩🇪', toFlag:'🇬🇧'},
+  'Spanisch':   {from:'Deutsch', to:'Spanisch',  fromFlag:'🇩🇪', toFlag:'🇪🇸'},
+  'Französisch':{from:'Deutsch', to:'Französisch',fromFlag:'🇩🇪', toFlag:'🇫🇷'},
+  'Italienisch':{from:'Deutsch', to:'Italienisch',fromFlag:'🇩🇪', toFlag:'🇮🇹'},
+  'Latein':     {from:'Deutsch', to:'Latein',    fromFlag:'🇩🇪', toFlag:'🏛️'},
+  'Python':     {from:'Begriff', to:'Python',    fromFlag:'📖',  toFlag:'🐍'},
+  'JavaScript': {from:'Begriff', to:'JavaScript',fromFlag:'📖',  toFlag:'🌐'},
+  'C++':        {from:'Begriff', to:'C++',       fromFlag:'📖',  toFlag:'⚙️'},
+  'HTML':       {from:'Begriff', to:'HTML',      fromFlag:'📖',  toFlag:'🌐'},
+  'Biologie':   {from:'Begriff', to:'Erklärung', fromFlag:'📖',  toFlag:'🔬'},
+};
+function getPoolLangLabels(lang) {
+  return LANG_LABELS[lang] || {from:lang||'Begriff', to:'Übersetzung', fromFlag:'📖', toFlag:'📝'};
+}
+
 const TITLES = { cards:'Karteikarten', quiz:'Quiz', typing:'Tipp-Modus', matching:'Zuordnen', overview:'Übersicht', coding:'💻 Programmieren' };
 function go(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1016,7 +1089,12 @@ function applyCardContent() {
   const v = cDeck[cIdx];
   document.getElementById('cc-front').textContent = v.de;
   document.getElementById('cc-back').textContent = v.en;
-  document.getElementById('cc-tag').textContent = v.cat || '🇩🇪 Deutsch';
+  // Use pool language for labels
+  const {l: poolLang} = spKey(activeKey);
+  const langLabels = getPoolLangLabels(poolLang);
+  document.getElementById('cc-tag').textContent = v.cat || langLabels.from;
+  const backTag = document.getElementById('cc-tag-back');
+  if(backTag) backTag.textContent = langLabels.to;
   document.getElementById('cc-cur').textContent = cIdx+1;
   document.getElementById('cc-tot').textContent = cDeck.length;
   document.getElementById('cc-kn').textContent = cDeck.filter(x=>x.known).length;
@@ -1111,7 +1189,7 @@ function loadQ() {
   v._d=d2e;
   document.getElementById('q-ctr').textContent=(qIdx+1)+' / '+n;
   document.getElementById('q-prog').style.width=(qIdx/n*100)+'%';
-  document.getElementById('q-dir').textContent=d2e?'Deutsch → Englisch':'Englisch → Deutsch';
+  const _ql=getPoolLangLabels(spKey(activeKey).l); document.getElementById('q-dir').textContent=d2e?_ql.from+' → '+_ql.to:_ql.to+' → '+_ql.from;
   document.getElementById('q-q').textContent=d2e?v.de:v.en;
   document.getElementById('q-fb').textContent=''; document.getElementById('q-fb').className='q-fb';
   document.getElementById('q-nxt').style.display='none';
@@ -1184,7 +1262,7 @@ function loadTypeQ() {
   document.getElementById('t-cur').textContent=(tIdx%tDeck.length)+1;
   document.getElementById('t-tot').textContent=tDeck.length;
   document.getElementById('t-prog').style.width=((tIdx%tDeck.length)/tDeck.length*100)+'%';
-  document.getElementById('t-dir').textContent=v._d?'Deutsch → Englisch':'Englisch → Deutsch';
+  const _tl=getPoolLangLabels(spKey(activeKey).l); document.getElementById('t-dir').textContent=v._d?_tl.from+' → '+_tl.to:_tl.to+' → '+_tl.from;
   document.getElementById('t-q').textContent=v._d?v.de:v.en;
   const inp=document.getElementById('t-inp'); inp.value=''; inp.className='t-input'; inp.disabled=false;
   document.getElementById('t-hint').textContent='';
@@ -1216,7 +1294,16 @@ function startMatch(unknOnly=false) {
   if(pool.length<4) pool=vocab;
   const pairs=shuf(pool).slice(0,8); mSel=null; mFound=0;
   document.getElementById('mc-cnt').textContent=0;
+  updateMatchHeads();
   renderMCol('ml',shuf([...pairs]),'de'); renderMCol('mr',shuf([...pairs]),'en');
+}
+function updateMatchHeads() {
+  const {l} = spKey(activeKey);
+  const lb = getPoolLangLabels(l);
+  const de = document.getElementById('match-lang-de');
+  const en = document.getElementById('match-lang-en');
+  if(de) de.textContent = lb.fromFlag + ' ' + lb.from;
+  if(en) en.textContent = lb.toFlag + ' ' + lb.to;
 }
 function renderMCol(id,pairs,f){ const c=document.getElementById(id); c.innerHTML=''; pairs.forEach(v=>{ const el=document.createElement('div'); el.className='m-item'; el.textContent=v[f]; el.dataset.id=v.id; el.onclick=()=>handleM(el,v,f); c.appendChild(el); }); }
 function handleM(el,v,f) {
@@ -1556,9 +1643,10 @@ function openPhoto() {
   document.getElementById('nv-import-btn').style.display='none';
   document.getElementById('nv-status').style.display='none';
   document.getElementById('nv-pairs').value='';
-  document.getElementById('nv-lang').value='';
   document.getElementById('nv-pool').value='';
-  document.getElementById('nv-cat').value='';
+  const aiInfo=document.getElementById('nv-ai-result-info');
+  if(aiInfo) aiInfo.style.display='none';
+  const detLang=document.getElementById('nv-detected-lang'); if(detLang) detLang.textContent='–';
   nvBase64=null;
   document.getElementById('photo-modal').classList.add('open');
 }
@@ -1626,18 +1714,34 @@ async function nvScan() {
 }
 
 function nvImport() {
-  const lang=(document.getElementById('nv-lang').value||'').trim()||'Import';
-  const pname=(document.getElementById('nv-pool').value||'').trim()||'Foto-Import';
-  const cat=(document.getElementById('nv-cat').value||'').trim();
-  const raw=(document.getElementById('nv-pairs').value||'').trim();
+  // Use AI-detected language, or fallback
+  const lang = (document.getElementById('nv-detected-lang')?.textContent||'').trim() || 'Import';
+  const pname = (document.getElementById('nv-pool').value||'').trim() || 'Foto-Import';
+  const raw = (document.getElementById('nv-pairs').value||'').trim();
   if(!raw){toast('⚠️ Keine Vokabeln');return;}
-  const pairs=parsePairs(raw);
-  if(!pairs.length){toast('⚠️ Keine gültigen Paare');return;}
   if(!POOLS[lang]) POOLS[lang]={};
-  const catKey=cat||'';
-  if(POOLS[lang][pname]) POOLS[lang][pname].subcats[catKey]=(POOLS[lang][pname].subcats[catKey]||[]).concat(pairs);
-  else POOLS[lang][pname]={subcats:{[catKey]:pairs}};
-  saveCustom(); closePhoto(); renderOv(); updateStats(); toast('✓ '+pairs.length+' Vokabeln importiert!');
+  if(!POOLS[lang][pname]) POOLS[lang][pname]={subcats:{}};
+  // Parse subcategories from # headers in text
+  let currentCat = '';
+  let totalPairs = 0;
+  const lines = raw.split('\n');
+  let catBuffer = [];
+  const flush = (cat) => {
+    if(!catBuffer.length) return;
+    const pairs = parsePairs(catBuffer.join('\n'));
+    if(pairs.length) {
+      POOLS[lang][pname].subcats[cat] = (POOLS[lang][pname].subcats[cat]||[]).concat(pairs);
+      totalPairs += pairs.length;
+    }
+    catBuffer = [];
+  };
+  lines.forEach(l => {
+    if(l.startsWith('# ')) { flush(currentCat); currentCat = l.slice(2).trim(); }
+    else catBuffer.push(l);
+  });
+  flush(currentCat);
+  if(!totalPairs){toast('⚠️ Keine gültigen Paare erkannt');return;}
+  saveCustom(); closePhoto(); renderOv(); updateStats(); toast('✓ '+totalPairs+' Vokabeln in "'+pname+'" importiert!');
 }
 
 // ===================== AUTH =====================
@@ -1788,11 +1892,21 @@ function openAccountSettings() {
     ?'<img src="'+avatarUrl+'" style="width:70px;height:70px;border-radius:50%;border:2px solid var(--a);object-fit:cover">'
     :'<div style="width:70px;height:70px;border-radius:50%;border:2px solid var(--bd);background:var(--sur2);display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>';
   body.innerHTML=
-    '<div style="text-align:center;margin-bottom:18px;">'+avatarHtml+'<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="triggerAvatarUpload()">Profilbild ändern</button></div></div>'+
+    '<div style="text-align:center;margin-bottom:16px;">'+avatarHtml+'<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="triggerAvatarUpload()">Profilbild ändern</button></div></div>'+
     '<div class="form-group"><div class="form-label">Nutzername</div><div style="padding:9px 12px;background:var(--sur2);border-radius:9px;font-size:12px;color:var(--tx)">'+((currentUser&&currentUser.username)||'–')+'</div></div>'+
-    '<div class="form-group"><div class="form-label">E-Mail</div><div style="padding:9px 12px;background:var(--sur2);border-radius:9px;font-size:12px;color:var(--tx)">'+((currentUser&&currentUser.email)||'–')+'</div></div>'+
-    '<div class="form-group"><div class="form-label">Server</div><div style="padding:9px 12px;background:var(--sur2);border-radius:9px;font-size:11px;color:var(--a4)">'+window.location.origin+'</div></div>'+
-    '<div style="display:flex;gap:7px;justify-content:space-between;margin-top:14px">'+
+    '<div class="form-group"><div class="form-label">E-Mail</div><div style="display:flex;gap:6px;align-items:center"><div style="padding:9px 12px;background:var(--sur2);border-radius:9px;font-size:12px;color:var(--tx);flex:1">'+((currentUser&&currentUser.email)||'–')+'</div><button class="btn btn-ghost btn-sm" onclick="showChangeEmail()">Ändern</button></div></div>'+
+    '<div id="change-email-box" style="display:none;padding:10px 12px;background:var(--sur2);border-radius:9px;margin-bottom:10px;">'+
+    '<div class="form-label" style="margin-bottom:6px">Neue E-Mail</div>'+
+    '<input class="form-input" id="new-email-inp" placeholder="neue@email.de" style="margin-bottom:8px">'+
+    '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="hideChangeEmail()">Abbrechen</button><button class="btn btn-primary btn-sm" onclick="doChangeEmail()">Bestätigen</button></div></div>'+
+    '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;">'+
+    '<button class="btn btn-ghost btn-sm" onclick="showChangePw()">Passwort ändern</button>'+
+    '</div>'+
+    '<div id="change-pw-box" style="display:none;padding:10px 12px;background:var(--sur2);border-radius:9px;margin-bottom:10px;">'+
+    '<div class="form-label" style="margin-bottom:6px">Neues Passwort</div>'+
+    '<input class="form-input" type="password" id="new-pw-inp" placeholder="mind. 6 Zeichen" style="margin-bottom:8px">'+
+    '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="hideChangePw()">Abbrechen</button><button class="btn btn-primary btn-sm" onclick="doChangePw()">Speichern</button></div></div>'+
+    '<div style="display:flex;gap:7px;justify-content:space-between;margin-top:6px">'+
     '<button class="btn btn-bad btn-sm" onclick="closePM();doLogout()">Abmelden</button>'+
     '<button class="btn btn-ghost" onclick="closePM()">Schließen</button></div>';
   document.getElementById('pool-modal').classList.add('open');
@@ -2157,7 +2271,7 @@ async function nvScan() {
       const r=await fetch(SUPABASE_URL+'/functions/v1/scan-vocab',{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwt},
-        body:JSON.stringify({imageBase64:nvBase64,mimeType:nvMimeType||'image/jpeg'})
+        body:JSON.stringify({imageBase64:nvBase64,mimeType:nvMimeType||'image/jpeg',smartMode:true})
       });
       if(!r.ok) {
         const e=await r.json().catch(()=>({}));
@@ -2173,13 +2287,32 @@ async function nvScan() {
       if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||'API Fehler');}
       const d=await r.json(); text=d.choices?.[0]?.message?.content?.trim()||'';
     }
-    const pairs=text.split('\n').filter(l=>l.includes('=')&&l.trim());
-    document.getElementById('nv-pairs').value=text;
+    // Try to parse smart JSON response from edge function
+    let displayText = text;
+    let detectedLang = '';
+    let detectedCats = '';
+    try {
+      const parsed = JSON.parse(text);
+      if(parsed.lang) {
+        detectedLang = parsed.lang;
+        document.getElementById('nv-detected-lang').textContent = parsed.lang;
+        const catNames = Object.keys(parsed.subcats||{});
+        detectedCats = catNames.join(', ') || 'keine';
+        document.getElementById('nv-detected-cats').textContent = detectedCats;
+        document.getElementById('nv-ai-result-info').style.display='block';
+        // Convert to flat text for textarea
+        displayText = Object.entries(parsed.subcats||{}).map(([cat,pairs])=>
+          (catNames.length>1?'# '+cat+'\n':'')+pairs.join('\n')
+        ).join('\n');
+      }
+    } catch(e) { /* not JSON, use plain text */ }
+    const pairCount = displayText.split('\n').filter(l=>l.includes('=')&&l.trim()&&!l.startsWith('#')).length;
+    document.getElementById('nv-pairs').value=displayText;
     document.getElementById('nv-result').style.display='block';
     document.getElementById('nv-import-btn').style.display='inline-flex';
-    nvSetStatus('✓ '+pairs.length+' Paare erkannt!','ok');
+    nvSetStatus('✓ '+pairCount+' Paare erkannt'+(detectedLang?' · '+detectedLang:'')+'!','ok');
   }catch(e){nvSetStatus('✗ '+e.message,'err');}
-  btn.disabled=false; btn.textContent='🔍 Erneut scannen';
+  btn.disabled=false; btn.textContent='Erneut scannen';
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
@@ -2401,6 +2534,226 @@ v.<span class="fn">push_back</span>(<span class="num">40</span>);         <span 
   }
 };
 
+// ── Python chapters ───────────────────────────────────────────────────────
+CODING_LANGS.python = {
+  name: 'Python', icon: '🐍',
+  chapters: [
+    {
+      id:'py_hello', title:'Hallo Welt & Basics', icon:'👋', done:false,
+      content: {
+        theory:`<h3>Python — einfach und lesbar</h3>
+<p>Python braucht keine Klammern, keine Semikolons. Einrückung (Indentation) definiert die Struktur.</p>`,
+        code:`<span class="cm"># Ausgabe</span>
+<span class="fn">print</span>(<span class="str">"Hallo Welt!"</span>)
+
+<span class="cm"># Variablen — kein Typ nötig</span>
+name = <span class="str">"Max"</span>
+alter = <span class="num">18</span>
+pi = <span class="num">3.14</span>
+
+<span class="fn">print</span>(<span class="str">f"Ich heiße {name} und bin {alter}"</span>)`,
+        explanation:`<p><strong>print()</strong> — Ausgabe auf die Konsole</p>
+<p><strong>f"..."</strong> — F-String: Variablen direkt im Text mit {}</p>
+<p>Python erkennt Typen automatisch — kein int, string etc. nötig</p>`,
+        fillIn: {
+          template:`# Gib deinen Namen aus
+___("Hallo Python!")
+
+name = "Anna"
+alter = ___
+print(f"Hallo {___}, du bist {alter} Jahre alt!")`,
+          blanks:['print','20','name'],
+          hint:'print(), Zahl, Variable'
+        },
+        quiz:[
+          {q:'Wie gibt man Text in Python aus?',opts:['echo()','console.log()','print()','cout <<'],correct:2},
+          {q:'Was ist ein f-String?',opts:['Fehler-String','String mit Variablen via {}','Float-String','Funktions-String'],correct:1},
+          {q:'Braucht Python Semikolons am Zeilenende?',opts:['Ja, immer','Nur bei Schleifen','Nein','Nur in Klassen'],correct:2},
+        ]
+      }
+    },
+    {
+      id:'py_if', title:'Bedingungen & Schleifen', icon:'🔄', done:false,
+      content: {
+        theory:`<h3>Kontrollstrukturen in Python</h3>
+<p>Python nutzt Doppelpunkt + Einrückung statt geschweifte Klammern.</p>`,
+        code:`<span class="cm"># if / elif / else</span>
+note = <span class="num">85</span>
+<span class="kw">if</span> note >= <span class="num">90</span>:
+    <span class="fn">print</span>(<span class="str">"Sehr gut"</span>)
+<span class="kw">elif</span> note >= <span class="num">70</span>:
+    <span class="fn">print</span>(<span class="str">"Gut"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Üben!"</span>)
+
+<span class="cm"># for-Schleife</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="fn">print</span>(i)
+
+<span class="cm"># while</span>
+n = <span class="num">0</span>
+<span class="kw">while</span> n < <span class="num">3</span>:
+    <span class="fn">print</span>(n)
+    n += <span class="num">1</span>`,
+        explanation:`<p><strong>if bedingung:</strong> — Doppelpunkt statt {}</p>
+<p><strong>elif</strong> — Python's "else if"</p>
+<p><strong>range(5)</strong> — gibt 0, 1, 2, 3, 4 zurück</p>`,
+        fillIn:{
+          template:`alter = 17
+___ alter >= 18:
+    print("Volljährig")
+___:
+    print("Minderjährig")
+
+for i in ___(3):
+    print(i)`,
+          blanks:['if','else','range'],
+          hint:'if, else, range'
+        },
+        quiz:[
+          {q:'Was ersetzt {} in Python?',opts:['Klammern','Doppelpunkt + Einrückung','Semikolon','Nichts'],correct:1},
+          {q:'Was gibt range(3) zurück?',opts:['1,2,3','0,1,2,3','0,1,2','1,2'],correct:2},
+          {q:'Wie heißt "else if" in Python?',opts:['elseif','elsif','elif','else if'],correct:2},
+        ]
+      }
+    },
+    {
+      id:'py_lists', title:'Listen & Funktionen', icon:'📋', done:false,
+      content: {
+        theory:`<h3>Listen & Funktionen</h3>
+<p>Listen sind Pythons Arrays. Funktionen werden mit <strong>def</strong> definiert.</p>`,
+        code:`<span class="cm"># Liste</span>
+noten = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>]
+noten.<span class="fn">append</span>(<span class="num">5</span>)
+<span class="fn">print</span>(noten[<span class="num">0</span>])   <span class="cm"># 1</span>
+<span class="fn">print</span>(<span class="fn">len</span>(noten)) <span class="cm"># 5</span>
+
+<span class="cm"># Funktion</span>
+<span class="kw">def</span> <span class="fn">addiere</span>(a, b):
+    <span class="kw">return</span> a + b
+
+ergebnis = <span class="fn">addiere</span>(<span class="num">3</span>, <span class="num">4</span>)
+<span class="fn">print</span>(ergebnis)  <span class="cm"># 7</span>`,
+        explanation:`<p><strong>list.append(x)</strong> — Element hinzufügen</p>
+<p><strong>len(list)</strong> — Länge der Liste</p>
+<p><strong>def name(params):</strong> — Funktion definieren</p>
+<p><strong>return</strong> — Wert zurückgeben</p>`,
+        fillIn:{
+          template:`tiere = ["Hund", "Katze"]
+tiere.___(  "Vogel")
+print(___(tiere))  # 3
+
+___ begrüße(name):
+    return "Hallo " + ___
+
+print(begrüße("Welt"))`,
+          blanks:['append','len','def','name'],
+          hint:'append, len, def, name'
+        },
+        quiz:[
+          {q:'Wie fügt man ein Element zu einer Liste hinzu?',opts:['list.add()','list.push()','list.append()','list.insert()'],correct:2},
+          {q:'Mit welchem Keyword definiert man Funktionen?',opts:['func','function','def','fn'],correct:2},
+          {q:'Was gibt len([1,2,3]) zurück?',opts:['0','2','3','4'],correct:2},
+        ]
+      }
+    }
+  ]
+};
+
+// ── HTML chapters ─────────────────────────────────────────────────────────
+CODING_LANGS.html = {
+  name: 'HTML', icon: '🌐',
+  chapters: [
+    {
+      id:'html_basics', title:'HTML Grundstruktur', icon:'🏗️', done:false,
+      content: {
+        theory:`<h3>Was ist HTML?</h3>
+<p>HTML (HyperText Markup Language) ist die Grundlage jeder Webseite. Es beschreibt die <em>Struktur</em> von Inhalten mit Tags.</p>`,
+        code:`<span class="kw">&lt;!DOCTYPE html&gt;</span>
+<span class="kw">&lt;html</span> <span class="type">lang</span>=<span class="str">"de"</span><span class="kw">&gt;</span>
+<span class="kw">&lt;head&gt;</span>
+  <span class="kw">&lt;meta</span> <span class="type">charset</span>=<span class="str">"UTF-8"</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;title&gt;</span>Meine Seite<span class="kw">&lt;/title&gt;</span>
+<span class="kw">&lt;/head&gt;</span>
+<span class="kw">&lt;body&gt;</span>
+  <span class="kw">&lt;h1&gt;</span>Hallo Welt!<span class="kw">&lt;/h1&gt;</span>
+  <span class="kw">&lt;p&gt;</span>Das ist ein Absatz.<span class="kw">&lt;/p&gt;</span>
+<span class="kw">&lt;/body&gt;</span>
+<span class="kw">&lt;/html&gt;</span>`,
+        explanation:`<p><strong>&lt;!DOCTYPE html&gt;</strong> — Deklariert HTML5</p>
+<p><strong>&lt;head&gt;</strong> — Metadaten, Titel, CSS-Links (nicht sichtbar)</p>
+<p><strong>&lt;body&gt;</strong> — Sichtbarer Inhalt der Seite</p>
+<p><strong>&lt;h1&gt; bis &lt;h6&gt;</strong> — Überschriften</p>
+<p><strong>&lt;p&gt;</strong> — Absatz (paragraph)</p>`,
+        fillIn:{
+          template:`<!___ html>
+<html>
+<___>
+  <title>Test</title>
+</head>
+<___>
+  <___>Überschrift</h1>
+  <p>Absatz</___>
+</body>
+</html>`,
+          blanks:['DOCTYPE','head','body','h1','/p'],
+          hint:'DOCTYPE, head, body, h1, /p'
+        },
+        quiz:[
+          {q:'Was enthält der &lt;head&gt; Bereich?',opts:['Den sichtbaren Inhalt','Metadaten und Titel','Nur Bilder','Scripts nur'],correct:1},
+          {q:'Welches Tag ist die größte Überschrift?',opts:['&lt;h6&gt;','&lt;heading&gt;','&lt;h1&gt;','&lt;title&gt;'],correct:2},
+          {q:'Was bedeutet &lt;!DOCTYPE html&gt;?',opts:['Ein Kommentar','Deklariert HTML5','Lädt CSS','Startet den Body'],correct:1},
+        ]
+      }
+    },
+    {
+      id:'html_tags', title:'Links, Bilder & Listen', icon:'🔗', done:false,
+      content: {
+        theory:`<h3>Wichtige HTML-Tags</h3>
+<p>HTML hat Tags für fast alles — Links, Bilder, Listen, Tabellen und mehr.</p>`,
+        code:`<span class="cm">&lt;!-- Link --&gt;</span>
+<span class="kw">&lt;a</span> <span class="type">href</span>=<span class="str">"https://example.com"</span><span class="kw">&gt;</span>Klick mich<span class="kw">&lt;/a&gt;</span>
+
+<span class="cm">&lt;!-- Bild --&gt;</span>
+<span class="kw">&lt;img</span> <span class="type">src</span>=<span class="str">"bild.jpg"</span> <span class="type">alt</span>=<span class="str">"Beschreibung"</span><span class="kw">&gt;</span>
+
+<span class="cm">&lt;!-- Ungeordnete Liste --&gt;</span>
+<span class="kw">&lt;ul&gt;</span>
+  <span class="kw">&lt;li&gt;</span>Punkt 1<span class="kw">&lt;/li&gt;</span>
+  <span class="kw">&lt;li&gt;</span>Punkt 2<span class="kw">&lt;/li&gt;</span>
+<span class="kw">&lt;/ul&gt;</span>
+
+<span class="cm">&lt;!-- Geordnete Liste --&gt;</span>
+<span class="kw">&lt;ol&gt;</span>
+  <span class="kw">&lt;li&gt;</span>Erster<span class="kw">&lt;/li&gt;</span>
+<span class="kw">&lt;/ol&gt;</span>`,
+        explanation:`<p><strong>&lt;a href="url"&gt;</strong> — Hyperlink</p>
+<p><strong>&lt;img src="..." alt="..."&gt;</strong> — Bild (kein schließendes Tag!)</p>
+<p><strong>&lt;ul&gt;</strong> — Unordered list (Punkte)</p>
+<p><strong>&lt;ol&gt;</strong> — Ordered list (Nummern)</p>
+<p><strong>&lt;li&gt;</strong> — List item</p>`,
+        fillIn:{
+          template:`<___ href="https://google.com">Google</a>
+
+<img ___ ="logo.png" alt="Logo">
+
+<ul>
+  <___>Erstes Element</li>
+  <li>Zweites Element</li>
+</___>`,
+          blanks:['a','src','li','/ul'],
+          hint:'a, src, li, /ul'
+        },
+        quiz:[
+          {q:'Welches Attribut gibt den Link-Ziel an?',opts:['src','link','href','url'],correct:2},
+          {q:'&lt;img&gt; hat kein ...',opts:['src-Attribut','alt-Attribut','schließendes Tag','class-Attribut'],correct:2},
+          {q:'Was macht &lt;ol&gt;?',opts:['Ungeordnete Liste','Geordnete (nummerierte) Liste','Tabelle','Absatz'],correct:1},
+        ]
+      }
+    }
+  ]
+};
+
 let activeCodingLang = 'cpp';
 let activeCodingChapter = null;
 let codingQuizIdx = 0;
@@ -2485,6 +2838,11 @@ function renderLessonContent(ch, view) {
   lesson.classList.add('active');
   const isDone = !!codingProgress[ch.id];
 
+  if (view === 'fill') {
+    renderFillIn(ch);
+    return;
+  }
+
   if (view === 'theory') {
     lesson.innerHTML = `
       <button onclick="renderCodingChapters()" style="background:none;border:none;color:var(--tx3);font-size:11px;cursor:pointer;margin-bottom:14px;font-family:'Geist Mono',monospace">← Alle Kapitel</button>
@@ -2499,6 +2857,7 @@ function renderLessonContent(ch, view) {
       </div>
       <div class="lesson-nav">
         <button class="btn btn-ghost" onclick="renderCodingChapters()">← Zurück</button>
+        ${ch.content.fillIn?'<button class="btn btn-ghost" onclick="renderLessonContent(activeCodingChapter,\'fill\')">Lücken-Aufgabe ✏️</button>':''}
         <button class="btn btn-primary" onclick="renderLessonContent(activeCodingChapter,'quiz')">Quiz starten →</button>
       </div>`;
   } else if (view === 'quiz') {
@@ -2520,6 +2879,62 @@ function renderLessonContent(ch, view) {
         <button class="btn btn-ghost" onclick="renderLessonContent(activeCodingChapter,'quiz')">Quiz wiederholen</button>
         <button class="btn btn-primary" onclick="renderCodingChapters()">Weiter →</button>
       </div>`;
+  }
+}
+
+
+function renderFillIn(ch) {
+  const lesson = document.getElementById('coding-lesson');
+  lesson.classList.add('active');
+  if(!ch.content.fillIn){ renderLessonContent(ch,'theory'); return; }
+  const fi = ch.content.fillIn;
+  // Build template with input fields
+  let blankIdx = 0;
+  const withBlanks = fi.template.replace(/___/g, () => {
+    const i = blankIdx++;
+    return `<input class="fill-blank" id="fb-${i}" data-idx="${i}" size="${(fi.blanks[i]||'').length+2}" autocomplete="off" spellcheck="false">`;
+  });
+  lesson.innerHTML = `
+    <button onclick="renderCodingChapters()" style="background:none;border:none;color:var(--tx3);font-size:11px;cursor:pointer;margin-bottom:14px;font-family:'Geist Mono',monospace">← Alle Kapitel</button>
+    <div class="lesson-card">
+      <h3>✏️ Lücken-Aufgabe: ${ch.title}</h3>
+      <p>Fülle die Lücken mit den richtigen Begriffen aus.</p>
+      <div class="fill-in-wrap">
+        <div class="fill-in-pre">${withBlanks}</div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:10px">Tipp: ${fi.hint}</div>
+      <div class="q-fb" id="fill-fb" style="min-height:18px;margin-bottom:8px"></div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-ghost" onclick="renderLessonContent(activeCodingChapter,'theory')">← Theorie</button>
+      <button class="btn btn-ghost" onclick="checkFillIn()" id="fill-check-btn">Prüfen</button>
+      <button class="btn btn-primary" id="fill-next-btn" onclick="renderLessonContent(activeCodingChapter,'quiz')" style="display:none">Quiz →</button>
+    </div>`;
+}
+
+function checkFillIn() {
+  const ch = activeCodingChapter;
+  if(!ch?.content?.fillIn) return;
+  const fi = ch.content.fillIn;
+  let correct = 0;
+  fi.blanks.forEach((answer, i) => {
+    const inp = document.getElementById('fb-'+i);
+    if(!inp) return;
+    const val = inp.value.trim();
+    if(val.toLowerCase() === answer.toLowerCase()) {
+      inp.className = 'fill-blank fb-ok'; inp.disabled = true; correct++;
+    } else if(val) {
+      inp.className = 'fill-blank fb-no';
+    }
+  });
+  const fb = document.getElementById('fill-fb');
+  if(correct === fi.blanks.length) {
+    fb.textContent = '✓ Alle richtig!'; fb.style.color = 'var(--a)';
+    document.getElementById('fill-check-btn').style.display = 'none';
+    document.getElementById('fill-next-btn').style.display = 'inline-flex';
+  } else {
+    fb.textContent = correct+'/'+fi.blanks.length+' richtig — versuche es weiter!';
+    fb.style.color = 'var(--a3)';
   }
 }
 
@@ -2580,6 +2995,101 @@ function copyCode(btn) {
 
 function copShareUrl(){var inp=document.getElementById("share-url");if(inp)navigator.clipboard.writeText(inp.value).then(function(){toast("Kopiert!");}).catch(function(){inp.select();document.execCommand("copy");toast("Kopiert!");});}
 
+
+
+// ── Password reset / Magic Link / Account changes ─────────────────────────
+function showForgotPassword() {
+  const forgot = document.getElementById('auth-forgot');
+  const magic = document.getElementById('auth-magic');
+  if(forgot){ forgot.style.display='block'; }
+  if(magic){ magic.style.display='none'; }
+  const loginEmail = document.getElementById('a-login')?.value||'';
+  const fe = document.getElementById('forgot-email');
+  if(fe && loginEmail.includes('@')) fe.value = loginEmail;
+}
+
+function showMagicLink() {
+  const magic = document.getElementById('auth-magic');
+  const forgot = document.getElementById('auth-forgot');
+  if(magic){ magic.style.display='block'; }
+  if(forgot){ forgot.style.display='none'; }
+  const loginEmail = document.getElementById('a-login')?.value||'';
+  const me = document.getElementById('magic-email');
+  if(me && loginEmail.includes('@')) me.value = loginEmail;
+}
+
+async function sendPasswordReset() {
+  const email = (document.getElementById('forgot-email')?.value||'').trim();
+  if(!email){ toast('Bitte E-Mail eingeben'); return; }
+  try {
+    const {error} = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/?resetpw=1'
+    });
+    if(error) throw error;
+    document.getElementById('auth-err').style.color='var(--a)';
+    document.getElementById('auth-err').textContent='✓ Zurücksetzungs-E-Mail gesendet!';
+    document.getElementById('auth-forgot').style.display='none';
+  } catch(e) {
+    document.getElementById('auth-err').textContent = e.message;
+    document.getElementById('auth-err').style.color='var(--a2)';
+  }
+}
+
+async function sendMagicLink() {
+  const email = (document.getElementById('magic-email')?.value||'').trim();
+  if(!email){ toast('Bitte E-Mail eingeben'); return; }
+  try {
+    const {error} = await sb.auth.signInWithOtp({
+      email,
+      options:{ emailRedirectTo: window.location.origin }
+    });
+    if(error) throw error;
+    document.getElementById('auth-err').style.color='var(--a)';
+    document.getElementById('auth-err').textContent='✓ Magic Link gesendet! Prüfe dein Postfach.';
+    document.getElementById('auth-magic').style.display='none';
+  } catch(e) {
+    document.getElementById('auth-err').textContent = e.message;
+    document.getElementById('auth-err').style.color='var(--a2)';
+  }
+}
+
+function hideChangePw(){const b=document.getElementById("change-pw-box");if(b)b.style.display="none";}
+function showChangePw() {
+  const box = document.getElementById('change-pw-box');
+  const emailBox = document.getElementById('change-email-box');
+  if(box){ box.style.display = box.style.display==='none'?'block':'none'; }
+  if(emailBox) emailBox.style.display='none';
+}
+
+function hideChangeEmail(){const b=document.getElementById("change-email-box");if(b)b.style.display="none";}
+function showChangeEmail() {
+  const box = document.getElementById('change-email-box');
+  const pwBox = document.getElementById('change-pw-box');
+  if(box){ box.style.display = box.style.display==='none'?'block':'none'; }
+  if(pwBox) pwBox.style.display='none';
+}
+
+async function doChangePw() {
+  const newPw = (document.getElementById('new-pw-inp')?.value||'').trim();
+  if(!newPw||newPw.length<6){ toast('Mind. 6 Zeichen'); return; }
+  try {
+    const {error} = await sb.auth.updateUser({password: newPw});
+    if(error) throw error;
+    document.getElementById('change-pw-box').style.display='none';
+    toast('✓ Passwort geändert!');
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+
+async function doChangeEmail() {
+  const newEmail = (document.getElementById('new-email-inp')?.value||'').trim();
+  if(!newEmail||!newEmail.includes('@')){ toast('Gültige E-Mail eingeben'); return; }
+  try {
+    const {error} = await sb.auth.updateUser({email: newEmail});
+    if(error) throw error;
+    document.getElementById('change-email-box').style.display='none';
+    toast('✓ Bestätigungs-E-Mail an neue Adresse gesendet!');
+  } catch(e) { toast('Fehler: '+e.message); }
+}
 
 // ── Pool Key Registry (safe onclick handlers) ─────────────────────────────
 // Registry is rebuilt each time renderOv() runs
