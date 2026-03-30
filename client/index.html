@@ -1252,7 +1252,12 @@ function renderOv() {
       const canDel=!isBuiltin(key);
 
       const row=document.createElement('div'); row.className='pool-row'+(isAct?' is-active':''); row.id='pr-'+esc(key);
-      row.innerHTML='<div class="pool-row-head" onclick="togglePoolRow(\''+esc(key)+'\')"><span class="pool-exp-icon">▶</span><span class="pool-row-name">'+pname+'</span>'+(isAct?'<span class="pool-active-chip">AKTIV</span>':'')+'<span class="pool-row-count">'+allP.length+'</span><div class="pool-bar-wrap"><div class="pool-bar-fill" id="pb-'+esc(key)+'" style="width:'+pct+'%"></div></div><span class="pool-row-pct" id="pp-'+esc(key)+'">'+pct+'%</span></div><div class="pool-detail"><div class="pd-stats"><div class="pd-stat"><div class="n" style="color:var(--tx)">'+allP.length+'</div><div class="l">GESAMT</div></div><div class="pd-stat"><div class="n" style="color:var(--a)">'+kn+'</div><div class="l">GEKONNT</div></div><div class="pd-stat"><div class="n" style="color:var(--a2)">'+(allP.length-kn)+'</div><div class="l">OFFEN</div></div><div class="pd-stat"><div class="n" style="color:var(--a4)">'+pct+'%</div><div class="l">FORTSCHRITT</div></div></div><div class="pd-actions">'+(!isAct?'<button class="btn btn-primary btn-sm" onclick="setActivePool(\''+esc(key)+'\')">✓ Aktiv setzen</button>':'<span style="font-size:10px;color:var(--a)">✓ Aktiv</span>')+'<button class="btn btn-ghost btn-sm" onclick="markPoolAll(\''+esc(key)+'\',true)">✓ Alle gekonnt</button><button class="btn btn-ghost btn-sm" onclick="markPoolAll(\''+esc(key)+'\',false)">↺ Reset</button><button class="btn btn-ghost btn-sm" onclick="openPM(\'sub\',\''+esc(key)+'\')">＋ Kategorie</button><button class="btn btn-ghost btn-sm" onclick="openPM(\'edit\',\''+esc(key)+'\')">✏️ Bearbeiten</button><button class="btn btn-ghost btn-sm" onclick="sharePool(\''+esc(key)+'\')">🔗 Teilen</button>'+(canDel?'<button class="btn btn-danger" onclick="deletePool(\''+esc(key)+'\')">🗑</button>':'')+'</div><div class="pd-filter" id="pdf-'+esc(key)+'"><button class="pd-f active" onclick="setPdF(\''+esc(key)+'\',\'all\',this)">Alle</button><button class="pd-f" onclick="setPdF(\''+esc(key)+'\',\'unknown\',this)">Nicht gekonnt</button><button class="pd-f" onclick="setPdF(\''+esc(key)+'\',\'known\',this)">Gekonnt</button></div><div id="pdc-'+esc(key)+'">'+renderPoolVocab(key,poolObj,'all')+'</div></div>';
+      // Store real key in registry so onclick can retrieve it safely
+      const keyId = 'k'+Object.keys(window._poolKeyReg||{}).length;
+      if(!window._poolKeyReg) window._poolKeyReg = {};
+      window._poolKeyReg[keyId] = key;
+      const ke = esc(key);
+      row.innerHTML='<div class="pool-row-head" onclick="togglePoolRow(\''+ke+'\')"><span class="pool-exp-icon">▶</span><span class="pool-row-name">'+pname+'</span>'+(isAct?'<span class="pool-active-chip">AKTIV</span>':'')+'<span class="pool-row-count">'+allP.length+'</span><div class="pool-bar-wrap"><div class="pool-bar-fill" id="pb-'+ke+'" style="width:'+pct+'%"></div></div><span class="pool-row-pct" id="pp-'+ke+'">'+pct+'%</span></div><div class="pool-detail"><div class="pd-stats"><div class="pd-stat"><div class="n" style="color:var(--tx)">'+allP.length+'</div><div class="l">GESAMT</div></div><div class="pd-stat"><div class="n" style="color:var(--a)">'+kn+'</div><div class="l">GEKONNT</div></div><div class="pd-stat"><div class="n" style="color:var(--a2)">'+(allP.length-kn)+'</div><div class="l">OFFEN</div></div><div class="pd-stat"><div class="n" style="color:var(--a4)">'+pct+'%</div><div class="l">FORTSCHRITT</div></div></div><div class="pd-actions">'+(!isAct?'<button class="btn btn-primary btn-sm" onclick="setActivePoolReg(\''+keyId+'\')">✓ Aktiv setzen</button>':'<span style="font-size:10px;color:var(--a)">✓ Aktiv</span>')+'<button class="btn btn-ghost btn-sm" onclick="markPoolAllReg(\''+keyId+'\',true)">✓ Alle gekonnt</button><button class="btn btn-ghost btn-sm" onclick="markPoolAllReg(\''+keyId+'\',false)">↺ Reset</button><button class="btn btn-ghost btn-sm" onclick="openPMReg(\'sub\',\''+keyId+'\')">＋ Kategorie</button><button class="btn btn-ghost btn-sm" onclick="openPMReg(\'edit\',\''+keyId+'\')">✏️ Bearbeiten</button><button class="btn btn-ghost btn-sm" onclick="sharePoolReg(\''+keyId+'\')">🔗 Teilen</button>'+(canDel?'<button class="btn btn-danger" onclick="deletePoolReg(\''+keyId+'\')">🗑</button>':'')+'</div><div class="pd-filter" id="pdf-'+ke+'"><button class="pd-f active" onclick="setPdFReg(\''+keyId+'\',\'all\',this)">Alle</button><button class="pd-f" onclick="setPdFReg(\''+keyId+'\',\'unknown\',this)">Nicht gekonnt</button><button class="pd-f" onclick="setPdFReg(\''+keyId+'\',\'known\',this)">Gekonnt</button></div><div id="pdc-'+ke+'">'+renderPoolVocab(key,poolObj,'all')+'</div></div>';
       pl.appendChild(row);
     }
   }
@@ -1420,12 +1425,19 @@ function closePM(){ document.getElementById('pool-modal').classList.remove('open
 function parsePairs(raw) {
   const seen = new Set();
   return raw.split('\n').map(l => {
+    // Strip markdown bullets (* - •) and numbering (1. 2.) at line start
+    l = l.replace(/^\s*[\*\-•]\s*/, '').replace(/^\s*\d+\.\s*/, '').trim();
+    if (!l) return null;
     const p = l.split('=').map(s => s.trim());
     if (p.length < 2 || !p[0]) return null;
-    const key = p[0].toLowerCase();
-    if (seen.has(key)) return null; // deduplicate
+    // Strip remaining markdown bold/italic (**word** → word)
+    const de = p[0].replace(/\*\*/g,'').replace(/\*/g,'').replace(/^[_]+|[_]+$/g,'').trim();
+    const en = p.slice(1).join('=').replace(/\*\*/g,'').replace(/\*/g,'').trim();
+    if (!de || !en) return null;
+    const key = de.toLowerCase();
+    if (seen.has(key)) return null;
     seen.add(key);
-    return [p[0], p.slice(1).join('=')];
+    return [de, en];
   }).filter(Boolean);
 }
 
@@ -2032,6 +2044,13 @@ async function syncFromServer() {
       localStorage.setItem('vf3_avatar_'+currentUser.username, profile.avatar_url);
       updateAcctBtn(true,currentUser);
     }
+    // 4. Pull coding progress
+    const {data:codingRows} = await sb.from('coding_progress').select('*').eq('user_id',uid);
+    (codingRows||[]).forEach(row=>{
+      if(row.lang && row.progress) {
+        lsSet('vf3_coding_'+row.lang, row.progress);
+      }
+    });
     loadState(); buildVocab(); updateStats();
     const act=document.querySelector('.screen.active')?.id?.replace('screen-','');
     if(act==='cards') initCards(); else if(act==='overview') renderOv();
@@ -2560,6 +2579,43 @@ function copyCode(btn) {
 
 
 function copShareUrl(){var inp=document.getElementById("share-url");if(inp)navigator.clipboard.writeText(inp.value).then(function(){toast("Kopiert!");}).catch(function(){inp.select();document.execCommand("copy");toast("Kopiert!");});}
+
+
+// ── Pool Key Registry (safe onclick handlers) ─────────────────────────────
+// Registry is rebuilt each time renderOv() runs
+function _poolKey(keyId) {
+  return (window._poolKeyReg||{})[keyId] || null;
+}
+function setActivePoolReg(keyId) {
+  const k = _poolKey(keyId);
+  if(!k) { toast('Fehler: Pool nicht gefunden'); return; }
+  setActivePool(k);
+}
+function markPoolAllReg(keyId, known) {
+  const k = _poolKey(keyId);
+  if(!k) return;
+  markPoolAll(esc(k), known);
+}
+function openPMReg(mode, keyId) {
+  const k = _poolKey(keyId);
+  if(!k) return;
+  openPM(mode, esc(k));
+}
+function sharePoolReg(keyId) {
+  const k = _poolKey(keyId);
+  if(!k) return;
+  sharePool(esc(k));
+}
+function deletePoolReg(keyId) {
+  const k = _poolKey(keyId);
+  if(!k) return;
+  deletePool(esc(k));
+}
+function setPdFReg(keyId, filter, btn) {
+  const k = _poolKey(keyId);
+  if(!k) return;
+  setPdF(esc(k), filter, btn);
+}
 
 // ===================== INIT =====================
 loadState();
