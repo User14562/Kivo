@@ -649,8 +649,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
     <div class="nav-sec">Verwalten</div>
     <div class="nav-item" data-s="overview" onclick="go('overview')"><span class="nav-icon">📋</span>Übersicht <span class="nav-badge" id="nb-pools">0</span></div>
     <div class="nav-item" data-s="stats" onclick="go('stats')"><span class="nav-icon">📊</span>Statistiken</div>
-    <div class="nav-item" data-s="friends" onclick="go('friends')"><span class="nav-icon">🏆</span>Freunde</div>
-    <div class="nav-item" data-s="changelog" onclick="go('changelog')"><span class="nav-icon">📋</span>Versions-Log</div>
   </nav>
   <div class="s-footer">
     <div class="stat-row"><span class="stat-lbl">Fortschritt</span><span class="stat-val" id="sm-pct">0%</span></div>
@@ -858,11 +856,13 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
   </div>
   <div class="fp-body">
     <div class="fp-tabs">
-      <button class="fp-tab active" id="fpt-board" onclick="switchFpTab('board')">Leaderboard</button>
+      <button class="fp-tab active" id="fpt-board" onclick="switchFpTab('board')">👥 Freunde</button>
+      <button class="fp-tab" id="fpt-global" onclick="switchFpTab('global')">🌍 Global</button>
       <button class="fp-tab" id="fpt-requests" onclick="switchFpTab('requests')">Anfragen <span id="fp-req-badge" style="display:none" class="req-badge">0</span></button>
-      <button class="fp-tab" id="fpt-add" onclick="switchFpTab('add')">➕ Hinzufügen</button>
+      <button class="fp-tab" id="fpt-add" onclick="switchFpTab('add')">➕</button>
     </div>
     <div id="fp-board-content"></div>
+    <div id="fp-global-content" style="display:none"></div>
     <div id="fp-requests-content" style="display:none"></div>
     <div id="fp-add-content" style="display:none">
       <div style="font-size:11px;color:var(--tx2);margin-bottom:12px;line-height:1.6">Suche nach Nutzername und sende eine Freundschaftsanfrage.</div>
@@ -972,7 +972,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
   <button class="bn-item" data-s="typing" onclick="go('typing')"><span class="bn-icon">⌨️</span>Tippen</button>
   <button class="bn-item" data-s="overview" onclick="go('overview')"><span class="bn-icon">📋</span>Pools</button>
   <button class="bn-item" data-s="stats" onclick="go('stats')"><span class="bn-icon">📊</span>Stats</button>
-  <button class="bn-item" data-s="friends" onclick="go('friends')"><span class="bn-icon">🏆</span>Freunde</button>
 </nav>
 
 <script>
@@ -2089,36 +2088,108 @@ function resizeAvatar(dataUrl, maxPx) {
   });
 }
 
-function openAccountSettings() {
+function openAccountSettings(tab='account') {
   document.getElementById('user-menu').classList.remove('open');
-  // Show simple account info modal via pool modal
   const body=document.getElementById('pm-body');
   const title=document.getElementById('pm-title');
-  title.textContent='Mein Konto';
+  title.textContent='⚙ Einstellungen';
+
   const avatarKey='vf3_avatar_'+((currentUser&&currentUser.username)||'');
   const avatarUrl=localStorage.getItem(avatarKey)||'';
   const avatarHtml=avatarUrl
     ?'<img src="'+avatarUrl+'" style="width:70px;height:70px;border-radius:50%;border:2px solid var(--a);object-fit:cover">'
     :'<div style="width:70px;height:70px;border-radius:50%;border:2px solid var(--bd);background:var(--sur2);display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>';
-  body.innerHTML=
-    '<div style="text-align:center;margin-bottom:16px;">'+avatarHtml+'<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="triggerAvatarUpload()">Profilbild ändern</button></div></div>'+
-    '<div class="form-group"><div class="form-label">Nutzername</div><div style="padding:9px 12px;background:var(--sur2);border-radius:9px;font-size:12px;color:var(--tx)">'+((currentUser&&currentUser.username)||'–')+'</div></div>'+
-    '<div class="form-group"><div class="form-label">E-Mail</div><div style="display:flex;gap:6px;align-items:center"><div style="padding:9px 12px;background:var(--sur2);border-radius:9px;font-size:12px;color:var(--tx);flex:1">'+((currentUser&&currentUser.email)||'–')+'</div><button class="btn btn-ghost btn-sm" onclick="showChangeEmail()">Ändern</button></div></div>'+
-    '<div id="change-email-box" style="display:none;padding:10px 12px;background:var(--sur2);border-radius:9px;margin-bottom:10px;">'+
-    '<div class="form-label" style="margin-bottom:6px">Neue E-Mail</div>'+
-    '<input class="form-input" id="new-email-inp" placeholder="neue@email.de" style="margin-bottom:8px">'+
-    '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="hideChangeEmail()">Abbrechen</button><button class="btn btn-primary btn-sm" onclick="doChangeEmail()">Bestätigen</button></div></div>'+
-    '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;">'+
-    '<button class="btn btn-ghost btn-sm" onclick="showChangePw()">Passwort ändern</button>'+
-    '</div>'+
-    '<div id="change-pw-box" style="display:none;padding:10px 12px;background:var(--sur2);border-radius:9px;margin-bottom:10px;">'+
-    '<div class="form-label" style="margin-bottom:6px">Neues Passwort</div>'+
-    '<input class="form-input" type="password" id="new-pw-inp" placeholder="mind. 6 Zeichen" style="margin-bottom:8px">'+
-    '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="hideChangePw()">Abbrechen</button><button class="btn btn-primary btn-sm" onclick="doChangePw()">Speichern</button></div></div>'+
-    '<div style="display:flex;gap:7px;justify-content:space-between;margin-top:6px">'+
-    '<button class="btn btn-bad btn-sm" onclick="closePM();doLogout()">Abmelden</button>'+
-    '<button class="btn btn-ghost" onclick="closePM()">Schließen</button></div>';
+
+  const changelogHtml = CHANGELOG.map(v=>`
+    <div class="cl-entry">
+      <div class="cl-ver">
+        <span class="cl-ver-num">v${v.version}</span>
+        ${v.label?`<span class="cl-ver-badge">${v.label}</span>`:''}
+        <span class="cl-ver-date">${v.date}</span>
+      </div>
+      ${v.items.map(it=>`<div class="cl-item"><div class="cl-dot ${it.type}"></div><span>${it.text}</span></div>`).join('')}
+    </div>`).join('');
+
+  body.innerHTML=`
+    <div style="display:flex;background:var(--sur2);border-radius:10px;padding:3px;margin-bottom:16px" id="as-tabs">
+      <button class="lb-tab ${tab==='account'?'active':''}" onclick="asTab('account')">Konto</button>
+      <button class="lb-tab ${tab==='changelog'?'active':''}" onclick="asTab('changelog')">Versions-Log</button>
+    </div>
+
+    <div id="as-account" style="display:${tab==='account'?'block':'none'}">
+      <div style="text-align:center;margin-bottom:16px">${avatarHtml}<div style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="triggerAvatarUpload()">📷 Profilbild ändern</button></div></div>
+
+      <div class="form-group">
+        <div class="form-label">Nutzername</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input class="form-input" id="as-username-inp" value="${(currentUser&&currentUser.username)||''}" style="flex:1">
+          <button class="btn btn-ok btn-sm" onclick="doChangeUsername()">Speichern</button>
+        </div>
+        <div id="as-username-msg" style="font-size:9px;margin-top:4px;color:var(--tx3)"></div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">E-Mail</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div style="padding:9px 12px;background:var(--sur2);border-radius:9px;font-size:12px;color:var(--tx);flex:1">${(currentUser&&currentUser.email)||'–'}</div>
+          <button class="btn btn-ghost btn-sm" onclick="showChangeEmail()">Ändern</button>
+        </div>
+      </div>
+      <div id="change-email-box" style="display:none;padding:10px 12px;background:var(--sur2);border-radius:9px;margin-bottom:10px;">
+        <div class="form-label" style="margin-bottom:6px">Neue E-Mail</div>
+        <input class="form-input" id="new-email-inp" placeholder="neue@email.de" style="margin-bottom:8px">
+        <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="hideChangeEmail()">Abbrechen</button><button class="btn btn-primary btn-sm" onclick="doChangeEmail()">Bestätigen</button></div>
+      </div>
+
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-ghost btn-sm" onclick="showChangePw()">Passwort ändern</button>
+      </div>
+      <div id="change-pw-box" style="display:none;padding:10px 12px;background:var(--sur2);border-radius:9px;margin-bottom:10px;">
+        <div class="form-label" style="margin-bottom:6px">Neues Passwort</div>
+        <input class="form-input" type="password" id="new-pw-inp" placeholder="mind. 6 Zeichen" style="margin-bottom:8px">
+        <div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="hideChangePw()">Abbrechen</button><button class="btn btn-primary btn-sm" onclick="doChangePw()">Speichern</button></div>
+      </div>
+
+      <div style="display:flex;gap:7px;justify-content:space-between;margin-top:6px">
+        <button class="btn btn-bad btn-sm" onclick="closePM();doLogout()">Abmelden</button>
+        <button class="btn btn-ghost" onclick="closePM()">Schließen</button>
+      </div>
+    </div>
+
+    <div id="as-changelog" style="display:${tab==='changelog'?'block':'none'}">
+      ${changelogHtml}
+    </div>
+  `;
   document.getElementById('pool-modal').classList.add('open');
+}
+
+function asTab(tab) {
+  document.querySelectorAll('#as-tabs .lb-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#as-tabs .lb-tab[onclick*="'+tab+'"]')?.classList.add('active');
+  document.getElementById('as-account').style.display = tab==='account'?'block':'none';
+  document.getElementById('as-changelog').style.display = tab==='changelog'?'block':'none';
+}
+
+async function doChangeUsername() {
+  if(!currentUser) return;
+  const newName = (document.getElementById('as-username-inp')?.value||'').trim();
+  const msg = document.getElementById('as-username-msg');
+  if (!newName) { msg.textContent='Name darf nicht leer sein'; msg.style.color='var(--a2)'; return; }
+  if (newName===currentUser.username) { msg.textContent='Kein Unterschied'; msg.style.color='var(--tx3)'; return; }
+  if (newName.length < 3) { msg.textContent='Mindestens 3 Zeichen'; msg.style.color='var(--a2)'; return; }
+  if (!/^[a-zA-Z0-9_.-]+$/.test(newName)) { msg.textContent='Nur Buchstaben, Zahlen, _ . - erlaubt'; msg.style.color='var(--a2)'; return; }
+  msg.textContent='Prüfe Verfügbarkeit...'; msg.style.color='var(--tx3)';
+  try {
+    // Check uniqueness
+    const {data:existing} = await sb.from('profiles').select('id').eq('username',newName).neq('id',currentUser.id).maybeSingle();
+    if (existing) { msg.textContent='Nutzername bereits vergeben'; msg.style.color='var(--a2)'; return; }
+    await sb.from('profiles').update({username:newName}).eq('id',currentUser.id);
+    currentUser.username = newName;
+    // Update local display
+    document.getElementById('um-name').textContent = newName;
+    msg.textContent='✓ Gespeichert!'; msg.style.color='var(--a)';
+    toast('✓ Nutzername geändert zu @'+newName);
+  } catch(e) { msg.textContent='Fehler: '+e.message; msg.style.color='var(--a2)'; }
 }
 
 function triggerAvatarUpload() {
@@ -3747,8 +3818,10 @@ function switchFpTab(tab) {
   document.querySelectorAll('.fp-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('fpt-'+tab)?.classList.add('active');
   document.getElementById('fp-board-content').style.display = tab==='board' ? '' : 'none';
+  document.getElementById('fp-global-content').style.display = tab==='global' ? '' : 'none';
   document.getElementById('fp-requests-content').style.display = tab==='requests' ? '' : 'none';
   document.getElementById('fp-add-content').style.display = tab==='add' ? '' : 'none';
+  if (tab==='global') loadGlobalLeaderboard();
 }
 
 async function loadFriendPanel() {
@@ -3877,6 +3950,37 @@ async function fpRemoveFriend(uid) {
   });
 }
 
+async function loadGlobalLeaderboard() {
+  const el = document.getElementById('fp-global-content');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">Lade...</div>';
+  try {
+    const {data: profiles} = await sb.from('profiles')
+      .select('id,username,xp_total,streak,avatar_url')
+      .order('xp_total', {ascending:false})
+      .limit(10);
+    const sorted = profiles||[];
+    const rankEmoji = i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const rankClass = i=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    if (!sorted.length) { el.innerHTML='<div style="text-align:center;padding:20px;font-size:11px;color:var(--tx3)">Keine Daten</div>'; return; }
+    el.innerHTML = '<div style="font-size:9px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Top 10 Global</div>'
+      + sorted.map((p,i)=>{
+        const isMe = currentUser && p.id===currentUser.id;
+        const av = p.avatar_url?'<img src="'+p.avatar_url+'">':`<span>${(p.username||'?')[0].toUpperCase()}</span>`;
+        return `<div class="friend-row ${isMe?'me-row':''}">
+          <span class="friend-rank ${rankClass(i)}">${rankEmoji(i)}</span>
+          <div class="friend-avatar">${av}</div>
+          <div class="friend-info">
+            <div class="friend-name">@${p.username||'?'} ${isMe?'<span style="font-size:9px;color:var(--a)">(Du)</span>':''}</div>
+            <div class="friend-pts">⚡ ${(p.xp_total||0).toLocaleString()} XP · ${(p.streak||0)>=2?'🔥':'📅'} ${p.streak||0}d</div>
+          </div>
+        </div>`;
+      }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--a2);padding:20px;text-align:center">⚠ ${e.message}</div>`;
+  }
+}
+
 // renderFriends (screen version for mobile)
 async function renderFriends() {
   const el=document.getElementById('friends-content');
@@ -3926,20 +4030,33 @@ async function submitFeedback() {
 // ===================== CHANGELOG =====================
 const CHANGELOG = [
   {
+    version: '1.4.0',
+    date: 'Demnächst',
+    label: '🔜 Geplant',
+    items: [
+      {type:'new', text:'Nutzer-Profile — dekorierbar mit Items'},
+      {type:'new', text:'Bewertungs-System — Freundes-Profile mit Stats-Vergleich'},
+      {type:'new', text:'KI-Lückentext — zufällig generierter Text passend zum Pool'},
+      {type:'new', text:'KI-Bot — Vokabellisten auf Anfrage generieren lassen'},
+    ]
+  },
+  {
     version: '1.3.0',
     date: '2025',
-    label: 'Aktuell',
+    label: '✓ Aktuell',
     items: [
       {type:'new', text:'Statistiken & Lernfortschritt-Dashboard mit Heatmap'},
-      {type:'new', text:'Freunde-System & Leaderboard (Supabase-basiert)'},
+      {type:'new', text:'Freunde-Panel (Slide-in) mit Freunde- & Global-Leaderboard'},
       {type:'new', text:'Spaced Repetition (SM-2) — intelligente Wiederholungsintervalle'},
-      {type:'new', text:'Freunde-Panel (Slide-in von rechts) neben Profilbild'},
       {type:'new', text:'XP-System in allen Modi (Quiz, Tippen, Karten, Zuordnen)'},
+      {type:'new', text:'Nutzername änderbar in Konto-Einstellungen'},
+      {type:'new', text:'Versions-Log im Einstellungs-Dialog'},
       {type:'new', text:'Feedback-Popup (unten rechts)'},
-      {type:'new', text:'Versions-Log'},
       {type:'new', text:'Programmieren-Bereich nur für Entwickler sichtbar'},
-      {type:'fix', text:'Mobiles Design: Bottom-Navigation, Sheet-Modals'},
-      {type:'fix', text:'Dark Theme: Dunkelgrün-Grau Farbschema'},
+      {type:'fix', text:'Dunkelgrün-Grau Farbschema'},
+      {type:'fix', text:'Mobile: Bottom-Navigation, Sheet-Modals'},
+      {type:'fix', text:'Freundschaftsanfragen korrekt zugestellt'},
+      {type:'fix', text:'Entfernen-Button nur bei echten Freunden sichtbar'},
     ]
   },
   {
@@ -3949,7 +4066,7 @@ const CHANGELOG = [
     items: [
       {type:'new', text:'Foto-Import mit NVIDIA Llama 3.2 Vision (Edge Function)'},
       {type:'new', text:'Pool teilen per Link'},
-      {type:'new', text:'Profilbild upload'},
+      {type:'new', text:'Profilbild Upload'},
       {type:'new', text:'Magic Link & Passwort vergessen'},
       {type:'new', text:'Cloud-Sync (Pools, Fortschritt, Profilbild)'},
     ]
@@ -3959,7 +4076,7 @@ const CHANGELOG = [
     date: '2025',
     label: '',
     items: [
-      {type:'new', text:'Coding-Bereich (C++, Python, HTML) mit Theorie, Quiz, Lücken-Aufgaben'},
+      {type:'new', text:'Coding-Bereich (C++, Python, HTML)'},
       {type:'new', text:'Sprach-Labels dynamisch je Pool'},
       {type:'new', text:'Pool Unterkategorien'},
       {type:'fix', text:'Quiz-Ergebnis-Screen mit Diagramm'},
@@ -3974,7 +4091,6 @@ const CHANGELOG = [
       {type:'new', text:'Karteikarten, Quiz, Tippen, Zuordnen'},
       {type:'new', text:'Dark/Light Mode'},
       {type:'new', text:'Supabase Auth (Login, Register)'},
-      {type:'new', text:'Sidebar-Navigation'},
     ]
   }
 ];
