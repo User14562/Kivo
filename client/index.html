@@ -317,19 +317,19 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 .bn-icon{font-size:18px;line-height:1;}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
-.stat-card{background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:16px;text-align:center;}
-.stat-card .sc-n{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:2px;}
-.stat-card .sc-l{font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:14px 10px;text-align:center;min-width:0;}
+.stat-card .sc-n{font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:2px;line-height:1.1;}
+.stat-card .sc-l{font-size:8px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;}
 .stat-section{background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px;}
-.stat-section-title{font-size:10px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
-.pool-progress-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;}
-.ppr-name{flex:1;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ppr-bar{flex:0 0 80px;height:5px;background:var(--sur2);border-radius:3px;overflow:hidden;}
+.stat-section-title{font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;font-weight:600;}
+.pool-progress-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;flex-wrap:nowrap;}
+.ppr-name{flex:1;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.ppr-bar{flex:0 0 60px;height:4px;background:var(--sur2);border-radius:3px;overflow:hidden;}
 .ppr-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--a),var(--a4));}
-.ppr-pct{font-size:10px;color:var(--tx2);min-width:30px;text-align:right;}
-.heatmap-wrap{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px;}
-.hm-cell{width:13px;height:13px;border-radius:3px;background:var(--sur2);}
+.ppr-pct{font-size:9px;color:var(--tx2);min-width:28px;text-align:right;flex-shrink:0;}
+.heatmap-wrap{display:flex;flex-wrap:wrap;gap:2px;margin-top:6px;}
+.hm-cell{width:11px;height:11px;border-radius:2px;background:var(--sur2);}
 .hm-cell.l1{background:rgba(61,245,160,.2);}
 .hm-cell.l2{background:rgba(61,245,160,.45);}
 .hm-cell.l3{background:rgba(61,245,160,.7);}
@@ -415,7 +415,10 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
   .pool-row-head{flex-wrap:wrap;}
   .bottom-nav{display:flex;}
   .topbar .pool-btn{max-width:110px;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .stats-grid{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .stat-card{padding:10px 6px;}
+  .stat-card .sc-n{font-size:20px;}
+  .stat-card .sc-l{font-size:7px;}
   .tb-title{font-size:14px;}
   .status-bar{padding:0 14px;font-size:9px;}
   .topbar .theme-toggle{width:40px;height:21px;}
@@ -1347,7 +1350,8 @@ function setKnown(val) {
   const cur = cDeck[cIdx];
   cur.known = val; vocab[cur.id].known = val;
   saveKnown(); updateStats(); toast(val?'✓ Gekonnt!':'✗ Nicht gekonnt');
-  srUpdate(activeKey, cur.id, val ? 4 : 1);
+  // No XP for flashcards — too easy to farm
+  srUpdate(activeKey, cur.id, val ? 4 : 1, false);
   if (skipKn && val) {
     cDeck.splice(cIdx, 1);
     if (!cDeck.length) { let src = activeCat==='all'?vocab:vocab.filter(v=>v.cat===activeCat); cDeck=shuf(src); cIdx=0; }
@@ -2432,11 +2436,15 @@ async function syncFromServer() {
     // 2. Pull progress
     const {data:prog} = await sb.from('progress').select('*').eq('user_id',uid);
     (prog||[]).forEach(row=>{ if(row.pool_key&&row.known_ids) lsSet('vf3_kn_'+row.pool_key, row.known_ids); });
-    // 3. Pull avatar
+    // 3. Pull avatar + username from server (fixes username reset bug)
     const {data:profile} = await sb.from('profiles').select('avatar_url,username').eq('id',uid).maybeSingle();
     if(profile?.avatar_url&&currentUser) {
       localStorage.setItem('vf3_avatar_'+currentUser.username, profile.avatar_url);
       updateAcctBtn(true,currentUser);
+    }
+    if(profile?.username&&currentUser) {
+      currentUser.username = profile.username;
+      document.getElementById('um-name').textContent = profile.username;
     }
     // 4. Pull coding progress
     const {data:codingRows} = await sb.from('coding_progress').select('*').eq('user_id',uid);
@@ -3429,7 +3437,7 @@ function srGet(poolKey, id) {
   return lsGet(srKey(poolKey, id), '{"ef":2.5,"interval":1,"due":0,"reps":0}');
 }
 
-function srUpdate(poolKey, id, quality) {
+function srUpdate(poolKey, id, quality, awardXp=true) {
   // quality: 0-5 (0-2 = wrong, 3-5 = correct)
   const d = srGet(poolKey, id);
   let {ef, interval, reps} = d;
@@ -3444,7 +3452,7 @@ function srUpdate(poolKey, id, quality) {
   }
   const due = Date.now() + interval * 86400000;
   lsSet(srKey(poolKey, id), {ef, interval, due, reps});
-  addLearnPoints(quality >= 3 ? 5 : 1);
+  if (awardXp) addLearnPoints(quality >= 3 ? 5 : 1);
 }
 
 function srDueCount(poolKey) {
@@ -4031,37 +4039,35 @@ async function submitFeedback() {
 const CHANGELOG = [
   {
     version: '1.4.0',
-    date: 'Demnächst',
     label: '🔜 Geplant',
     items: [
       {type:'new', text:'Nutzer-Profile — dekorierbar mit Items'},
       {type:'new', text:'Bewertungs-System — Freundes-Profile mit Stats-Vergleich'},
-      {type:'new', text:'KI-Lückentext — zufällig generierter Text passend zum Pool'},
+      {type:'new', text:'KI-Lückentext — zufällig generierter Text passend zum Pool (Claude API)'},
       {type:'new', text:'KI-Bot — Vokabellisten auf Anfrage generieren lassen'},
     ]
   },
   {
     version: '1.3.0',
-    date: '2025',
     label: '✓ Aktuell',
     items: [
       {type:'new', text:'Statistiken & Lernfortschritt-Dashboard mit Heatmap'},
-      {type:'new', text:'Freunde-Panel (Slide-in) mit Freunde- & Global-Leaderboard'},
+      {type:'new', text:'Freunde-Panel (Slide-in) mit Freunde- & Global Top 10-Leaderboard'},
+      {type:'new', text:'Pool teilen über Freunde-Panel (nicht nur per Link)'},
       {type:'new', text:'Spaced Repetition (SM-2) — intelligente Wiederholungsintervalle'},
-      {type:'new', text:'XP-System in allen Modi (Quiz, Tippen, Karten, Zuordnen)'},
+      {type:'new', text:'XP-System in Quiz, Tippen und Zuordnen (nicht Karteikarten)'},
       {type:'new', text:'Nutzername änderbar in Konto-Einstellungen'},
-      {type:'new', text:'Versions-Log im Einstellungs-Dialog'},
-      {type:'new', text:'Feedback-Popup (unten rechts)'},
-      {type:'new', text:'Programmieren-Bereich nur für Entwickler sichtbar'},
+      {type:'new', text:'Versions-Log in Konto-Einstellungen'},
+      {type:'new', text:'Feedback-Popup'},
+      {type:'new', text:'Programmieren nur für Entwickler sichtbar (is_dev Flag)'},
       {type:'fix', text:'Dunkelgrün-Grau Farbschema'},
       {type:'fix', text:'Mobile: Bottom-Navigation, Sheet-Modals'},
+      {type:'fix', text:'Nutzername-Reset nach Neuladung behoben'},
       {type:'fix', text:'Freundschaftsanfragen korrekt zugestellt'},
-      {type:'fix', text:'Entfernen-Button nur bei echten Freunden sichtbar'},
     ]
   },
   {
     version: '1.2.0',
-    date: '2025',
     label: '',
     items: [
       {type:'new', text:'Foto-Import mit NVIDIA Llama 3.2 Vision (Edge Function)'},
@@ -4073,7 +4079,6 @@ const CHANGELOG = [
   },
   {
     version: '1.1.0',
-    date: '2025',
     label: '',
     items: [
       {type:'new', text:'Coding-Bereich (C++, Python, HTML)'},
@@ -4084,7 +4089,6 @@ const CHANGELOG = [
   },
   {
     version: '1.0.0',
-    date: '2025',
     label: '',
     items: [
       {type:'new', text:'Erste Version von VocabFlow'},
@@ -4103,13 +4107,8 @@ function renderChangelog() {
       <div class="cl-ver">
         <span class="cl-ver-num">v${v.version}</span>
         ${v.label?`<span class="cl-ver-badge">${v.label}</span>`:''}
-        <span class="cl-ver-date">${v.date}</span>
       </div>
-      ${v.items.map(it=>`
-        <div class="cl-item">
-          <div class="cl-dot ${it.type}"></div>
-          <span>${it.text}</span>
-        </div>`).join('')}
+      ${v.items.map(it=>`<div class="cl-item"><div class="cl-dot ${it.type}"></div><span>${it.text}</span></div>`).join('')}
     </div>`).join('');
 }
 
