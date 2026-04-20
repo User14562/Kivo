@@ -15,14 +15,14 @@
 <style>
 :root{--tt:background 0.3s ease,color 0.3s ease,border-color 0.3s ease,box-shadow 0.3s ease;}
 [data-theme="dark"]{
-  --bg:#0b0d12;--bg2:#10131a;--sur:#161b26;--sur2:#1d2436;
-  --bd:#252d42;--bd2:#2e3a56;--tx:#e4e8f4;--tx2:#8892aa;--tx3:#525d75;
-  --a:#3df5a0;--ad:rgba(61,245,160,0.12);
-  --a2:#ff6b6b;--a2d:rgba(255,107,107,0.12);
-  --a3:#fec84b;--a3d:rgba(254,200,75,0.12);
-  --a4:#60a5fa;--a4d:rgba(96,165,250,0.12);
-  --a5:#c084fc;--a5d:rgba(192,132,252,0.12);
-  --sh:0 4px 24px rgba(0,0,0,0.4);--sh2:0 2px 8px rgba(0,0,0,0.3);
+  --bg:#0f1412;--bg2:#141a18;--sur:#192420;--sur2:#1f2d28;
+  --bd:#263330;--bd2:#2e3f3a;--tx:#dde8e4;--tx2:#7a9990;--tx3:#4a6660;
+  --a:#3df5a0;--ad:rgba(61,245,160,0.10);
+  --a2:#ff6b6b;--a2d:rgba(255,107,107,0.10);
+  --a3:#fec84b;--a3d:rgba(254,200,75,0.10);
+  --a4:#60a5fa;--a4d:rgba(96,165,250,0.10);
+  --a5:#c084fc;--a5d:rgba(192,132,252,0.10);
+  --sh:0 4px 24px rgba(0,0,0,0.5);--sh2:0 2px 8px rgba(0,0,0,0.35);
 }
 [data-theme="light"]{
   --bg:#f0f4fb;--bg2:#e8edf7;--sur:#fff;--sur2:#f4f6fb;
@@ -358,6 +358,50 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 /* SR badge */
 .sr-due-badge{background:var(--a3d);border:1px solid var(--a3);color:var(--a3);font-size:9px;padding:1px 6px;border-radius:10px;}
 
+/* FRIEND PANEL (slide in from right) */
+.friend-panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s;}
+.friend-panel-overlay.open{opacity:1;pointer-events:all;}
+.friend-panel{position:fixed;top:0;right:-420px;width:420px;max-width:100vw;height:100vh;background:var(--bg2);border-left:1px solid var(--bd2);display:flex;flex-direction:column;z-index:301;transition:right .3s cubic-bezier(.4,0,.2,1);box-shadow:var(--sh);}
+.friend-panel.open{right:0;}
+.fp-head{padding:18px 20px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.fp-title{font-family:'Instrument Serif',serif;font-size:19px;color:var(--tx);}
+.fp-close{width:30px;height:30px;border-radius:8px;border:1px solid var(--bd);background:var(--sur);color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;}
+.fp-close:hover{border-color:var(--a2);color:var(--a2);}
+.fp-body{flex:1;overflow-y:auto;padding:16px 20px 20px;}
+.fp-tabs{display:flex;background:var(--sur2);border-radius:10px;padding:3px;margin-bottom:14px;}
+.fp-tab{flex:1;padding:7px;border-radius:8px;border:none;background:transparent;color:var(--tx2);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s;}
+.fp-tab.active{background:var(--sur);color:var(--tx);box-shadow:var(--sh2);}
+.req-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:var(--a2);border-radius:50%;font-size:9px;color:#fff;margin-left:4px;font-weight:700;}
+
+/* FRIEND TOPBAR BUTTON */
+.friend-topbar-btn{width:34px;height:34px;border-radius:50%;border:2px solid var(--bd);background:var(--sur);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:15px;flex-shrink:0;position:relative;}
+.friend-topbar-btn:hover{border-color:var(--a);background:var(--ad);}
+.friend-notif-dot{position:absolute;top:-1px;right:-1px;width:10px;height:10px;background:var(--a2);border-radius:50%;border:2px solid var(--bg2);display:none;}
+.friend-notif-dot.show{display:block;}
+
+/* FEEDBACK POPUP */
+.feedback-popup{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--bd2);border-radius:16px;padding:14px 16px;width:280px;box-shadow:var(--sh);z-index:250;animation:si .2s ease;}
+.feedback-popup.hidden{display:none;}
+.fp2-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.fp2-title{font-size:12px;font-weight:600;color:var(--tx);}
+.fp2-close{width:22px;height:22px;border-radius:6px;border:none;background:var(--sur2);color:var(--tx3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.fp2-close:hover{color:var(--a2);}
+.feedback-form{display:flex;flex-direction:column;gap:8px;}
+.feedback-form .form-input{font-size:11px;padding:8px 10px;}
+.feedback-form textarea.form-input{resize:vertical;min-height:70px;font-family:'Geist Mono',monospace;}
+
+/* CHANGELOG */
+.cl-entry{padding:14px 16px;background:var(--sur);border:1px solid var(--bd);border-radius:13px;margin-bottom:10px;}
+.cl-ver{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.cl-ver-num{font-family:'Instrument Serif',serif;font-size:17px;color:var(--tx);}
+.cl-ver-date{font-size:9px;color:var(--tx3);letter-spacing:1px;}
+.cl-ver-badge{font-size:9px;padding:2px 8px;border-radius:10px;border:1px solid var(--a);background:var(--ad);color:var(--a);}
+.cl-item{display:flex;gap:8px;font-size:10px;color:var(--tx2);padding:3px 0;line-height:1.5;}
+.cl-dot{width:5px;height:5px;border-radius:50%;background:var(--a);flex-shrink:0;margin-top:5px;}
+.cl-dot.fix{background:var(--a3);}
+.cl-dot.new{background:var(--a4);}
+.cl-dot.remove{background:var(--a2);}
+
 @media(max-width:680px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.open{transform:translateX(0);}
@@ -601,12 +645,12 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
     <div class="nav-item" data-s="quiz" onclick="go('quiz')"><span class="nav-icon">🎯</span>Quiz</div>
     <div class="nav-item" data-s="typing" onclick="go('typing')"><span class="nav-icon">⌨️</span>Tippen</div>
     <div class="nav-item" data-s="matching" onclick="go('matching')"><span class="nav-icon">🔗</span>Zuordnen</div>
-    <div class="nav-sec">Lernen</div>
-    <div class="nav-item" data-s="coding" onclick="go('coding')"><span class="nav-icon">💻</span>Programmieren</div>
+    <div class="nav-item dev-only" data-s="coding" id="nav-coding" onclick="go('coding')" style="display:none"><span class="nav-icon">💻</span>Programmieren <span class="nav-badge" style="background:var(--a5d);border-color:var(--a5);color:var(--a5)">DEV</span></div>
     <div class="nav-sec">Verwalten</div>
     <div class="nav-item" data-s="overview" onclick="go('overview')"><span class="nav-icon">📋</span>Übersicht <span class="nav-badge" id="nb-pools">0</span></div>
     <div class="nav-item" data-s="stats" onclick="go('stats')"><span class="nav-icon">📊</span>Statistiken</div>
     <div class="nav-item" data-s="friends" onclick="go('friends')"><span class="nav-icon">🏆</span>Freunde</div>
+    <div class="nav-item" data-s="changelog" onclick="go('changelog')"><span class="nav-icon">📋</span>Versions-Log</div>
   </nav>
   <div class="s-footer">
     <div class="stat-row"><span class="stat-lbl">Fortschritt</span><span class="stat-val" id="sm-pct">0%</span></div>
@@ -632,6 +676,11 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
         <div class="tog-icons"><span>🌙</span><span>☀️</span></div>
         <div class="tog-thumb"></div>
       </button>
+      <!-- Friend panel button -->
+      <div class="friend-topbar-btn" id="friend-topbar-btn" onclick="openFriendPanel()" title="Freunde & Leaderboard">
+        🏆
+        <div class="friend-notif-dot" id="friend-notif-dot"></div>
+      </div>
       <!-- Account icon button — always visible -->
       <div class="acct-btn" id="acct-btn" onclick="toggleUserMenu()" title="Konto">
         <svg id="acct-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -783,13 +832,60 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
       <div id="stats-content"></div>
     </div>
 
-    <!-- FREUNDE & LEADERBOARD -->
+    <!-- FREUNDE & LEADERBOARD (Screen, for mobile nav) -->
     <div class="screen" id="screen-friends">
       <div class="pg-title">Freunde & Leaderboard</div>
       <div class="pg-sub">Vergleiche deinen Fortschritt mit Freunden</div>
       <div id="friends-content"></div>
     </div>
 
+    <!-- CHANGELOG -->
+    <div class="screen" id="screen-changelog">
+      <div class="pg-title">Versions-Log</div>
+      <div class="pg-sub">Was ist neu in VocabFlow</div>
+      <div id="changelog-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FRIEND PANEL (slide from right) -->
+<div class="friend-panel-overlay" id="friend-panel-overlay" onclick="closeFriendPanel()"></div>
+<div class="friend-panel" id="friend-panel">
+  <div class="fp-head">
+    <div class="fp-title">🏆 Freunde</div>
+    <button class="fp-close" onclick="closeFriendPanel()">✕</button>
+  </div>
+  <div class="fp-body">
+    <div class="fp-tabs">
+      <button class="fp-tab active" id="fpt-board" onclick="switchFpTab('board')">Leaderboard</button>
+      <button class="fp-tab" id="fpt-requests" onclick="switchFpTab('requests')">Anfragen <span id="fp-req-badge" style="display:none" class="req-badge">0</span></button>
+      <button class="fp-tab" id="fpt-add" onclick="switchFpTab('add')">➕ Hinzufügen</button>
+    </div>
+    <div id="fp-board-content"></div>
+    <div id="fp-requests-content" style="display:none"></div>
+    <div id="fp-add-content" style="display:none">
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:12px;line-height:1.6">Suche nach Nutzername und sende eine Freundschaftsanfrage.</div>
+      <div style="display:flex;gap:7px;margin-bottom:10px">
+        <input class="form-input" id="fp-search-inp" placeholder="Nutzername..." style="flex:1">
+        <button class="btn btn-ok" onclick="fpAddFriend()">Senden</button>
+      </div>
+      <div id="fp-add-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK POPUP -->
+<div class="feedback-popup" id="feedback-popup">
+  <div class="fp2-head">
+    <div class="fp2-title">💬 Feedback & Ideen</div>
+    <button class="fp2-close" onclick="closeFeedback()">✕</button>
+  </div>
+  <div style="font-size:10px;color:var(--tx3);margin-bottom:10px;line-height:1.5">Hast du eine Idee oder einen Bug gefunden? Schreib es uns!</div>
+  <div class="feedback-form">
+    <input class="form-input" id="fb-title-inp" placeholder="Titel (z.B. Bug: Quiz stürzt ab)">
+    <textarea class="form-input" id="fb-desc-inp" placeholder="Beschreibung..."></textarea>
+    <button class="btn btn-ok" onclick="submitFeedback()" style="width:100%">Absenden ✓</button>
   </div>
 </div>
 
@@ -1108,7 +1204,7 @@ function getPoolLangLabels(lang) {
   return LANG_LABELS[lang] || {from:lang||'Begriff', to:'Übersetzung', fromFlag:'📖', toFlag:'📝'};
 }
 
-const TITLES = { cards:'Karteikarten', quiz:'Quiz', typing:'Tipp-Modus', matching:'Zuordnen', overview:'Übersicht', coding:'💻 Programmieren', stats:'📊 Statistiken', friends:'🏆 Freunde & Leaderboard' };
+const TITLES = { cards:'Karteikarten', quiz:'Quiz', typing:'Tipp-Modus', matching:'Zuordnen', overview:'Übersicht', coding:'💻 Programmieren', stats:'📊 Statistiken', friends:'🏆 Freunde & Leaderboard', changelog:'📋 Versions-Log' };
 function go(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1127,6 +1223,7 @@ function go(name) {
   else if (name==='coding') renderCodingChapters();
   else if (name==='stats') renderStats();
   else if (name==='friends') renderFriends();
+  else if (name==='changelog') renderChangelog();
 }
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sov').classList.add('open'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sov').classList.remove('open'); }
@@ -1423,7 +1520,7 @@ function handleM(el,v,f) {
   if(!mSel){ document.querySelectorAll('.m-item.ms').forEach(e=>e.classList.remove('ms')); el.classList.add('ms'); mSel={el,v,f}; }
   else {
     if(mSel.f===f){ mSel.el.classList.remove('ms'); el.classList.add('ms'); mSel={el,v,f}; return; }
-    if(mSel.v.id===v.id){ el.classList.add('mm'); mSel.el.classList.add('mm'); el.classList.remove('ms'); mFound++; document.getElementById('mc-cnt').textContent=mFound; if(mFound===8) toast('🎉 Alle Paare!'); }
+    if(mSel.v.id===v.id){ el.classList.add('mm'); mSel.el.classList.add('mm'); el.classList.remove('ms'); mFound++; document.getElementById('mc-cnt').textContent=mFound; addLearnPoints(5); srUpdate(activeKey, mSel.v.id, 4); if(mFound===8) toast('🎉 Alle Paare! +40 XP'); }
     else { el.classList.add('mw'); mSel.el.classList.add('mw'); setTimeout(()=>{ el.classList.remove('mw','ms'); mSel.el.classList.remove('mw','ms'); },500); }
     mSel=null;
   }
@@ -2278,16 +2375,19 @@ async function syncFromServer() {
       }
     });
     // 5. Pull XP data
-    const {data:xpProfile} = await sb.from('profiles').select('xp_total,streak,xp_data').eq('id',uid).maybeSingle();
+    const {data:xpProfile} = await sb.from('profiles').select('xp_total,streak,xp_data,is_dev').eq('id',uid).maybeSingle();
     if(xpProfile?.xp_data) {
       const localXp = lsGet('vf3_xp','{}');
-      // Merge: take max per day
       const merged = {...(xpProfile.xp_data||{})};
       for(const [day,pts] of Object.entries(localXp)) {
         merged[day] = Math.max(merged[day]||0, pts);
       }
       lsSet('vf3_xp', merged);
     }
+    // 6. Dev status
+    applyDevStatus(!!(xpProfile?.is_dev));
+    // 7. Check pending friend requests for notification dot
+    checkPendingFriendRequests();
     loadState(); buildVocab(); updateStats();
     const act=document.querySelector('.screen.active')?.id?.replace('screen-','');
     if(act==='cards') initCards(); else if(act==='overview') renderOv();
@@ -3629,10 +3729,298 @@ async function removeFriend(uid) {
   });
 }
 
+// ===================== FRIEND PANEL =====================
+let fpTab = 'board';
+let fpFriendIds = []; // track actual accepted friend IDs
+
+function openFriendPanel() {
+  document.getElementById('friend-panel-overlay').classList.add('open');
+  document.getElementById('friend-panel').classList.add('open');
+  loadFriendPanel();
+}
+function closeFriendPanel() {
+  document.getElementById('friend-panel-overlay').classList.remove('open');
+  document.getElementById('friend-panel').classList.remove('open');
+}
+function switchFpTab(tab) {
+  fpTab = tab;
+  document.querySelectorAll('.fp-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('fpt-'+tab)?.classList.add('active');
+  document.getElementById('fp-board-content').style.display = tab==='board' ? '' : 'none';
+  document.getElementById('fp-requests-content').style.display = tab==='requests' ? '' : 'none';
+  document.getElementById('fp-add-content').style.display = tab==='add' ? '' : 'none';
+}
+
+async function loadFriendPanel() {
+  if (!currentUser) {
+    document.getElementById('fp-board-content').innerHTML = `
+      <div style="text-align:center;padding:30px 0">
+        <div style="font-size:40px;margin-bottom:10px">🔒</div>
+        <div style="font-size:12px;color:var(--tx);margin-bottom:8px">Anmeldung erforderlich</div>
+        <button class="btn btn-primary btn-sm" onclick="closeFriendPanel();showAuthOverlay()">Anmelden</button>
+      </div>`;
+    return;
+  }
+  document.getElementById('fp-board-content').innerHTML = '<div style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">Lade...</div>';
+  try {
+    await syncXpToServer();
+    // Load friendships
+    const {data: friendLinks} = await sb.from('friendships')
+      .select('friend_id,user_id,status')
+      .or('user_id.eq.'+currentUser.id+',friend_id.eq.'+currentUser.id);
+    const accepted = (friendLinks||[]).filter(f=>f.status==='accepted');
+    fpFriendIds = accepted.map(f=>f.user_id===currentUser.id?f.friend_id:f.user_id);
+    const pendingIn = (friendLinks||[]).filter(f=>f.status==='pending'&&f.friend_id===currentUser.id);
+    // Update req badge
+    const badge = document.getElementById('fp-req-badge');
+    if (badge) { badge.textContent=pendingIn.length; badge.style.display=pendingIn.length>0?'':'none'; }
+    const notifDot = document.getElementById('friend-notif-dot');
+    if (notifDot) notifDot.classList.toggle('show', pendingIn.length>0);
+
+    // Load leaderboard (friends + me)
+    const allIds = [...fpFriendIds, currentUser.id];
+    const {data: profiles} = await sb.from('profiles').select('id,username,xp_total,streak,avatar_url').in('id', allIds);
+    const sorted = (profiles||[]).sort((a,b)=>(b.xp_total||0)-(a.xp_total||0));
+    const myXp = getTotalXp(), myStreak = calcStreak();
+    const rankEmoji = i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const rankClass = i=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+
+    // Board HTML
+    let boardHtml = '';
+    if (sorted.length <= 1) {
+      boardHtml = `<div style="text-align:center;padding:24px 0">
+        <div style="font-size:36px;margin-bottom:10px">👥</div>
+        <div style="font-size:12px;color:var(--tx);margin-bottom:6px">Noch keine Freunde</div>
+        <div style="font-size:10px;color:var(--tx3);line-height:1.6;margin-bottom:14px">Füge Freunde hinzu um<br>sie im Leaderboard zu sehen.</div>
+        <button class="btn btn-ok btn-sm" onclick="switchFpTab('add')">➕ Freund hinzufügen</button>
+      </div>`;
+    } else {
+      boardHtml = sorted.map((p,i)=>{
+        const isMe = p.id===currentUser.id;
+        const xp = isMe?myXp:(p.xp_total||0);
+        const streak = isMe?myStreak:(p.streak||0);
+        const av = p.avatar_url?'<img src="'+p.avatar_url+'">':`<span>${(p.username||'?')[0].toUpperCase()}</span>`;
+        const isFriend = fpFriendIds.includes(p.id);
+        return `<div class="friend-row ${isMe?'me-row':''}">
+          <span class="friend-rank ${rankClass(i)}">${rankEmoji(i)}</span>
+          <div class="friend-avatar">${av}</div>
+          <div class="friend-info">
+            <div class="friend-name">@${p.username||'?'} ${isMe?'<span style="font-size:9px;color:var(--a)">(Du)</span>':''}</div>
+            <div class="friend-pts">⚡ ${xp.toLocaleString()} XP · ${streak>=2?'🔥':'📅'} ${streak}d</div>
+          </div>
+          ${isFriend&&!isMe?`<button class="btn btn-danger btn-sm" onclick="fpRemoveFriend('${p.id}')">✗</button>`:''}
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('fp-board-content').innerHTML = boardHtml;
+
+    // Requests HTML
+    let reqHtml = '';
+    if (pendingIn.length === 0) {
+      reqHtml = '<div style="text-align:center;padding:20px;font-size:11px;color:var(--tx3)">Keine offenen Anfragen</div>';
+    } else {
+      const uids = pendingIn.map(p=>p.user_id);
+      const {data: reqProfiles} = await sb.from('profiles').select('id,username').in('id', uids);
+      reqHtml = (reqProfiles||[]).map(p=>`
+        <div class="friend-req-row">
+          <span style="flex:1;color:var(--tx)">@${p.username}</span>
+          <button class="btn btn-ok btn-sm" onclick="fpAcceptFriend('${p.id}')">✓ Annehmen</button>
+          <button class="btn btn-danger btn-sm" onclick="fpDeclineFriend('${p.id}')">✗</button>
+        </div>`).join('');
+    }
+    document.getElementById('fp-requests-content').innerHTML = reqHtml;
+  } catch(e) {
+    document.getElementById('fp-board-content').innerHTML = `<div style="font-size:11px;color:var(--a2);padding:20px;text-align:center">⚠ ${e.message}<br><br><button class="btn btn-ghost btn-sm" onclick="loadFriendPanel()">↺ Retry</button></div>`;
+  }
+}
+
+async function fpAddFriend() {
+  if (!currentUser) { showAuthOverlay(); return; }
+  const uname = (document.getElementById('fp-search-inp')?.value||'').trim();
+  const res = document.getElementById('fp-add-result');
+  if (!uname) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Nutzername eingeben</div>'; return; }
+  if (uname===currentUser.username) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Das bist du selbst 😄</div>'; return; }
+  res.innerHTML='<div style="font-size:10px;color:var(--tx3)">Suche...</div>';
+  try {
+    const {data:profile} = await sb.from('profiles').select('id,username').eq('username',uname).maybeSingle();
+    if (!profile) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Nutzer "@'+uname+'" nicht gefunden</div>'; return; }
+    const {data:existing} = await sb.from('friendships')
+      .select('id,status')
+      .or('and(user_id.eq.'+currentUser.id+',friend_id.eq.'+profile.id+'),and(user_id.eq.'+profile.id+',friend_id.eq.'+currentUser.id+')')
+      .maybeSingle();
+    if (existing) { res.innerHTML='<div style="font-size:10px;color:var(--a3)">'+(existing.status==='pending'?'Anfrage bereits gesendet ⏳':'Bereits befreundet ✓')+'</div>'; return; }
+    await sb.from('friendships').insert({user_id:currentUser.id, friend_id:profile.id, status:'pending'});
+    res.innerHTML='<div style="font-size:10px;color:var(--a)">✓ Anfrage an @'+uname+' gesendet!</div>';
+    document.getElementById('fp-search-inp').value='';
+  } catch(e) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Fehler: '+e.message+'</div>'; }
+}
+
+async function fpAcceptFriend(uid) {
+  try {
+    await sb.from('friendships').update({status:'accepted'}).eq('user_id',uid).eq('friend_id',currentUser.id);
+    toast('✓ Freundschaft angenommen!'); loadFriendPanel();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+async function fpDeclineFriend(uid) {
+  try {
+    await sb.from('friendships').delete().eq('user_id',uid).eq('friend_id',currentUser.id);
+    toast('Anfrage abgelehnt'); loadFriendPanel();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+async function fpRemoveFriend(uid) {
+  confirm2('Freund entfernen?','Diese Person wird aus deiner Freundesliste entfernt.',async()=>{
+    try {
+      await sb.from('friendships').delete()
+        .or('and(user_id.eq.'+currentUser.id+',friend_id.eq.'+uid+'),and(user_id.eq.'+uid+',friend_id.eq.'+currentUser.id+')');
+      toast('Freund entfernt'); loadFriendPanel();
+    } catch(e) { toast('Fehler: '+e.message); }
+  });
+}
+
+// renderFriends (screen version for mobile)
+async function renderFriends() {
+  const el=document.getElementById('friends-content');
+  if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:20px;font-size:11px;color:var(--tx3)">Öffne das Freunde-Panel oben rechts (🏆)<br>oder nutze den Leaderboard hier:</div>';
+  openFriendPanel();
+}
+
+// ===================== FEEDBACK =====================
+let feedbackShown = false;
+function showFeedbackPopup() {
+  if (feedbackShown) return;
+  feedbackShown = true;
+  const p = document.getElementById('feedback-popup');
+  if (p) p.classList.remove('hidden');
+}
+function closeFeedback() {
+  const p = document.getElementById('feedback-popup');
+  if (p) p.classList.add('hidden');
+}
+async function submitFeedback() {
+  const title = (document.getElementById('fb-title-inp')?.value||'').trim();
+  const desc = (document.getElementById('fb-desc-inp')?.value||'').trim();
+  if (!title) { toast('Bitte einen Titel eingeben'); return; }
+  try {
+    await sb.from('feedback').insert({
+      title,
+      description: desc,
+      user_id: currentUser?.id||null,
+      username: currentUser?.username||'anonym',
+      created_at: new Date().toISOString()
+    });
+    toast('✓ Feedback gesendet! Danke 🙏');
+    document.getElementById('fb-title-inp').value='';
+    document.getElementById('fb-desc-inp').value='';
+    closeFeedback();
+  } catch(e) {
+    // Fallback: save locally if table doesn't exist
+    const fb = lsGet('vf3_feedback_queue','[]');
+    fb.push({title,desc,ts:Date.now()});
+    lsSet('vf3_feedback_queue',fb);
+    toast('✓ Gespeichert (wird beim nächsten Sync übertragen)');
+    closeFeedback();
+  }
+}
+
+// ===================== CHANGELOG =====================
+const CHANGELOG = [
+  {
+    version: '1.3.0',
+    date: '2025',
+    label: 'Aktuell',
+    items: [
+      {type:'new', text:'Statistiken & Lernfortschritt-Dashboard mit Heatmap'},
+      {type:'new', text:'Freunde-System & Leaderboard (Supabase-basiert)'},
+      {type:'new', text:'Spaced Repetition (SM-2) — intelligente Wiederholungsintervalle'},
+      {type:'new', text:'Freunde-Panel (Slide-in von rechts) neben Profilbild'},
+      {type:'new', text:'XP-System in allen Modi (Quiz, Tippen, Karten, Zuordnen)'},
+      {type:'new', text:'Feedback-Popup (unten rechts)'},
+      {type:'new', text:'Versions-Log'},
+      {type:'new', text:'Programmieren-Bereich nur für Entwickler sichtbar'},
+      {type:'fix', text:'Mobiles Design: Bottom-Navigation, Sheet-Modals'},
+      {type:'fix', text:'Dark Theme: Dunkelgrün-Grau Farbschema'},
+    ]
+  },
+  {
+    version: '1.2.0',
+    date: '2025',
+    label: '',
+    items: [
+      {type:'new', text:'Foto-Import mit NVIDIA Llama 3.2 Vision (Edge Function)'},
+      {type:'new', text:'Pool teilen per Link'},
+      {type:'new', text:'Profilbild upload'},
+      {type:'new', text:'Magic Link & Passwort vergessen'},
+      {type:'new', text:'Cloud-Sync (Pools, Fortschritt, Profilbild)'},
+    ]
+  },
+  {
+    version: '1.1.0',
+    date: '2025',
+    label: '',
+    items: [
+      {type:'new', text:'Coding-Bereich (C++, Python, HTML) mit Theorie, Quiz, Lücken-Aufgaben'},
+      {type:'new', text:'Sprach-Labels dynamisch je Pool'},
+      {type:'new', text:'Pool Unterkategorien'},
+      {type:'fix', text:'Quiz-Ergebnis-Screen mit Diagramm'},
+    ]
+  },
+  {
+    version: '1.0.0',
+    date: '2025',
+    label: '',
+    items: [
+      {type:'new', text:'Erste Version von VocabFlow'},
+      {type:'new', text:'Karteikarten, Quiz, Tippen, Zuordnen'},
+      {type:'new', text:'Dark/Light Mode'},
+      {type:'new', text:'Supabase Auth (Login, Register)'},
+      {type:'new', text:'Sidebar-Navigation'},
+    ]
+  }
+];
+
+function renderChangelog() {
+  const el = document.getElementById('changelog-content');
+  if (!el) return;
+  el.innerHTML = CHANGELOG.map(v=>`
+    <div class="cl-entry">
+      <div class="cl-ver">
+        <span class="cl-ver-num">v${v.version}</span>
+        ${v.label?`<span class="cl-ver-badge">${v.label}</span>`:''}
+        <span class="cl-ver-date">${v.date}</span>
+      </div>
+      ${v.items.map(it=>`
+        <div class="cl-item">
+          <div class="cl-dot ${it.type}"></div>
+          <span>${it.text}</span>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+// ===================== DEV STATUS =====================
+function applyDevStatus(isDev) {
+  const codingNav = document.getElementById('nav-coding');
+  if (codingNav) codingNav.style.display = isDev ? '' : 'none';
+}
+
 // ===================== INIT =====================
+async function checkPendingFriendRequests() {
+  if(!currentUser) return;
+  try {
+    const {data} = await sb.from('friendships')
+      .select('id').eq('friend_id',currentUser.id).eq('status','pending');
+    const count = (data||[]).length;
+    const dot = document.getElementById('friend-notif-dot');
+    if(dot) dot.classList.toggle('show', count>0);
+  } catch(e) {}
+}
+
 loadState();
 initCards();
 initAuth().then(checkShareUrl);
+
+// Show feedback popup after 90 seconds
+setTimeout(showFeedbackPopup, 90000);
 </script>
 </body>
 </html>
