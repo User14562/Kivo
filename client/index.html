@@ -310,16 +310,82 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
 
+/* BOTTOM NAV (mobile only) */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:58px;background:var(--bg2);border-top:1px solid var(--bd);z-index:60;flex-direction:row;align-items:stretch;padding-bottom:env(safe-area-inset-bottom,0);}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:var(--tx3);cursor:pointer;transition:all .15s;border:none;background:none;font-family:'Geist Mono',monospace;padding:4px 0;}
+.bn-item.active{color:var(--a);}
+.bn-icon{font-size:18px;line-height:1;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
+.stat-card{background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:16px;text-align:center;}
+.stat-card .sc-n{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:2px;}
+.stat-card .sc-l{font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;}
+.stat-section{background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px;}
+.stat-section-title{font-size:10px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
+.pool-progress-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;}
+.ppr-name{flex:1;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ppr-bar{flex:0 0 80px;height:5px;background:var(--sur2);border-radius:3px;overflow:hidden;}
+.ppr-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--a),var(--a4));}
+.ppr-pct{font-size:10px;color:var(--tx2);min-width:30px;text-align:right;}
+.heatmap-wrap{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px;}
+.hm-cell{width:13px;height:13px;border-radius:3px;background:var(--sur2);}
+.hm-cell.l1{background:rgba(61,245,160,.2);}
+.hm-cell.l2{background:rgba(61,245,160,.45);}
+.hm-cell.l3{background:rgba(61,245,160,.7);}
+.hm-cell.l4{background:var(--a);}
+[data-theme="light"] .hm-cell.l1{background:rgba(5,150,105,.15);}
+[data-theme="light"] .hm-cell.l2{background:rgba(5,150,105,.35);}
+[data-theme="light"] .hm-cell.l3{background:rgba(5,150,105,.6);}
+
+/* FRIENDS & LEADERBOARD */
+.friend-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.friend-row{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--sur);border:1px solid var(--bd);border-radius:12px;transition:all .15s;}
+.friend-row.me-row{border-color:var(--a);background:var(--ad);}
+.friend-avatar{width:36px;height:36px;border-radius:50%;background:var(--sur2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;overflow:hidden;}
+.friend-avatar img{width:100%;height:100%;object-fit:cover;}
+.friend-info{flex:1;min-width:0;}
+.friend-name{font-size:12px;font-weight:600;color:var(--tx);}
+.friend-pts{font-size:10px;color:var(--tx3);margin-top:1px;}
+.friend-rank{font-family:'Instrument Serif',serif;font-size:20px;min-width:32px;text-align:center;flex-shrink:0;}
+.rank-1{color:#fec84b;} .rank-2{color:#c0c0c0;} .rank-3{color:#cd7f32;}
+.lb-tabs{display:flex;background:var(--sur2);border-radius:10px;padding:3px;margin-bottom:14px;}
+.lb-tab{flex:1;padding:6px;border-radius:8px;border:none;background:transparent;color:var(--tx2);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s;}
+.lb-tab.active{background:var(--sur);color:var(--tx);box-shadow:var(--sh2);}
+.add-friend-row{display:flex;gap:7px;margin-bottom:16px;}
+.friend-req-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--a3d);border:1px solid var(--a3);border-radius:11px;margin-bottom:6px;font-size:11px;}
+
+/* SR badge */
+.sr-due-badge{background:var(--a3d);border:1px solid var(--a3);color:var(--a3);font-size:9px;padding:1px 6px;border-radius:10px;}
+
 @media(max-width:680px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.open{transform:translateX(0);}
   .sov.open{display:block;}
   .main{margin-left:0;height:100vh;}
-  .hamburger{display:flex;}
+  .hamburger{display:none;}
+  .topbar{padding:0 14px;height:48px;min-height:48px;}
   .q-opts{grid-template-columns:1fr;}
   .match-grid{grid-template-columns:1fr;}
-  .content{padding:14px;}
+  .content{padding:12px 14px 72px;}
   .pool-row-head{flex-wrap:wrap;}
+  .bottom-nav{display:flex;}
+  .topbar .pool-btn{max-width:110px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .tb-title{font-size:14px;}
+  .status-bar{padding:0 14px;font-size:9px;}
+  .topbar .theme-toggle{width:40px;height:21px;}
+  .topbar .theme-toggle .tog-thumb{width:15px;height:15px;}
+  [data-theme="light"] .topbar .theme-toggle .tog-thumb{transform:translateX(19px);}
+  .pd-actions .btn{padding:5px 8px;font-size:10px;}
+  .res-stats{gap:6px;}
+  .res-stat{min-width:60px;padding:8px 10px;}
+  .hm-cell{width:10px;height:10px;}
+  .card-actions{gap:5px;}
+  .card-actions .btn{padding:7px 10px;font-size:10px;}
+  .flashcard-wrap{height:200px;}
+  .modal{max-width:100%;border-radius:18px 18px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:90vh;}
+  .modal-overlay{align-items:flex-end;padding:0;}
 }
 
 /* ACCOUNT BUTTON & AVATAR */
@@ -539,12 +605,16 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
     <div class="nav-item" data-s="coding" onclick="go('coding')"><span class="nav-icon">💻</span>Programmieren</div>
     <div class="nav-sec">Verwalten</div>
     <div class="nav-item" data-s="overview" onclick="go('overview')"><span class="nav-icon">📋</span>Übersicht <span class="nav-badge" id="nb-pools">0</span></div>
+    <div class="nav-item" data-s="stats" onclick="go('stats')"><span class="nav-icon">📊</span>Statistiken</div>
+    <div class="nav-item" data-s="friends" onclick="go('friends')"><span class="nav-icon">🏆</span>Freunde</div>
   </nav>
   <div class="s-footer">
     <div class="stat-row"><span class="stat-lbl">Fortschritt</span><span class="stat-val" id="sm-pct">0%</span></div>
     <div class="mini-bar"><div class="mini-bar-fill" id="sm-bar" style="width:0%"></div></div>
     <div class="stat-row"><span class="stat-lbl">✅ Gekonnt</span><span class="stat-val" id="sm-k">0</span></div>
     <div class="stat-row"><span class="stat-lbl">📚 Gesamt</span><span class="stat-val" id="sm-t">0</span></div>
+    <div class="stat-row"><span class="stat-lbl">🔥 Streak</span><span class="stat-val" id="sm-streak">0</span></div>
+    <div class="stat-row"><span class="stat-lbl">🧠 SR</span><span class="stat-val" id="sm-sr" style="color:var(--a3)">–</span></div>
   </div>
 </aside>
 
@@ -706,6 +776,23 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
   </div>
 </div>
 
+    <!-- STATISTIKEN -->
+    <div class="screen" id="screen-stats">
+      <div class="pg-title">Statistiken</div>
+      <div class="pg-sub">Dein Lernfortschritt auf einen Blick</div>
+      <div id="stats-content"></div>
+    </div>
+
+    <!-- FREUNDE & LEADERBOARD -->
+    <div class="screen" id="screen-friends">
+      <div class="pg-title">Freunde & Leaderboard</div>
+      <div class="pg-sub">Vergleiche deinen Fortschritt mit Freunden</div>
+      <div id="friends-content"></div>
+    </div>
+
+  </div>
+</div>
+
 <!-- POOL MODAL -->
 <div class="modal-overlay" id="pool-modal">
   <div class="modal">
@@ -781,6 +868,16 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" data-s="cards" onclick="go('cards')"><span class="bn-icon">🃏</span>Karten</button>
+  <button class="bn-item" data-s="quiz" onclick="go('quiz')"><span class="bn-icon">🎯</span>Quiz</button>
+  <button class="bn-item" data-s="typing" onclick="go('typing')"><span class="bn-icon">⌨️</span>Tippen</button>
+  <button class="bn-item" data-s="overview" onclick="go('overview')"><span class="bn-icon">📋</span>Pools</button>
+  <button class="bn-item" data-s="stats" onclick="go('stats')"><span class="bn-icon">📊</span>Stats</button>
+  <button class="bn-item" data-s="friends" onclick="go('friends')"><span class="bn-icon">🏆</span>Freunde</button>
+</nav>
 
 <script>
 // ===================== DATA =====================
@@ -968,6 +1065,13 @@ function updateStats() {
   document.getElementById('sm-bar').style.width = pct + '%';
   let pc = 0; for (const ps of Object.values(POOLS)) pc += Object.keys(ps).length;
   document.getElementById('nb-pools').textContent = pc;
+  // SR due count badge
+  const due = srDueCount(activeKey);
+  const srEl = document.getElementById('sm-sr');
+  if (srEl) srEl.textContent = due > 0 ? due + ' fällig' : '0 fällig';
+  // Streak in footer
+  const streakEl = document.getElementById('sm-streak');
+  if (streakEl) streakEl.textContent = calcStreak();
 }
 
 function shuf(arr) {
@@ -1004,12 +1108,15 @@ function getPoolLangLabels(lang) {
   return LANG_LABELS[lang] || {from:lang||'Begriff', to:'Übersetzung', fromFlag:'📖', toFlag:'📝'};
 }
 
-const TITLES = { cards:'Karteikarten', quiz:'Quiz', typing:'Tipp-Modus', matching:'Zuordnen', overview:'Übersicht', coding:'💻 Programmieren' };
+const TITLES = { cards:'Karteikarten', quiz:'Quiz', typing:'Tipp-Modus', matching:'Zuordnen', overview:'Übersicht', coding:'💻 Programmieren', stats:'📊 Statistiken', friends:'🏆 Freunde & Leaderboard' };
 function go(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(n => n.classList.remove('active'));
   document.getElementById('screen-'+name)?.classList.add('active');
   document.querySelector('[data-s="'+name+'"]')?.classList.add('active');
+  // Also highlight bottom nav
+  document.querySelectorAll('.bn-item[data-s="'+name+'"]').forEach(b=>b.classList.add('active'));
   document.getElementById('tb-title').textContent = TITLES[name]||name;
   closeSidebar();
   if (name==='cards') initCards();
@@ -1018,6 +1125,8 @@ function go(name) {
   else if (name==='matching') startMatch();
   else if (name==='overview') renderOv();
   else if (name==='coding') renderCodingChapters();
+  else if (name==='stats') renderStats();
+  else if (name==='friends') renderFriends();
 }
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sov').classList.add('open'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sov').classList.remove('open'); }
@@ -1142,6 +1251,7 @@ function setKnown(val) {
   const cur = cDeck[cIdx];
   cur.known = val; vocab[cur.id].known = val;
   saveKnown(); updateStats(); toast(val?'✓ Gekonnt!':'✗ Nicht gekonnt');
+  srUpdate(activeKey, cur.id, val ? 4 : 1);
   if (skipKn && val) {
     cDeck.splice(cIdx, 1);
     if (!cDeck.length) { let src = activeCat==='all'?vocab:vocab.filter(v=>v.cat===activeCat); cDeck=shuf(src); cIdx=0; }
@@ -1209,12 +1319,14 @@ function ansQ(btn, chosen, correct, v) {
     fb.textContent='✓ Richtig!'; fb.className='q-fb fb-ok';
     document.getElementById('q-ok').textContent=qOk;
     v.known=true; vocab[v.id].known=true; saveKnown(); updateStats();
+    srUpdate(activeKey, v.id, 4); // SR: good
   } else {
     btn.classList.add('opt-no'); qNo++;
     fb.textContent='✗ Richtig: '+correct; fb.className='q-fb fb-no';
     document.getElementById('q-no').textContent=qNo;
     mistakeLog[v.de]=(mistakeLog[v.de]||0)+1;
     lsSet('vf3_ml',mistakeLog);
+    srUpdate(activeKey, v.id, 1); // SR: wrong
   }
   document.getElementById('q-nxt').style.display='inline-flex';
 }
@@ -1278,8 +1390,8 @@ function checkType() {
   const parts=correct.split('/').map(s=>s.trim().replace(/\(.*?\)/g,'').replace(/[^a-zäöü\s]/gi,'').trim());
   const isOk=parts.some(p=>ans===p||(ans.length>3&&p.includes(ans)));
   inp.disabled=true;
-  if(isOk){ inp.className='t-input t-ok'; document.getElementById('t-hint').textContent='✓ Richtig!'; document.getElementById('t-hint').style.color='var(--a)'; tOk++; document.getElementById('t-ok').textContent=tOk; v.known=true; vocab[v.id].known=true; saveKnown(); updateStats(); }
-  else { inp.className='t-input t-no'; document.getElementById('t-hint').textContent='✗ Richtig: '+(v._d?v.en:v.de); document.getElementById('t-hint').style.color='var(--a2)'; tNo++; document.getElementById('t-no').textContent=tNo; mistakeLog[v.de]=(mistakeLog[v.de]||0)+1; lsSet('vf3_ml',mistakeLog); }
+  if(isOk){ inp.className='t-input t-ok'; document.getElementById('t-hint').textContent='✓ Richtig!'; document.getElementById('t-hint').style.color='var(--a)'; tOk++; document.getElementById('t-ok').textContent=tOk; v.known=true; vocab[v.id].known=true; saveKnown(); updateStats(); srUpdate(activeKey, v.id, 4); }
+  else { inp.className='t-input t-no'; document.getElementById('t-hint').textContent='✗ Richtig: '+(v._d?v.en:v.de); document.getElementById('t-hint').style.color='var(--a2)'; tNo++; document.getElementById('t-no').textContent=tNo; mistakeLog[v.de]=(mistakeLog[v.de]||0)+1; lsSet('vf3_ml',mistakeLog); srUpdate(activeKey, v.id, 1); }
   document.getElementById('t-check').style.display='none';
   document.getElementById('t-nxt').style.display='inline-flex';
 }
@@ -2165,6 +2277,17 @@ async function syncFromServer() {
         lsSet('vf3_coding_'+row.lang, row.progress);
       }
     });
+    // 5. Pull XP data
+    const {data:xpProfile} = await sb.from('profiles').select('xp_total,streak,xp_data').eq('id',uid).maybeSingle();
+    if(xpProfile?.xp_data) {
+      const localXp = lsGet('vf3_xp','{}');
+      // Merge: take max per day
+      const merged = {...(xpProfile.xp_data||{})};
+      for(const [day,pts] of Object.entries(localXp)) {
+        merged[day] = Math.max(merged[day]||0, pts);
+      }
+      lsSet('vf3_xp', merged);
+    }
     loadState(); buildVocab(); updateStats();
     const act=document.querySelector('.screen.active')?.id?.replace('screen-','');
     if(act==='cards') initCards(); else if(act==='overview') renderOv();
@@ -3125,6 +3248,385 @@ function setPdFReg(keyId, filter, btn) {
   const k = _poolKey(keyId);
   if(!k) return;
   setPdF(esc(k), filter, btn);
+}
+
+// ===================== SPACED REPETITION (SM-2) =====================
+// sr data: { [poolKey_vocabId]: { ef: float, interval: int, due: timestamp, reps: int } }
+function srKey(poolKey, id) { return 'vf3_sr_' + esc(poolKey) + '_' + id; }
+
+function srGet(poolKey, id) {
+  return lsGet(srKey(poolKey, id), '{"ef":2.5,"interval":1,"due":0,"reps":0}');
+}
+
+function srUpdate(poolKey, id, quality) {
+  // quality: 0-5 (0-2 = wrong, 3-5 = correct)
+  const d = srGet(poolKey, id);
+  let {ef, interval, reps} = d;
+  if (quality < 3) {
+    reps = 0; interval = 1;
+  } else {
+    if (reps === 0) interval = 1;
+    else if (reps === 1) interval = 6;
+    else interval = Math.round(interval * ef);
+    reps++;
+    ef = Math.max(1.3, ef + 0.1 - (5-quality)*(0.08+(5-quality)*0.02));
+  }
+  const due = Date.now() + interval * 86400000;
+  lsSet(srKey(poolKey, id), {ef, interval, due, reps});
+  addLearnPoints(quality >= 3 ? 5 : 1);
+}
+
+function srDueCount(poolKey) {
+  const pool = getPoolObj(poolKey); if(!pool) return 0;
+  const flat = flattenPool(pool);
+  return flat.filter((_,i) => {
+    const d = srGet(poolKey, i);
+    return d.due <= Date.now();
+  }).length;
+}
+
+// ===================== LERNPUNKTE (XP) =====================
+function addLearnPoints(pts) {
+  const today = new Date().toISOString().slice(0,10);
+  let xp = lsGet('vf3_xp', '{}');
+  xp[today] = (xp[today]||0) + pts;
+  lsSet('vf3_xp', xp);
+  // Update total points & streak
+  calcStreak();
+  // Sync to server if logged in
+  if(currentUser) syncXpToServer();
+}
+
+function getTotalXp() {
+  const xp = lsGet('vf3_xp', '{}');
+  return Object.values(xp).reduce((a,b)=>a+b, 0);
+}
+
+function calcStreak() {
+  const xp = lsGet('vf3_xp', '{}');
+  const today = new Date();
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    if (xp[key] && xp[key] > 0) streak++;
+    else if (i > 0) break;
+  }
+  lsSet('vf3_streak', streak);
+  return streak;
+}
+
+async function syncXpToServer() {
+  if(!currentUser) return;
+  try {
+    const xp = lsGet('vf3_xp', '{}');
+    const total = getTotalXp();
+    const streak = calcStreak();
+    await sb.from('profiles').upsert({
+      id: currentUser.id,
+      username: currentUser.username,
+      email: currentUser.email,
+      xp_total: total,
+      streak: streak,
+      xp_data: xp,
+      updated_at: new Date().toISOString()
+    });
+  } catch(e) { console.warn('XP sync:', e.message); }
+}
+
+// ===================== STATISTIKEN =====================
+function renderStats() {
+  const el = document.getElementById('stats-content');
+  if (!el) return;
+  const streak = calcStreak();
+  const totalXp = getTotalXp();
+  const xpData = lsGet('vf3_xp', '{}');
+  const totalVocab = Object.values(POOLS).flatMap(l=>Object.values(l)).reduce((a,p)=>a+flattenPool(p).length,0);
+  const knownVocab = Object.entries(POOLS).flatMap(([l,ps])=>Object.entries(ps).map(([p])=>getKnownIds(mkKey(l,p)).length)).reduce((a,b)=>a+b,0);
+  const totalSess = sessions.length;
+  const avgPct = totalSess ? Math.round(sessions.reduce((a,s)=>a+s.pct,0)/totalSess) : 0;
+
+  // Heatmap — last 84 days (12 weeks)
+  const heatCells = [];
+  const today = new Date();
+  for (let i = 83; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const pts = xpData[key]||0;
+    let lvl = 0;
+    if (pts > 0) lvl = 1;
+    if (pts >= 20) lvl = 2;
+    if (pts >= 50) lvl = 3;
+    if (pts >= 100) lvl = 4;
+    heatCells.push('<div class="hm-cell l'+lvl+'" title="'+key+': '+pts+' XP"></div>');
+  }
+
+  // Pool progress
+  let poolRows = '';
+  for (const [lang, pools] of Object.entries(POOLS)) {
+    for (const [pname, poolObj] of Object.entries(pools)) {
+      const key = mkKey(lang, pname);
+      const flat = flattenPool(poolObj);
+      const kn = getKnownIds(key).length;
+      const pct = flat.length ? Math.round(kn/flat.length*100) : 0;
+      const due = srDueCount(key);
+      poolRows += '<div class="pool-progress-row">'
+        + '<span class="ppr-name">' + pname + '</span>'
+        + (due > 0 ? '<span class="sr-due-badge">'+due+' fällig</span>' : '')
+        + '<div class="ppr-bar"><div class="ppr-fill" style="width:'+pct+'%"></div></div>'
+        + '<span class="ppr-pct">'+pct+'%</span>'
+        + '</div>';
+    }
+  }
+
+  // Session history mini chart
+  let sessChart = '';
+  if (sessions.length) {
+    const rec = sessions.slice(-10);
+    const mx = Math.max(...rec.map(s=>s.n),1);
+    sessChart = '<div style="display:flex;align-items:flex-end;gap:4px;height:52px;margin-top:10px">'
+      + rec.map(s=>{
+        const oh=Math.max(Math.round(s.ok/mx*44),2);
+        const nh=Math.max(Math.round(s.no/mx*44),1);
+        return '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">'
+          +'<div style="width:100%;border-radius:3px 3px 0 0;min-height:2px;height:'+nh+'px;background:var(--a2)"></div>'
+          +'<div style="width:100%;border-radius:3px 3px 0 0;min-height:2px;height:'+oh+'px;background:var(--a)"></div>'
+          +'<div style="font-size:8px;color:var(--tx3)">'+s.pct+'%</div>'
+          +'</div>';
+      }).join('')
+      + '</div>';
+  }
+
+  el.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:4px">${streak >= 3 ? '🔥' : '📅'}</div>
+        <div class="sc-n" style="color:var(--a3)">${streak}</div>
+        <div class="sc-l">Tage-Streak</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:4px">⚡</div>
+        <div class="sc-n" style="color:var(--a4)">${totalXp}</div>
+        <div class="sc-l">Gesamte XP</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:4px">✅</div>
+        <div class="sc-n" style="color:var(--a)">${knownVocab}</div>
+        <div class="sc-l">Gekonnt</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:4px">📚</div>
+        <div class="sc-n">${totalVocab}</div>
+        <div class="sc-l">Vokabeln Total</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:4px">🎯</div>
+        <div class="sc-n" style="color:var(--a5)">${avgPct}%</div>
+        <div class="sc-l">Ø Quiz-Score</div>
+      </div>
+      <div class="stat-card">
+        <div style="font-size:28px;margin-bottom:4px">🏃</div>
+        <div class="sc-n" style="color:var(--a2)">${totalSess}</div>
+        <div class="sc-l">Quiz-Sessions</div>
+      </div>
+    </div>
+
+    <div class="stat-section">
+      <div class="stat-section-title">🗓 Lernaktivität (letzte 12 Wochen)</div>
+      <div style="font-size:9px;color:var(--tx3);margin-bottom:6px">weniger ←→ mehr</div>
+      <div class="heatmap-wrap">${heatCells.join('')}</div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:8px;font-size:9px;color:var(--tx3)">
+        <span>wenig</span>
+        <div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div>
+        <span>viel</span>
+      </div>
+    </div>
+
+    <div class="stat-section">
+      <div class="stat-section-title">📋 Pool-Fortschritt</div>
+      ${poolRows || '<div style="font-size:11px;color:var(--tx3)">Noch keine Pools</div>'}
+    </div>
+
+    ${sessions.length ? `<div class="stat-section">
+      <div class="stat-section-title">📈 Quiz-Verlauf (letzte 10)</div>
+      ${sessChart}
+    </div>` : ''}
+
+    <div class="stat-section">
+      <div class="stat-section-title">🧠 Spaced Repetition</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px">
+        VocabFlow merkt sich wie gut du Vokabeln kannst und plant den optimalen Wiederholungszeitpunkt (SM-2 Algorithmus).
+        XP bekommst du beim Lernen in allen Modi.
+      </div>
+      <button class="btn btn-ok" onclick="go('cards')">🃏 Jetzt lernen & XP sammeln</button>
+    </div>
+  `;
+}
+
+// ===================== FREUNDE & LEADERBOARD =====================
+let lbTab = 'friends'; // 'friends' | 'global'
+
+async function renderFriends() {
+  const el = document.getElementById('friends-content');
+  if (!el) return;
+
+  if (!currentUser) {
+    el.innerHTML = `<div style="text-align:center;padding:40px 20px;">
+      <div style="font-size:48px;margin-bottom:12px">🏆</div>
+      <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--tx);margin-bottom:8px">Leaderboard & Freunde</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:20px;line-height:1.6">Melde dich an um Freunde hinzuzufügen<br>und dich im Leaderboard zu vergleichen.</div>
+      <button class="btn btn-primary" onclick="showAuthOverlay()">Jetzt anmelden</button>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--tx3);font-size:11px">Lade Leaderboard...</div>';
+
+  try {
+    // Sync own XP first
+    await syncXpToServer();
+
+    // Load friends
+    const {data: friendLinks} = await sb.from('friendships')
+      .select('friend_id, user_id')
+      .or('user_id.eq.'+currentUser.id+',friend_id.eq.'+currentUser.id)
+      .eq('status', 'accepted');
+
+    const friendIds = (friendLinks||[]).map(f => f.user_id===currentUser.id ? f.friend_id : f.user_id);
+
+    // Pending requests
+    const {data: pending} = await sb.from('friendships')
+      .select('user_id, profiles!friendships_user_id_fkey(username)')
+      .eq('friend_id', currentUser.id)
+      .eq('status', 'pending');
+
+    // Load profiles for leaderboard
+    let leaderboardIds = lbTab==='friends' ? [...friendIds, currentUser.id] : null;
+    let query = sb.from('profiles').select('id,username,xp_total,streak,avatar_url');
+    if (lbTab==='friends' && leaderboardIds.length) {
+      query = query.in('id', leaderboardIds);
+    } else if (lbTab==='global') {
+      query = query.order('xp_total', {ascending:false}).limit(20);
+    }
+    const {data: profiles} = await query;
+
+    // Sort by XP
+    const sorted = (profiles||[]).sort((a,b)=>(b.xp_total||0)-(a.xp_total||0));
+    const myXp = getTotalXp();
+    const myStreak = calcStreak();
+
+    const rankEmoji = (i) => i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const rankClass = (i) => i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+
+    let pendingHtml = '';
+    if (pending && pending.length > 0) {
+      pendingHtml = '<div style="margin-bottom:16px">'
+        + '<div class="stat-section-title" style="margin-bottom:8px">📬 Freundschaftsanfragen</div>'
+        + pending.map(p=>`<div class="friend-req-row">
+            <span style="flex:1;font-size:11px;color:var(--tx)">@${p.profiles?.username||'Unbekannt'} möchte dein Freund sein</span>
+            <button class="btn btn-ok btn-sm" onclick="acceptFriend('${p.user_id}')">✓</button>
+            <button class="btn btn-danger btn-sm" onclick="declineFriend('${p.user_id}')">✗</button>
+          </div>`).join('')
+        + '</div>';
+    }
+
+    let boardHtml = '';
+    if (lbTab==='friends' && sorted.length <= 1) {
+      boardHtml = `<div style="text-align:center;padding:30px 20px;">
+        <div style="font-size:40px;margin-bottom:10px">👥</div>
+        <div style="font-size:13px;color:var(--tx);margin-bottom:6px">Noch keine Freunde</div>
+        <div style="font-size:11px;color:var(--tx3);line-height:1.6">Füge Freunde per Nutzername hinzu<br>um sie im Leaderboard zu sehen.</div>
+      </div>`;
+    } else {
+      boardHtml = '<div class="friend-list">'
+        + sorted.map((p, i) => {
+          const isMe = p.id === currentUser.id;
+          const xp = isMe ? myXp : (p.xp_total||0);
+          const streak = isMe ? myStreak : (p.streak||0);
+          const avatarHtml = p.avatar_url
+            ? '<img src="'+p.avatar_url+'">'
+            : '<span>'+(p.username||'?')[0].toUpperCase()+'</span>';
+          return `<div class="friend-row ${isMe?'me-row':''}">
+            <span class="friend-rank ${rankClass(i)}">${rankEmoji(i)}</span>
+            <div class="friend-avatar">${avatarHtml}</div>
+            <div class="friend-info">
+              <div class="friend-name">@${p.username||'?'} ${isMe?'<span style="font-size:9px;color:var(--a)">(Du)</span>':''}</div>
+              <div class="friend-pts">⚡ ${xp.toLocaleString()} XP &nbsp;·&nbsp; ${streak >= 2 ? '🔥' : '📅'} ${streak} Tage</div>
+            </div>
+            ${!isMe ? `<button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="removeFriend('${p.id}')">✗</button>` : ''}
+          </div>`;
+        }).join('')
+        + '</div>';
+    }
+
+    el.innerHTML = `
+      ${pendingHtml}
+      <div class="add-friend-row">
+        <input class="form-input" id="friend-search-inp" placeholder="Nutzername eingeben..." style="flex:1">
+        <button class="btn btn-ok" onclick="addFriend()">➕ Hinzufügen</button>
+      </div>
+      <div class="lb-tabs">
+        <button class="lb-tab ${lbTab==='friends'?'active':''}" onclick="lbTab='friends';renderFriends()">👥 Freunde</button>
+        <button class="lb-tab ${lbTab==='global'?'active':''}" onclick="lbTab='global';renderFriends()">🌍 Global Top 20</button>
+      </div>
+      ${boardHtml}
+    `;
+  } catch(e) {
+    el.innerHTML = `<div style="padding:20px;text-align:center">
+      <div style="font-size:11px;color:var(--a2);margin-bottom:14px">⚠ Fehler: ${e.message}</div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:14px;line-height:1.6">Hinweis: Die Freunde-Funktion benötigt zusätzliche Supabase-Tabellen.<br>Lokal werden deine Statistiken trotzdem gespeichert.</div>
+      <button class="btn btn-ghost btn-sm" onclick="renderFriends()">↺ Erneut versuchen</button>
+    </div>`;
+  }
+}
+
+async function addFriend() {
+  if (!currentUser) { showAuthOverlay(); return; }
+  const uname = (document.getElementById('friend-search-inp')?.value||'').trim();
+  if (!uname) { toast('Nutzername eingeben'); return; }
+  if (uname === currentUser.username) { toast('Das bist du selbst 😄'); return; }
+  try {
+    const {data: profile} = await sb.from('profiles').select('id,username').eq('username', uname).maybeSingle();
+    if (!profile) { toast('Nutzer "'+uname+'" nicht gefunden'); return; }
+    // Check if already friends
+    const {data: existing} = await sb.from('friendships')
+      .select('id,status')
+      .or('and(user_id.eq.'+currentUser.id+',friend_id.eq.'+profile.id+'),and(user_id.eq.'+profile.id+',friend_id.eq.'+currentUser.id+')')
+      .maybeSingle();
+    if (existing) {
+      toast(existing.status==='pending' ? 'Anfrage bereits gesendet' : 'Bereits befreundet!');
+      return;
+    }
+    await sb.from('friendships').insert({user_id: currentUser.id, friend_id: profile.id, status: 'pending'});
+    toast('✓ Freundschaftsanfrage an @'+uname+' gesendet!');
+    document.getElementById('friend-search-inp').value = '';
+    renderFriends();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+
+async function acceptFriend(uid) {
+  try {
+    await sb.from('friendships').update({status:'accepted'}).eq('user_id',uid).eq('friend_id',currentUser.id);
+    toast('✓ Freundschaft angenommen!'); renderFriends();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+
+async function declineFriend(uid) {
+  try {
+    await sb.from('friendships').delete().eq('user_id',uid).eq('friend_id',currentUser.id);
+    toast('Anfrage abgelehnt'); renderFriends();
+  } catch(e) { toast('Fehler: '+e.message); }
+}
+
+async function removeFriend(uid) {
+  if (!currentUser) return;
+  confirm2('Freund entfernen?', 'Diese Person wird aus deiner Freundesliste entfernt.', async ()=>{
+    try {
+      await sb.from('friendships').delete()
+        .or('and(user_id.eq.'+currentUser.id+',friend_id.eq.'+uid+'),and(user_id.eq.'+uid+',friend_id.eq.'+currentUser.id+')');
+      toast('Freund entfernt'); renderFriends();
+    } catch(e) { toast('Fehler: '+e.message); }
+  });
 }
 
 // ===================== INIT =====================
