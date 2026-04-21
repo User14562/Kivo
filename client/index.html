@@ -358,6 +358,31 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
 /* SR badge */
 .sr-due-badge{background:var(--a3d);border:1px solid var(--a3);color:var(--a3);font-size:9px;padding:1px 6px;border-radius:10px;}
 
+/* GAP FILL */
+.gap-text{font-size:14px;line-height:2.2;color:var(--tx);padding:16px;background:var(--sur);border:1px solid var(--bd);border-radius:14px;margin-bottom:14px;}
+.gap-blank{display:inline-block;min-width:80px;border-bottom:2px solid var(--a);background:var(--sur2);border-radius:6px 6px 0 0;padding:2px 8px;margin:0 3px;font-family:'Geist Mono',monospace;font-size:13px;outline:none;color:var(--tx);transition:all .15s;vertical-align:middle;}
+.gap-blank:focus{background:var(--ad);border-bottom-color:var(--a4);}
+.gap-blank.gb-ok{background:rgba(61,245,160,.15);border-bottom-color:var(--a);color:var(--a);}
+.gap-blank.gb-no{background:rgba(255,107,107,.12);border-bottom-color:var(--a2);color:var(--a2);}
+.gap-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.gap-loading{display:flex;align-items:center;gap:10px;padding:24px;background:var(--sur);border:1px solid var(--bd);border-radius:14px;font-size:11px;color:var(--tx3);}
+.gap-spinner{width:18px;height:18px;border:2px solid var(--bd);border-top-color:var(--a);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* AI BOT */
+.aibot-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:10px;margin-bottom:12px;}
+.ai-msg{max-width:85%;padding:10px 13px;border-radius:14px;font-size:11px;line-height:1.6;}
+.ai-msg.user{align-self:flex-end;background:var(--ad);border:1px solid var(--a);color:var(--tx);border-radius:14px 14px 4px 14px;}
+.ai-msg.bot{align-self:flex-start;background:var(--sur);border:1px solid var(--bd);color:var(--tx);border-radius:14px 14px 14px 4px;}
+.ai-msg.bot.typing{color:var(--tx3);}
+.aibot-input-row{display:flex;gap:8px;flex-shrink:0;}
+.aibot-suggestions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.ai-suggest{padding:5px 10px;background:var(--sur2);border:1px solid var(--bd);border-radius:20px;font-size:10px;color:var(--tx2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.ai-suggest:hover{border-color:var(--a);color:var(--a);}
+.ai-import-btn{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:5px 10px;background:var(--ad);border:1px solid var(--a);border-radius:8px;font-size:10px;color:var(--a);cursor:pointer;font-family:'Geist Mono',monospace;}
+.ai-import-btn:hover{background:var(--a);color:var(--bg);}
+.pool-share-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--sur);border:1px solid var(--bd);border-radius:11px;margin-bottom:6px;font-size:11px;}
+
 /* FRIEND PANEL (slide in from right) */
 .friend-panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s;}
 .friend-panel-overlay.open{opacity:1;pointer-events:all;}
@@ -648,6 +673,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
     <div class="nav-item" data-s="quiz" onclick="go('quiz')"><span class="nav-icon">🎯</span>Quiz</div>
     <div class="nav-item" data-s="typing" onclick="go('typing')"><span class="nav-icon">⌨️</span>Tippen</div>
     <div class="nav-item" data-s="matching" onclick="go('matching')"><span class="nav-icon">🔗</span>Zuordnen</div>
+    <div class="nav-item" data-s="gap" onclick="go('gap')"><span class="nav-icon">🤖</span>KI-Lückentext</div>
+    <div class="nav-item" data-s="aibot" onclick="go('aibot')"><span class="nav-icon">💬</span>KI-Assistent</div>
     <div class="nav-item dev-only" data-s="coding" id="nav-coding" onclick="go('coding')" style="display:none"><span class="nav-icon">💻</span>Programmieren <span class="nav-badge" style="background:var(--a5d);border-color:var(--a5);color:var(--a5)">DEV</span></div>
     <div class="nav-sec">Verwalten</div>
     <div class="nav-item" data-s="overview" onclick="go('overview')"><span class="nav-icon">📋</span>Übersicht <span class="nav-badge" id="nb-pools">0</span></div>
@@ -847,6 +874,20 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
       <div id="changelog-content"></div>
     </div>
 
+    <!-- KI LÜCKENTEXT -->
+    <div class="screen" id="screen-gap">
+      <div class="pg-title">KI-Lückentext</div>
+      <div class="pg-sub">Generierter Text passend zu deinem Pool — füll die Lücken aus</div>
+      <div id="gap-content"></div>
+    </div>
+
+    <!-- KI BOT -->
+    <div class="screen" id="screen-aibot">
+      <div class="pg-title">KI-Assistent</div>
+      <div class="pg-sub">Frag die KI nach Vokabellisten oder Lernhilfe</div>
+      <div id="aibot-content" style="display:flex;flex-direction:column;height:calc(100vh - 140px)"></div>
+    </div>
+
   </div>
 </div>
 
@@ -861,20 +902,13 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
     <div class="fp-tabs">
       <button class="fp-tab active" id="fpt-board" onclick="switchFpTab('board')">👥 Freunde</button>
       <button class="fp-tab" id="fpt-global" onclick="switchFpTab('global')">🌍 Global</button>
-      <button class="fp-tab" id="fpt-requests" onclick="switchFpTab('requests')">Anfragen <span id="fp-req-badge" style="display:none" class="req-badge">0</span></button>
-      <button class="fp-tab" id="fpt-add" onclick="switchFpTab('add')">➕</button>
+      <button class="fp-tab" id="fpt-social" onclick="switchFpTab('social')">➕ Anfragen <span id="fp-req-badge" style="display:none" class="req-badge">0</span></button>
+      <button class="fp-tab" id="fpt-pools" onclick="switchFpTab('pools')">📤 Pools</button>
     </div>
     <div id="fp-board-content"></div>
     <div id="fp-global-content" style="display:none"></div>
-    <div id="fp-requests-content" style="display:none"></div>
-    <div id="fp-add-content" style="display:none">
-      <div style="font-size:11px;color:var(--tx2);margin-bottom:12px;line-height:1.6">Suche nach Nutzername und sende eine Freundschaftsanfrage.</div>
-      <div style="display:flex;gap:7px;margin-bottom:10px">
-        <input class="form-input" id="fp-search-inp" placeholder="Nutzername..." style="flex:1">
-        <button class="btn btn-ok" onclick="fpAddFriend()">Senden</button>
-      </div>
-      <div id="fp-add-result"></div>
-    </div>
+    <div id="fp-social-content" style="display:none"></div>
+    <div id="fp-pools-content" style="display:none"></div>
   </div>
 </div>
 
@@ -1206,14 +1240,13 @@ function getPoolLangLabels(lang) {
   return LANG_LABELS[lang] || {from:lang||'Begriff', to:'Übersetzung', fromFlag:'📖', toFlag:'📝'};
 }
 
-const TITLES = { cards:'Karteikarten', quiz:'Quiz', typing:'Tipp-Modus', matching:'Zuordnen', overview:'Übersicht', coding:'💻 Programmieren', stats:'📊 Statistiken', friends:'🏆 Freunde & Leaderboard', changelog:'📋 Versions-Log' };
+const TITLES = { cards:'Karteikarten', quiz:'Quiz', typing:'Tipp-Modus', matching:'Zuordnen', overview:'Übersicht', coding:'💻 Programmieren', stats:'📊 Statistiken', friends:'🏆 Freunde', changelog:'📋 Versions-Log', gap:'🤖 KI-Lückentext', aibot:'💬 KI-Assistent' };
 function go(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.bn-item').forEach(n => n.classList.remove('active'));
   document.getElementById('screen-'+name)?.classList.add('active');
   document.querySelector('[data-s="'+name+'"]')?.classList.add('active');
-  // Also highlight bottom nav
   document.querySelectorAll('.bn-item[data-s="'+name+'"]').forEach(b=>b.classList.add('active'));
   document.getElementById('tb-title').textContent = TITLES[name]||name;
   closeSidebar();
@@ -1226,6 +1259,8 @@ function go(name) {
   else if (name==='stats') renderStats();
   else if (name==='friends') renderFriends();
   else if (name==='changelog') renderChangelog();
+  else if (name==='gap') renderGapFill();
+  else if (name==='aibot') renderAiBot();
 }
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sov').classList.add('open'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sov').classList.remove('open'); }
@@ -3642,175 +3677,9 @@ function renderStats() {
   `;
 }
 
-// ===================== FREUNDE & LEADERBOARD =====================
-let lbTab = 'friends'; // 'friends' | 'global'
-
-async function renderFriends() {
-  const el = document.getElementById('friends-content');
-  if (!el) return;
-
-  if (!currentUser) {
-    el.innerHTML = `<div style="text-align:center;padding:40px 20px;">
-      <div style="font-size:48px;margin-bottom:12px">🏆</div>
-      <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--tx);margin-bottom:8px">Leaderboard & Freunde</div>
-      <div style="font-size:11px;color:var(--tx2);margin-bottom:20px;line-height:1.6">Melde dich an um Freunde hinzuzufügen<br>und dich im Leaderboard zu vergleichen.</div>
-      <button class="btn btn-primary" onclick="showAuthOverlay()">Jetzt anmelden</button>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--tx3);font-size:11px">Lade Leaderboard...</div>';
-
-  try {
-    // Sync own XP first
-    await syncXpToServer();
-
-    // Load friends
-    const {data: friendLinks} = await sb.from('friendships')
-      .select('friend_id, user_id')
-      .or('user_id.eq.'+currentUser.id+',friend_id.eq.'+currentUser.id)
-      .eq('status', 'accepted');
-
-    const friendIds = (friendLinks||[]).map(f => f.user_id===currentUser.id ? f.friend_id : f.user_id);
-
-    // Pending requests
-    const {data: pending} = await sb.from('friendships')
-      .select('user_id, profiles!friendships_user_id_fkey(username)')
-      .eq('friend_id', currentUser.id)
-      .eq('status', 'pending');
-
-    // Load profiles for leaderboard
-    let leaderboardIds = lbTab==='friends' ? [...friendIds, currentUser.id] : null;
-    let query = sb.from('profiles').select('id,username,xp_total,streak,avatar_url');
-    if (lbTab==='friends' && leaderboardIds.length) {
-      query = query.in('id', leaderboardIds);
-    } else if (lbTab==='global') {
-      query = query.order('xp_total', {ascending:false}).limit(20);
-    }
-    const {data: profiles} = await query;
-
-    // Sort by XP
-    const sorted = (profiles||[]).sort((a,b)=>(b.xp_total||0)-(a.xp_total||0));
-    const myXp = getTotalXp();
-    const myStreak = calcStreak();
-
-    const rankEmoji = (i) => i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
-    const rankClass = (i) => i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
-
-    let pendingHtml = '';
-    if (pending && pending.length > 0) {
-      pendingHtml = '<div style="margin-bottom:16px">'
-        + '<div class="stat-section-title" style="margin-bottom:8px">📬 Freundschaftsanfragen</div>'
-        + pending.map(p=>`<div class="friend-req-row">
-            <span style="flex:1;font-size:11px;color:var(--tx)">@${p.profiles?.username||'Unbekannt'} möchte dein Freund sein</span>
-            <button class="btn btn-ok btn-sm" onclick="acceptFriend('${p.user_id}')">✓</button>
-            <button class="btn btn-danger btn-sm" onclick="declineFriend('${p.user_id}')">✗</button>
-          </div>`).join('')
-        + '</div>';
-    }
-
-    let boardHtml = '';
-    if (lbTab==='friends' && sorted.length <= 1) {
-      boardHtml = `<div style="text-align:center;padding:30px 20px;">
-        <div style="font-size:40px;margin-bottom:10px">👥</div>
-        <div style="font-size:13px;color:var(--tx);margin-bottom:6px">Noch keine Freunde</div>
-        <div style="font-size:11px;color:var(--tx3);line-height:1.6">Füge Freunde per Nutzername hinzu<br>um sie im Leaderboard zu sehen.</div>
-      </div>`;
-    } else {
-      boardHtml = '<div class="friend-list">'
-        + sorted.map((p, i) => {
-          const isMe = p.id === currentUser.id;
-          const xp = isMe ? myXp : (p.xp_total||0);
-          const streak = isMe ? myStreak : (p.streak||0);
-          const avatarHtml = p.avatar_url
-            ? '<img src="'+p.avatar_url+'">'
-            : '<span>'+(p.username||'?')[0].toUpperCase()+'</span>';
-          return `<div class="friend-row ${isMe?'me-row':''}">
-            <span class="friend-rank ${rankClass(i)}">${rankEmoji(i)}</span>
-            <div class="friend-avatar">${avatarHtml}</div>
-            <div class="friend-info">
-              <div class="friend-name">@${p.username||'?'} ${isMe?'<span style="font-size:9px;color:var(--a)">(Du)</span>':''}</div>
-              <div class="friend-pts">⚡ ${xp.toLocaleString()} XP &nbsp;·&nbsp; ${streak >= 2 ? '🔥' : '📅'} ${streak} Tage</div>
-            </div>
-            ${!isMe ? `<button class="btn btn-danger btn-sm" style="flex-shrink:0" onclick="removeFriend('${p.id}')">✗</button>` : ''}
-          </div>`;
-        }).join('')
-        + '</div>';
-    }
-
-    el.innerHTML = `
-      ${pendingHtml}
-      <div class="add-friend-row">
-        <input class="form-input" id="friend-search-inp" placeholder="Nutzername eingeben..." style="flex:1">
-        <button class="btn btn-ok" onclick="addFriend()">➕ Hinzufügen</button>
-      </div>
-      <div class="lb-tabs">
-        <button class="lb-tab ${lbTab==='friends'?'active':''}" onclick="lbTab='friends';renderFriends()">👥 Freunde</button>
-        <button class="lb-tab ${lbTab==='global'?'active':''}" onclick="lbTab='global';renderFriends()">🌍 Global Top 20</button>
-      </div>
-      ${boardHtml}
-    `;
-  } catch(e) {
-    el.innerHTML = `<div style="padding:20px;text-align:center">
-      <div style="font-size:11px;color:var(--a2);margin-bottom:14px">⚠ Fehler: ${e.message}</div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:14px;line-height:1.6">Hinweis: Die Freunde-Funktion benötigt zusätzliche Supabase-Tabellen.<br>Lokal werden deine Statistiken trotzdem gespeichert.</div>
-      <button class="btn btn-ghost btn-sm" onclick="renderFriends()">↺ Erneut versuchen</button>
-    </div>`;
-  }
-}
-
-async function addFriend() {
-  if (!currentUser) { showAuthOverlay(); return; }
-  const uname = (document.getElementById('friend-search-inp')?.value||'').trim();
-  if (!uname) { toast('Nutzername eingeben'); return; }
-  if (uname === currentUser.username) { toast('Das bist du selbst 😄'); return; }
-  try {
-    const {data: profile} = await sb.from('profiles').select('id,username').eq('username', uname).maybeSingle();
-    if (!profile) { toast('Nutzer "'+uname+'" nicht gefunden'); return; }
-    // Check if already friends
-    const {data: existing} = await sb.from('friendships')
-      .select('id,status')
-      .or('and(user_id.eq.'+currentUser.id+',friend_id.eq.'+profile.id+'),and(user_id.eq.'+profile.id+',friend_id.eq.'+currentUser.id+')')
-      .maybeSingle();
-    if (existing) {
-      toast(existing.status==='pending' ? 'Anfrage bereits gesendet' : 'Bereits befreundet!');
-      return;
-    }
-    await sb.from('friendships').insert({user_id: currentUser.id, friend_id: profile.id, status: 'pending'});
-    toast('✓ Freundschaftsanfrage an @'+uname+' gesendet!');
-    document.getElementById('friend-search-inp').value = '';
-    renderFriends();
-  } catch(e) { toast('Fehler: '+e.message); }
-}
-
-async function acceptFriend(uid) {
-  try {
-    await sb.from('friendships').update({status:'accepted'}).eq('user_id',uid).eq('friend_id',currentUser.id);
-    toast('✓ Freundschaft angenommen!'); renderFriends();
-  } catch(e) { toast('Fehler: '+e.message); }
-}
-
-async function declineFriend(uid) {
-  try {
-    await sb.from('friendships').delete().eq('user_id',uid).eq('friend_id',currentUser.id);
-    toast('Anfrage abgelehnt'); renderFriends();
-  } catch(e) { toast('Fehler: '+e.message); }
-}
-
-async function removeFriend(uid) {
-  if (!currentUser) return;
-  confirm2('Freund entfernen?', 'Diese Person wird aus deiner Freundesliste entfernt.', async ()=>{
-    try {
-      await sb.from('friendships').delete()
-        .or('and(user_id.eq.'+currentUser.id+',friend_id.eq.'+uid+'),and(user_id.eq.'+uid+',friend_id.eq.'+currentUser.id+')');
-      toast('Freund entfernt'); renderFriends();
-    } catch(e) { toast('Fehler: '+e.message); }
-  });
-}
-
 // ===================== FRIEND PANEL =====================
 let fpTab = 'board';
-let fpFriendIds = []; // track actual accepted friend IDs
+let fpFriendIds = [];
 
 function openFriendPanel() {
   document.getElementById('friend-panel-overlay').classList.add('open');
@@ -3825,11 +3694,12 @@ function switchFpTab(tab) {
   fpTab = tab;
   document.querySelectorAll('.fp-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('fpt-'+tab)?.classList.add('active');
-  document.getElementById('fp-board-content').style.display = tab==='board' ? '' : 'none';
-  document.getElementById('fp-global-content').style.display = tab==='global' ? '' : 'none';
-  document.getElementById('fp-requests-content').style.display = tab==='requests' ? '' : 'none';
-  document.getElementById('fp-add-content').style.display = tab==='add' ? '' : 'none';
-  if (tab==='global') loadGlobalLeaderboard();
+  ['board','global','social','pools'].forEach(t=>{
+    const el = document.getElementById('fp-'+t+'-content');
+    if(el) el.style.display = t===tab ? '' : 'none';
+  });
+  if(tab==='global') loadGlobalLeaderboard();
+  else if(tab==='pools') loadFpPools();
 }
 
 async function loadFriendPanel() {
@@ -3845,20 +3715,20 @@ async function loadFriendPanel() {
   document.getElementById('fp-board-content').innerHTML = '<div style="text-align:center;padding:20px;font-size:10px;color:var(--tx3)">Lade...</div>';
   try {
     await syncXpToServer();
-    // Load friendships
     const {data: friendLinks} = await sb.from('friendships')
       .select('friend_id,user_id,status')
       .or('user_id.eq.'+currentUser.id+',friend_id.eq.'+currentUser.id);
     const accepted = (friendLinks||[]).filter(f=>f.status==='accepted');
     fpFriendIds = accepted.map(f=>f.user_id===currentUser.id?f.friend_id:f.user_id);
     const pendingIn = (friendLinks||[]).filter(f=>f.status==='pending'&&f.friend_id===currentUser.id);
-    // Update req badge
-    const badge = document.getElementById('fp-req-badge');
-    if (badge) { badge.textContent=pendingIn.length; badge.style.display=pendingIn.length>0?'':'none'; }
-    const notifDot = document.getElementById('friend-notif-dot');
-    if (notifDot) notifDot.classList.toggle('show', pendingIn.length>0);
 
-    // Load leaderboard (friends + me)
+    // Update badges
+    const badge = document.getElementById('fp-req-badge');
+    if(badge){badge.textContent=pendingIn.length;badge.style.display=pendingIn.length>0?'':'none';}
+    const dot = document.getElementById('friend-notif-dot');
+    if(dot) dot.classList.toggle('show', pendingIn.length>0);
+
+    // Leaderboard
     const allIds = [...fpFriendIds, currentUser.id];
     const {data: profiles} = await sb.from('profiles').select('id,username,xp_total,streak,avatar_url').in('id', allIds);
     const sorted = (profiles||[]).sort((a,b)=>(b.xp_total||0)-(a.xp_total||0));
@@ -3866,14 +3736,12 @@ async function loadFriendPanel() {
     const rankEmoji = i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
     const rankClass = i=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
 
-    // Board HTML
     let boardHtml = '';
     if (sorted.length <= 1) {
       boardHtml = `<div style="text-align:center;padding:24px 0">
         <div style="font-size:36px;margin-bottom:10px">👥</div>
         <div style="font-size:12px;color:var(--tx);margin-bottom:6px">Noch keine Freunde</div>
-        <div style="font-size:10px;color:var(--tx3);line-height:1.6;margin-bottom:14px">Füge Freunde hinzu um<br>sie im Leaderboard zu sehen.</div>
-        <button class="btn btn-ok btn-sm" onclick="switchFpTab('add')">➕ Freund hinzufügen</button>
+        <div style="font-size:10px;color:var(--tx3);line-height:1.6;margin-bottom:14px">Füge Freunde hinzu im ➕ Tab.</div>
       </div>`;
     } else {
       boardHtml = sorted.map((p,i)=>{
@@ -3895,45 +3763,169 @@ async function loadFriendPanel() {
     }
     document.getElementById('fp-board-content').innerHTML = boardHtml;
 
-    // Requests HTML
+    // Social tab (Anfragen + Hinzufügen combined)
     let reqHtml = '';
-    if (pendingIn.length === 0) {
-      reqHtml = '<div style="text-align:center;padding:20px;font-size:11px;color:var(--tx3)">Keine offenen Anfragen</div>';
-    } else {
+    if (pendingIn.length > 0) {
       const uids = pendingIn.map(p=>p.user_id);
       const {data: reqProfiles} = await sb.from('profiles').select('id,username').in('id', uids);
-      reqHtml = (reqProfiles||[]).map(p=>`
-        <div class="friend-req-row">
-          <span style="flex:1;color:var(--tx)">@${p.username}</span>
-          <button class="btn btn-ok btn-sm" onclick="fpAcceptFriend('${p.id}')">✓ Annehmen</button>
-          <button class="btn btn-danger btn-sm" onclick="fpDeclineFriend('${p.id}')">✗</button>
-        </div>`).join('');
+      reqHtml = `<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">Eingehende Anfragen</div>`
+        + (reqProfiles||[]).map(p=>`
+          <div class="friend-req-row">
+            <div class="friend-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0"><span>${(p.username||'?')[0].toUpperCase()}</span></div>
+            <span style="flex:1;color:var(--tx)">@${p.username}</span>
+            <button class="btn btn-ok btn-sm" onclick="fpAcceptFriend('${p.id}')">✓</button>
+            <button class="btn btn-danger btn-sm" onclick="fpDeclineFriend('${p.id}')">✗</button>
+          </div>`).join('');
+      reqHtml += '<div style="height:16px"></div>';
     }
-    document.getElementById('fp-requests-content').innerHTML = reqHtml;
+
+    // Pool invites
+    const {data: poolInvites} = await sb.from('pool_shares')
+      .select('id,pool_key,pool_name,from_username,data')
+      .eq('to_user_id', currentUser.id)
+      .eq('accepted', false);
+    let poolInvHtml = '';
+    if ((poolInvites||[]).length > 0) {
+      poolInvHtml = `<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">Pool-Einladungen</div>`
+        + poolInvites.map(inv=>`
+          <div class="friend-req-row" style="background:var(--a4d);border-color:var(--a4)">
+            <span style="font-size:16px">📚</span>
+            <div style="flex:1;min-width:0">
+              <div style="color:var(--tx);font-size:11px;font-weight:600">${inv.pool_name||inv.pool_key}</div>
+              <div style="color:var(--tx3);font-size:9px">von @${inv.from_username}</div>
+            </div>
+            <button class="btn btn-ok btn-sm" onclick="acceptPoolInvite('${inv.id}','${inv.pool_key}','${inv.pool_name}',this)">✓ Annehmen</button>
+            <button class="btn btn-danger btn-sm" onclick="declinePoolInvite('${inv.id}')">✗</button>
+          </div>`).join('');
+      poolInvHtml += '<div style="height:16px"></div>';
+    }
+
+    document.getElementById('fp-social-content').innerHTML = reqHtml + poolInvHtml + `
+      <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">Freund hinzufügen</div>
+      <div style="display:flex;gap:7px;margin-bottom:8px">
+        <input class="form-input" id="fp-search-inp" placeholder="Nutzername..." style="flex:1">
+        <button class="btn btn-ok" onclick="fpAddFriend()">Senden</button>
+      </div>
+      <div id="fp-add-result"></div>`;
+
   } catch(e) {
     document.getElementById('fp-board-content').innerHTML = `<div style="font-size:11px;color:var(--a2);padding:20px;text-align:center">⚠ ${e.message}<br><br><button class="btn btn-ghost btn-sm" onclick="loadFriendPanel()">↺ Retry</button></div>`;
   }
+}
+
+async function loadFpPools() {
+  const el = document.getElementById('fp-pools-content');
+  if(!el) return;
+  if(!currentUser){el.innerHTML='<div style="padding:20px;text-align:center;font-size:11px;color:var(--tx3)">Anmeldung erforderlich</div>';return;}
+  if(!fpFriendIds.length){el.innerHTML='<div style="padding:20px;text-align:center;font-size:11px;color:var(--tx3)">Keine Freunde vorhanden</div>';return;}
+
+  // Load friend profiles for display
+  const {data: fProfiles} = await sb.from('profiles').select('id,username').in('id',fpFriendIds);
+  const friendMap = Object.fromEntries((fProfiles||[]).map(p=>[p.id,p.username]));
+
+  // Build pool list
+  let poolOpts = '';
+  for (const [lang, pools] of Object.entries(POOLS)) {
+    for (const [pname] of Object.entries(pools)) {
+      poolOpts += `<option value="${esc(mkKey(lang,pname))}" data-name="${pname}">${pname} (${lang})</option>`;
+    }
+  }
+
+  el.innerHTML = `
+    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:10px">Pool an Freund senden</div>
+    <div class="form-group" style="margin-bottom:8px">
+      <select class="form-input" id="fp-pool-sel" style="width:100%">
+        <option value="">Pool wählen...</option>
+        ${poolOpts}
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <select class="form-input" id="fp-friend-sel" style="width:100%">
+        <option value="">Freund wählen...</option>
+        ${Object.entries(friendMap).map(([id,name])=>`<option value="${id}">@${name}</option>`).join('')}
+      </select>
+    </div>
+    <button class="btn btn-ok" style="width:100%" onclick="sendPoolToFriend()">📤 Pool senden</button>
+    <div id="fp-pool-result" style="margin-top:8px;font-size:10px"></div>`;
+}
+
+async function sendPoolToFriend() {
+  const poolKey = document.getElementById('fp-pool-sel')?.value;
+  const toId = document.getElementById('fp-friend-sel')?.value;
+  const res = document.getElementById('fp-pool-result');
+  if(!poolKey||!toId){if(res)res.innerHTML='<span style="color:var(--a2)">Bitte Pool und Freund wählen</span>';return;}
+
+  const poolEl = document.getElementById('fp-pool-sel');
+  const poolName = poolEl.options[poolEl.selectedIndex]?.dataset?.name||poolKey;
+  const pool = getPoolObj(poolKey);
+  if(!pool){if(res)res.innerHTML='<span style="color:var(--a2)">Pool nicht gefunden</span>';return;}
+
+  try {
+    await sb.from('pool_shares').insert({
+      from_user_id: currentUser.id,
+      from_username: currentUser.username,
+      to_user_id: toId,
+      pool_key: poolKey,
+      pool_name: poolName,
+      data: pool,
+      accepted: false,
+      created_at: new Date().toISOString()
+    });
+    if(res)res.innerHTML='<span style="color:var(--a)">✓ Pool gesendet!</span>';
+    toast('📤 Pool "'+poolName+'" gesendet!');
+  } catch(e){
+    if(res)res.innerHTML='<span style="color:var(--a2)">Fehler: '+e.message+'</span>';
+  }
+}
+
+async function acceptPoolInvite(invId, poolKey, poolName, btn) {
+  try {
+    const {data:inv} = await sb.from('pool_shares').select('data,pool_name').eq('id',invId).maybeSingle();
+    if(!inv?.data){toast('Fehler: Pool-Daten nicht gefunden');return;}
+    // Parse lang from poolKey e.g. "en__Tiere"
+    const parts = poolKey.split('__');
+    const lang = parts[0]||'Import'; const pname = inv.pool_name||parts[1]||poolKey;
+    // Save pool locally
+    const custom = lsGet('vf3_custom','{}');
+    if(!custom[lang]) custom[lang]={};
+    custom[lang][pname] = inv.data;
+    lsSet('vf3_custom',custom);
+    // Upload to supabase
+    await sb.from('pools').upsert({user_id:currentUser.id,lang,name:pname,data:inv.data});
+    // Mark accepted
+    await sb.from('pool_shares').update({accepted:true}).eq('id',invId);
+    loadState(); buildVocab(); updateStats();
+    toast('✓ Pool "'+pname+'" übernommen!');
+    loadFriendPanel();
+  } catch(e){toast('Fehler: '+e.message);}
+}
+
+async function declinePoolInvite(invId) {
+  try {
+    await sb.from('pool_shares').update({accepted:true}).eq('id',invId);
+    toast('Einladung abgelehnt'); loadFriendPanel();
+  } catch(e){toast('Fehler: '+e.message);}
 }
 
 async function fpAddFriend() {
   if (!currentUser) { showAuthOverlay(); return; }
   const uname = (document.getElementById('fp-search-inp')?.value||'').trim();
   const res = document.getElementById('fp-add-result');
-  if (!uname) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Nutzername eingeben</div>'; return; }
-  if (uname===currentUser.username) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Das bist du selbst 😄</div>'; return; }
-  res.innerHTML='<div style="font-size:10px;color:var(--tx3)">Suche...</div>';
+  if (!uname) { if(res)res.innerHTML='<div style="font-size:10px;color:var(--a2)">Nutzername eingeben</div>'; return; }
+  if (uname===currentUser.username) { if(res)res.innerHTML='<div style="font-size:10px;color:var(--a2)">Das bist du selbst 😄</div>'; return; }
+  if(res)res.innerHTML='<div style="font-size:10px;color:var(--tx3)">Suche...</div>';
   try {
     const {data:profile} = await sb.from('profiles').select('id,username').eq('username',uname).maybeSingle();
-    if (!profile) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Nutzer "@'+uname+'" nicht gefunden</div>'; return; }
+    if (!profile) { if(res)res.innerHTML='<div style="font-size:10px;color:var(--a2)">Nutzer "@'+uname+'" nicht gefunden</div>'; return; }
     const {data:existing} = await sb.from('friendships')
       .select('id,status')
       .or('and(user_id.eq.'+currentUser.id+',friend_id.eq.'+profile.id+'),and(user_id.eq.'+profile.id+',friend_id.eq.'+currentUser.id+')')
       .maybeSingle();
-    if (existing) { res.innerHTML='<div style="font-size:10px;color:var(--a3)">'+(existing.status==='pending'?'Anfrage bereits gesendet ⏳':'Bereits befreundet ✓')+'</div>'; return; }
+    if (existing) { if(res)res.innerHTML='<div style="font-size:10px;color:var(--a3)">'+(existing.status==='pending'?'Anfrage bereits gesendet ⏳':'Bereits befreundet ✓')+'</div>'; return; }
     await sb.from('friendships').insert({user_id:currentUser.id, friend_id:profile.id, status:'pending'});
-    res.innerHTML='<div style="font-size:10px;color:var(--a)">✓ Anfrage an @'+uname+' gesendet!</div>';
+    if(res)res.innerHTML='<div style="font-size:10px;color:var(--a)">✓ Anfrage an @'+uname+' gesendet!</div>';
     document.getElementById('fp-search-inp').value='';
-  } catch(e) { res.innerHTML='<div style="font-size:10px;color:var(--a2)">Fehler: '+e.message+'</div>'; }
+  } catch(e) { if(res)res.innerHTML='<div style="font-size:10px;color:var(--a2)">Fehler: '+e.message+'</div>'; }
 }
 
 async function fpAcceptFriend(uid) {
@@ -3965,8 +3957,7 @@ async function loadGlobalLeaderboard() {
   try {
     const {data: profiles} = await sb.from('profiles')
       .select('id,username,xp_total,streak,avatar_url')
-      .order('xp_total', {ascending:false})
-      .limit(10);
+      .order('xp_total', {ascending:false}).limit(10);
     const sorted = profiles||[];
     const rankEmoji = i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
     const rankClass = i=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
@@ -3989,11 +3980,7 @@ async function loadGlobalLeaderboard() {
   }
 }
 
-// renderFriends (screen version for mobile)
 async function renderFriends() {
-  const el=document.getElementById('friends-content');
-  if(!el) return;
-  el.innerHTML='<div style="text-align:center;padding:20px;font-size:11px;color:var(--tx3)">Öffne das Freunde-Panel oben rechts (🏆)<br>oder nutze den Leaderboard hier:</div>';
   openFriendPanel();
 }
 
@@ -4039,14 +4026,65 @@ async function submitFeedback() {
 const CHANGELOG = [
   {
     version: '1.4.0',
-    label: '🔜 Geplant',
+    label: '✓ Aktuell',
     items: [
-      {type:'new', text:'Nutzer-Profile — dekorierbar mit Items'},
-      {type:'new', text:'Bewertungs-System — Freundes-Profile mit Stats-Vergleich'},
-      {type:'new', text:'KI-Lückentext — zufällig generierter Text passend zum Pool (Claude API)'},
-      {type:'new', text:'KI-Bot — Vokabellisten auf Anfrage generieren lassen'},
+      {type:'new', text:'KI-Lückentext — generierter Text passend zum Pool mit ausfüllbaren Lücken'},
+      {type:'new', text:'KI-Assistent — Vokabellisten per Chat generieren & direkt importieren'},
+      {type:'new', text:'Pool an Freunde senden (Freunde-Panel → Pools-Tab)'},
+      {type:'new', text:'Pool-Einladungen annehmen im Anfragen-Tab'},
+      {type:'fix', text:'Anfragen + Hinzufügen in einem Tab zusammengefasst'},
+      {type:'fix', text:'Nutzername-Reset nach Neuladung behoben'},
+      {type:'fix', text:'Kein XP-Farming mehr bei Karteikarten'},
+      {type:'fix', text:'Statistiken-Layout überarbeitet'},
     ]
   },
+  {
+    version: '1.3.0',
+    label: '',
+    items: [
+      {type:'new', text:'Statistiken & Lernfortschritt-Dashboard mit Heatmap'},
+      {type:'new', text:'Freunde-Panel (Slide-in) mit Freunde- & Global Top 10-Leaderboard'},
+      {type:'new', text:'Spaced Repetition (SM-2) — intelligente Wiederholungsintervalle'},
+      {type:'new', text:'XP-System in Quiz, Tippen und Zuordnen'},
+      {type:'new', text:'Nutzername änderbar in Konto-Einstellungen'},
+      {type:'new', text:'Feedback-Popup'},
+      {type:'new', text:'Programmieren nur für Entwickler sichtbar (is_dev Flag)'},
+      {type:'fix', text:'Dunkelgrün-Grau Farbschema'},
+      {type:'fix', text:'Mobile: Bottom-Navigation, Sheet-Modals'},
+    ]
+  },
+  {
+    version: '1.2.0',
+    label: '',
+    items: [
+      {type:'new', text:'Foto-Import mit NVIDIA Llama 3.2 Vision (Edge Function)'},
+      {type:'new', text:'Pool teilen per Link'},
+      {type:'new', text:'Profilbild Upload'},
+      {type:'new', text:'Magic Link & Passwort vergessen'},
+      {type:'new', text:'Cloud-Sync (Pools, Fortschritt, Profilbild)'},
+    ]
+  },
+  {
+    version: '1.1.0',
+    label: '',
+    items: [
+      {type:'new', text:'Coding-Bereich (C++, Python, HTML)'},
+      {type:'new', text:'Sprach-Labels dynamisch je Pool'},
+      {type:'new', text:'Pool Unterkategorien'},
+      {type:'fix', text:'Quiz-Ergebnis-Screen mit Diagramm'},
+    ]
+  },
+  {
+    version: '1.0.0',
+    label: '',
+    items: [
+      {type:'new', text:'Erste Version von VocabFlow'},
+      {type:'new', text:'Karteikarten, Quiz, Tippen, Zuordnen'},
+      {type:'new', text:'Dark/Light Mode'},
+      {type:'new', text:'Supabase Auth (Login, Register)'},
+    ]
+  }
+];
   {
     version: '1.3.0',
     label: '✓ Aktuell',
@@ -4118,7 +4156,269 @@ function applyDevStatus(isDev) {
   if (codingNav) codingNav.style.display = isDev ? '' : 'none';
 }
 
-// ===================== INIT =====================
+// ===================== V1.4: KI-LÜCKENTEXT =====================
+let gapVocab = [];
+let gapGenerated = false;
+
+function renderGapFill() {
+  const el = document.getElementById('gap-content');
+  if(!el) return;
+  const flat = flattenPool(getPoolObj(activeKey));
+  if(!flat.length){
+    el.innerHTML=`<div style="padding:30px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">📚</div>
+      <div style="font-size:13px;color:var(--tx);margin-bottom:8px">Kein Pool ausgewählt</div>
+      <div style="font-size:11px;color:var(--tx3)">Wähle zuerst einen Pool in der Übersicht aus.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML=`
+    <div style="font-size:11px;color:var(--tx2);margin-bottom:14px;line-height:1.6">
+      Die KI generiert einen kurzen Text passend zu deinem Pool <strong style="color:var(--tx)">${activeKey.split('__')[1]||activeKey}</strong> und baut Lücken ein, die du ausfüllen musst.
+    </div>
+    <div class="gap-actions">
+      <button class="btn btn-primary" onclick="generateGapText()">✨ Text generieren</button>
+      <button class="btn btn-ghost" onclick="go('overview')">Pool wechseln →</button>
+    </div>
+    <div id="gap-output"></div>`;
+}
+
+async function generateGapText() {
+  const outEl = document.getElementById('gap-output');
+  if(!outEl) return;
+  const flat = flattenPool(getPoolObj(activeKey));
+  if(!flat.length){toast('Kein Pool aktiv');return;}
+
+  // Pick 5-7 random vocab for the gaps
+  const shuffled = [...flat].sort(()=>Math.random()-.5);
+  gapVocab = shuffled.slice(0, Math.min(6, shuffled.length));
+  const wordList = gapVocab.map(v=>v.de+'='+v.en).join(', ');
+  const poolName = activeKey.split('__')[1]||activeKey;
+
+  outEl.innerHTML=`<div class="gap-loading"><div class="gap-spinner"></div>KI generiert Text...</div>`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Du bist ein Sprachlern-Assistent. Erstelle einen kurzen deutschen Text (4-6 Sätze) zum Thema "${poolName}". 
+Baue genau diese Wörter natürlich in den Text ein: ${gapVocab.map(v=>v.de).join(', ')}.
+Markiere jedes dieser Wörter mit [[wort]]. Beispiel: "Die [[Katze]] liegt auf dem Sofa."
+Gib NUR den Text zurück, keine Erklärung.`,
+        messages:[{role:'user',content:`Erstelle den Lückentext für das Thema "${poolName}" mit den Wörtern: ${gapVocab.map(v=>v.de).join(', ')}`}]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.map(c=>c.text||'').join('')||'';
+    if(!text){throw new Error('Keine Antwort von KI');}
+    renderGapTextUI(text);
+  } catch(e) {
+    outEl.innerHTML=`<div style="padding:16px;background:var(--sur);border:1px solid var(--bd);border-radius:14px">
+      <div style="font-size:11px;color:var(--a2);margin-bottom:10px">⚠ KI-Fehler: ${e.message}</div>
+      <div style="font-size:10px;color:var(--tx3);margin-bottom:12px">Beispieltext (offline):</div>
+      ${renderGapTextOffline()}
+    </div>`;
+  }
+}
+
+function renderGapTextOffline() {
+  // Fallback: build simple sentences from vocab
+  const sents = gapVocab.map(v=>`Das Wort für "${v.en}" ist [[${v.de}]].`).join(' ');
+  renderGapTextUI(sents);
+  return '';
+}
+
+function renderGapTextUI(rawText) {
+  const outEl = document.getElementById('gap-output');
+  if(!outEl) return;
+  // Replace [[word]] with inputs
+  let idx = 0;
+  const html = rawText.replace(/\[\[([^\]]+)\]\]/g, (_, word)=>{
+    const i = idx++;
+    const v = gapVocab.find(v=>v.de.toLowerCase()===word.toLowerCase())||{de:word,en:'?'};
+    return `<input class="gap-blank" id="gb-${i}" data-answer="${v.de}" data-en="${v.en}" placeholder="___" size="${Math.max(8,word.length+2)}" autocomplete="off" spellcheck="false" oninput="checkGapInput(this)">`;
+  });
+
+  outEl.innerHTML=`
+    <div class="gap-text">${html}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-ok" onclick="checkAllGaps()">✓ Alles prüfen</button>
+      <button class="btn btn-ghost" onclick="revealAllGaps()">👁 Lösung zeigen</button>
+      <button class="btn btn-ghost" onclick="generateGapText()">↺ Neu generieren</button>
+    </div>
+    <div id="gap-result"></div>
+    <div style="margin-top:10px">
+      <div style="font-size:9px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Gesuchte Wörter</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${gapVocab.map(v=>`<span style="padding:3px 9px;background:var(--sur2);border:1px solid var(--bd);border-radius:20px;font-size:10px;color:var(--tx2)">${v.en}</span>`).join('')}
+      </div>
+    </div>`;
+}
+
+function checkGapInput(inp) {
+  const answer = (inp.dataset.answer||'').toLowerCase().trim();
+  const val = inp.value.toLowerCase().trim();
+  if(!val) { inp.className='gap-blank'; return; }
+  if(val===answer){ inp.className='gap-blank gb-ok'; addLearnPoints(3); }
+  else { inp.className='gap-blank'; }
+}
+
+function checkAllGaps() {
+  let correct=0, total=0;
+  document.querySelectorAll('.gap-blank').forEach(inp=>{
+    total++;
+    const answer=(inp.dataset.answer||'').toLowerCase().trim();
+    const val=inp.value.toLowerCase().trim();
+    if(val===answer){inp.className='gap-blank gb-ok';correct++;}
+    else{inp.className='gap-blank gb-no';}
+  });
+  const res=document.getElementById('gap-result');
+  if(res){
+    const pct=total?Math.round(correct/total*100):0;
+    res.innerHTML=`<div style="padding:10px 14px;background:var(--sur);border:1px solid var(--bd);border-radius:10px;font-size:11px">
+      ${correct===total?'🎉':'📝'} <strong>${correct}/${total}</strong> richtig (${pct}%)
+      ${correct===total?'<span style="color:var(--a)"> — Perfekt! +'+correct*3+' XP</span>':''}
+    </div>`;
+    if(correct===total) addLearnPoints(correct*3);
+  }
+}
+
+function revealAllGaps() {
+  document.querySelectorAll('.gap-blank').forEach(inp=>{
+    inp.value=inp.dataset.answer||'';
+    inp.className='gap-blank gb-ok';
+    inp.disabled=true;
+  });
+}
+
+// ===================== V1.4: KI-ASSISTENT (BOT) =====================
+let aiBotHistory = [];
+const AI_SYSTEM = `Du bist VocabFlow-Assistent — ein freundlicher Sprachlern-Helfer.
+Du hilfst Nutzern beim Vokabellernen: du kannst Vokabellisten erstellen, Lernstrategien erklären und Fragen beantworten.
+Wenn du eine Vokabelliste erstellst, formatiere sie IMMER als JSON am Ende deiner Antwort in diesem Format:
+<vocab_list>
+{"lang":"Deutsch","name":"Listenname","pairs":[{"de":"Wort","en":"Translation"},{"de":"Wort2","en":"Translation2"}]}
+</vocab_list>
+Halte deine Antworten kurz und freundlich. Antworte auf Deutsch.`;
+
+const AI_SUGGESTIONS = [
+  '📚 Erstelle eine Vokabelliste zu Farben auf Englisch',
+  '🍎 20 Vokabeln zum Thema Essen',
+  '🏠 Zimmer und Möbel auf Spanisch',
+  '✈️ Reise-Vokabeln für den Urlaub',
+  '💼 Business-Englisch Grundvokabular',
+];
+
+function renderAiBot() {
+  const el = document.getElementById('aibot-content');
+  if(!el) return;
+  aiBotHistory = [];
+  el.innerHTML=`
+    <div class="aibot-messages" id="aibot-msgs">
+      <div class="ai-msg bot">👋 Hallo! Ich bin dein VocabFlow-Assistent. Ich kann dir Vokabellisten erstellen oder beim Lernen helfen. Was brauchst du?</div>
+    </div>
+    <div class="aibot-suggestions" id="aibot-suggestions">
+      ${AI_SUGGESTIONS.map(s=>`<div class="ai-suggest" onclick="aiBotSuggest('${s.replace(/'/g,"\\'")}')">${s}</div>`).join('')}
+    </div>
+    <div class="aibot-input-row">
+      <input class="form-input" id="aibot-inp" placeholder="Frag mich etwas..." style="flex:1" onkeydown="if(event.key==='Enter')sendAiMessage()">
+      <button class="btn btn-primary" onclick="sendAiMessage()">➤</button>
+    </div>`;
+}
+
+function aiBotSuggest(text) {
+  const inp = document.getElementById('aibot-inp');
+  if(inp) inp.value = text;
+  sendAiMessage();
+  document.getElementById('aibot-suggestions').style.display='none';
+}
+
+async function sendAiMessage() {
+  const inp = document.getElementById('aibot-inp');
+  const msg = (inp?.value||'').trim();
+  if(!msg) return;
+  inp.value='';
+
+  const msgsEl = document.getElementById('aibot-msgs');
+  if(!msgsEl) return;
+
+  // Add user message
+  aiBotHistory.push({role:'user', content:msg});
+  msgsEl.innerHTML += `<div class="ai-msg user">${msg}</div>`;
+  msgsEl.innerHTML += `<div class="ai-msg bot typing" id="ai-typing">✦ Denkt nach...</div>`;
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:AI_SYSTEM,
+        messages:aiBotHistory
+      })
+    });
+    const data = await resp.json();
+    const reply = data.content?.map(c=>c.text||'').join('')||'Fehler bei der KI-Antwort.';
+    aiBotHistory.push({role:'assistant', content:reply});
+
+    // Remove typing indicator
+    document.getElementById('ai-typing')?.remove();
+
+    // Check for vocab list
+    const vocabMatch = reply.match(/<vocab_list>([\s\S]*?)<\/vocab_list>/);
+    let displayReply = reply.replace(/<vocab_list>[\s\S]*?<\/vocab_list>/, '').trim();
+
+    let importBtn = '';
+    if(vocabMatch) {
+      try {
+        const parsed = JSON.parse(vocabMatch[1].trim());
+        const safeJson = encodeURIComponent(JSON.stringify(parsed));
+        importBtn = `<div class="ai-import-btn" onclick="importAiVocabList('${safeJson}')">📥 Liste importieren (${parsed.pairs?.length||0} Wörter)</div>`;
+      } catch(e){}
+    }
+
+    msgsEl.innerHTML += `<div class="ai-msg bot">${displayReply.replace(/\n/g,'<br>')}${importBtn}</div>`;
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  } catch(e) {
+    document.getElementById('ai-typing')?.remove();
+    msgsEl.innerHTML += `<div class="ai-msg bot" style="color:var(--a2)">⚠ Fehler: ${e.message}</div>`;
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+}
+
+async function importAiVocabList(encodedJson) {
+  try {
+    const parsed = JSON.parse(decodeURIComponent(encodedJson));
+    const lang = parsed.lang||'KI-Import';
+    const name = parsed.name||'KI-Liste '+new Date().toLocaleDateString('de');
+    const pairs = parsed.pairs||[];
+    if(!pairs.length){toast('Keine Vokabeln gefunden');return;}
+
+    const poolData = pairs.map((p,i)=>({id:i,de:p.de||'',en:p.en||'',known:false}));
+    const custom = lsGet('vf3_custom','{}');
+    if(!custom[lang]) custom[lang]={};
+    custom[lang][name]=poolData;
+    lsSet('vf3_custom',custom);
+
+    if(currentUser) {
+      await sb.from('pools').upsert({user_id:currentUser.id,lang,name,data:poolData});
+    }
+    loadState(); buildVocab(); updateStats();
+    toast('✓ "'+name+'" mit '+pairs.length+' Wörtern importiert!');
+
+    // Ask if they want to switch to the new pool
+    confirm2('Pool wechseln?','Möchtest du jetzt zum neuen Pool "'+name+'" wechseln?', ()=>{
+      const key = mkKey(lang,name);
+      setActivePool(key);
+      go('cards');
+    });
+  } catch(e){toast('Import-Fehler: '+e.message);}
+}
 async function checkPendingFriendRequests() {
   if(!currentUser) return;
   try {
