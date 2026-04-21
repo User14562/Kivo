@@ -885,7 +885,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Geist Mono',monospace;hei
     <div class="screen" id="screen-aibot">
       <div class="pg-title">KI-Assistent</div>
       <div class="pg-sub">Frag die KI nach Vokabellisten oder Lernhilfe</div>
-      <div id="aibot-content" style="display:flex;flex-direction:column;height:calc(100vh - 140px)"></div>
+      <div id="aibot-content" style="display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:320px"></div>
     </div>
 
   </div>
@@ -3977,23 +3977,88 @@ function renderGapFill() {
   const el = document.getElementById('gap-content');
   if(!el) return;
   const flat = flattenPool(getPoolObj(activeKey));
+  const {l: poolLang, p: poolName} = spKey(activeKey);
   if(!flat.length){
-    el.innerHTML=`<div style="padding:30px;text-align:center">
-      <div style="font-size:40px;margin-bottom:12px">📚</div>
-      <div style="font-size:13px;color:var(--tx);margin-bottom:8px">Kein Pool ausgewählt</div>
-      <div style="font-size:11px;color:var(--tx3)">Wähle zuerst einen Pool in der Übersicht aus.</div>
+    el.innerHTML=`<div style="padding:40px 20px;text-align:center">
+      <div style="font-size:48px;margin-bottom:14px">📚</div>
+      <div style="font-family:'Instrument Serif',serif;font-size:18px;color:var(--tx);margin-bottom:6px">Kein Pool ausgewählt</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:16px">Wähle zuerst einen Pool in der Übersicht aus.</div>
+      <button class="btn btn-primary" onclick="go('overview')">Zur Übersicht →</button>
     </div>`;
     return;
   }
   el.innerHTML=`
-    <div style="font-size:11px;color:var(--tx2);margin-bottom:14px;line-height:1.6">
-      Die KI generiert einen kurzen Text passend zu deinem Pool <strong style="color:var(--tx)">${activeKey.split('__')[1]||activeKey}</strong> und baut Lücken ein, die du ausfüllen musst.
+    <div style="background:var(--sur);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px">Aktiver Pool</div>
+        <div style="font-size:13px;color:var(--tx);font-weight:500">${poolName}</div>
+        <div style="font-size:10px;color:var(--tx3)">${poolLang} · ${flat.length} Vokabeln</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="go('overview')">Pool wechseln →</button>
+    </div>
+    <div style="font-size:11px;color:var(--tx2);margin-bottom:14px;line-height:1.7">
+      Die KI generiert einen kurzen Text zum Thema <strong style="color:var(--tx)">${poolName}</strong> und baut Lücken ein, die du ausfüllen musst. Hinweise sind die englischen Übersetzungen.
     </div>
     <div class="gap-actions">
       <button class="btn btn-primary" onclick="generateGapText()">✨ Text generieren</button>
-      <button class="btn btn-ghost" onclick="go('overview')">Pool wechseln →</button>
     </div>
     <div id="gap-output"></div>`;
+}
+
+// ── NVIDIA Text API Helper ────────────────────────────────────────────────
+const NVIDIA_TEXT_MODEL = 'meta/llama-3.3-70b-instruct';
+const NVIDIA_TEXT_URL   = 'https://integrate.api.nvidia.com/v1/chat/completions';
+
+function getNvKey() {
+  return localStorage.getItem('vf3_nvkey') || '';
+}
+
+async function nvTextCall(systemPrompt, userPrompt, maxTokens=800) {
+  const key = getNvKey();
+  if(!key) throw new Error('Kein NVIDIA API Key gesetzt — bitte in den Einstellungen eintragen');
+  const resp = await fetch(NVIDIA_TEXT_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+key},
+    body: JSON.stringify({
+      model: NVIDIA_TEXT_MODEL,
+      messages: [
+        {role:'system', content: systemPrompt},
+        {role:'user',   content: userPrompt}
+      ],
+      max_tokens: maxTokens,
+      temperature: 0.7
+    })
+  });
+  if(!resp.ok) {
+    const err = await resp.json().catch(()=>({}));
+    throw new Error(err.detail || err.message || 'NVIDIA Fehler '+resp.status);
+  }
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content?.trim() || '';
+}
+
+async function nvChatCall(messages, systemPrompt, maxTokens=800) {
+  const key = getNvKey();
+  if(!key) throw new Error('Kein NVIDIA API Key gesetzt — bitte in den Einstellungen eintragen');
+  const resp = await fetch(NVIDIA_TEXT_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+key},
+    body: JSON.stringify({
+      model: NVIDIA_TEXT_MODEL,
+      messages: [
+        {role:'system', content: systemPrompt},
+        ...messages
+      ],
+      max_tokens: maxTokens,
+      temperature: 0.7
+    })
+  });
+  if(!resp.ok) {
+    const err = await resp.json().catch(()=>({}));
+    throw new Error(err.detail || err.message || 'NVIDIA Fehler '+resp.status);
+  }
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content?.trim() || '';
 }
 
 async function generateGapText() {
@@ -4002,37 +4067,39 @@ async function generateGapText() {
   const flat = flattenPool(getPoolObj(activeKey));
   if(!flat.length){toast('Kein Pool aktiv');return;}
 
-  // Pick 5-7 random vocab for the gaps
+  const {p: poolName} = spKey(activeKey);
   const shuffled = [...flat].sort(()=>Math.random()-.5);
   gapVocab = shuffled.slice(0, Math.min(6, shuffled.length));
-  const wordList = gapVocab.map(v=>v.de+'='+v.en).join(', ');
-  const poolName = activeKey.split('__')[1]||activeKey;
 
-  outEl.innerHTML=`<div class="gap-loading"><div class="gap-spinner"></div>KI generiert Text...</div>`;
+  if(!getNvKey()) {
+    outEl.innerHTML=`<div style="padding:18px;background:var(--sur);border:1px solid var(--bd);border-radius:14px">
+      <div style="font-size:12px;color:var(--tx);margin-bottom:10px;font-weight:600">🔑 NVIDIA API Key benötigt</div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:12px">Gib einmal deinen NVIDIA API Key ein — er wird lokal gespeichert.</div>
+      <div style="display:flex;gap:7px">
+        <input class="form-input" id="gap-nv-key" placeholder="nvapi-..." style="flex:1;font-size:11px">
+        <button class="btn btn-primary" onclick="localStorage.setItem('vf3_nvkey',document.getElementById('gap-nv-key').value.trim());generateGapText()">Speichern & starten</button>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--tx3)">Key holen: <a href="https://build.nvidia.com" target="_blank" style="color:var(--a4)">build.nvidia.com</a></div>
+    </div>`;
+    return;
+  }
+
+  outEl.innerHTML=`<div class="gap-loading"><div class="gap-spinner"></div>NVIDIA KI generiert Text...</div>`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`Du bist ein Sprachlern-Assistent. Erstelle einen kurzen deutschen Text (4-6 Sätze) zum Thema "${poolName}". 
-Baue genau diese Wörter natürlich in den Text ein: ${gapVocab.map(v=>v.de).join(', ')}.
+    const system = `Du bist ein Sprachlern-Assistent. Erstelle einen kurzen deutschen Text (4–6 Sätze) zum Thema "${poolName}".
+Baue genau diese Wörter natürlich ein: ${gapVocab.map(v=>v.de).join(', ')}.
 Markiere jedes dieser Wörter mit [[wort]]. Beispiel: "Die [[Katze]] liegt auf dem Sofa."
-Gib NUR den Text zurück, keine Erklärung.`,
-        messages:[{role:'user',content:`Erstelle den Lückentext für das Thema "${poolName}" mit den Wörtern: ${gapVocab.map(v=>v.de).join(', ')}`}]
-      })
-    });
-    const data = await resp.json();
-    const text = data.content?.map(c=>c.text||'').join('')||'';
-    if(!text){throw new Error('Keine Antwort von KI');}
+Gib NUR den Text zurück, keine Erklärung, keine Überschrift.`;
+    const text = await nvTextCall(system, `Erstelle den Lückentext für "${poolName}".`, 600);
+    if(!text) throw new Error('Leere Antwort von KI');
     renderGapTextUI(text);
   } catch(e) {
+    const isKeyErr = e.message.includes('Key') || e.message.includes('401') || e.message.includes('403');
     outEl.innerHTML=`<div style="padding:16px;background:var(--sur);border:1px solid var(--bd);border-radius:14px">
-      <div style="font-size:11px;color:var(--a2);margin-bottom:10px">⚠ KI-Fehler: ${e.message}</div>
-      <div style="font-size:10px;color:var(--tx3);margin-bottom:12px">Beispieltext (offline):</div>
-      ${renderGapTextOffline()}
+      <div style="font-size:11px;color:var(--a2);margin-bottom:10px">⚠ ${e.message}</div>
+      ${isKeyErr?`<button class="btn btn-ghost btn-sm" onclick="localStorage.removeItem('vf3_nvkey');generateGapText()">🔑 API Key ändern</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="renderGapTextOffline()">Offline-Beispiel laden</button>
     </div>`;
   }
 }
@@ -4107,7 +4174,7 @@ function revealAllGaps() {
   });
 }
 
-// ===================== V1.4: KI-ASSISTENT (BOT) =====================
+// ===================== KI-ASSISTENT =====================
 let aiBotHistory = [];
 const AI_SYSTEM = `Du bist VocabFlow-Assistent — ein freundlicher Sprachlern-Helfer.
 Du hilfst Nutzern beim Vokabellernen: du kannst Vokabellisten erstellen, Lernstrategien erklären und Fragen beantworten.
@@ -4129,9 +4196,26 @@ function renderAiBot() {
   const el = document.getElementById('aibot-content');
   if(!el) return;
   aiBotHistory = [];
+
+  if(!getNvKey()) {
+    el.innerHTML=`<div style="flex:1;display:flex;align-items:center;justify-content:center">
+      <div style="text-align:center;max-width:340px;padding:20px">
+        <div style="font-size:48px;margin-bottom:14px">🔑</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--tx);margin-bottom:8px">NVIDIA API Key benötigt</div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:18px;line-height:1.7">Gib einmal deinen NVIDIA API Key ein — er wird lokal gespeichert und für alle KI-Funktionen verwendet.</div>
+        <div style="display:flex;gap:7px;margin-bottom:8px">
+          <input class="form-input" id="bot-nv-key" placeholder="nvapi-..." style="flex:1;font-size:11px">
+          <button class="btn btn-primary" onclick="localStorage.setItem('vf3_nvkey',document.getElementById('bot-nv-key').value.trim());renderAiBot()">Speichern</button>
+        </div>
+        <div style="font-size:10px;color:var(--tx3)">Key holen: <a href="https://build.nvidia.com" target="_blank" style="color:var(--a4)">build.nvidia.com</a> (kostenlos)</div>
+      </div>
+    </div>`;
+    return;
+  }
+
   el.innerHTML=`
     <div class="aibot-messages" id="aibot-msgs">
-      <div class="ai-msg bot">👋 Hallo! Ich bin dein VocabFlow-Assistent. Ich kann dir Vokabellisten erstellen oder beim Lernen helfen. Was brauchst du?</div>
+      <div class="ai-msg bot">👋 Hallo! Ich bin dein VocabFlow-Assistent. Ich kann Vokabellisten erstellen oder beim Lernen helfen. Was brauchst du?</div>
     </div>
     <div class="aibot-suggestions" id="aibot-suggestions">
       ${AI_SUGGESTIONS.map(s=>`<div class="ai-suggest" onclick="aiBotSuggest('${s.replace(/'/g,"\\'")}')">${s}</div>`).join('')}
@@ -4139,6 +4223,7 @@ function renderAiBot() {
     <div class="aibot-input-row">
       <input class="form-input" id="aibot-inp" placeholder="Frag mich etwas..." style="flex:1" onkeydown="if(event.key==='Enter')sendAiMessage()">
       <button class="btn btn-primary" onclick="sendAiMessage()">➤</button>
+      <button class="btn btn-ghost btn-sm" title="API Key ändern" onclick="localStorage.removeItem('vf3_nvkey');renderAiBot()" style="padding:8px;font-size:14px">🔑</button>
     </div>`;
 }
 
@@ -4146,7 +4231,8 @@ function aiBotSuggest(text) {
   const inp = document.getElementById('aibot-inp');
   if(inp) inp.value = text;
   sendAiMessage();
-  document.getElementById('aibot-suggestions').style.display='none';
+  const sugg = document.getElementById('aibot-suggestions');
+  if(sugg) sugg.style.display='none';
 }
 
 async function sendAiMessage() {
@@ -4158,31 +4244,17 @@ async function sendAiMessage() {
   const msgsEl = document.getElementById('aibot-msgs');
   if(!msgsEl) return;
 
-  // Add user message
   aiBotHistory.push({role:'user', content:msg});
   msgsEl.innerHTML += `<div class="ai-msg user">${msg}</div>`;
   msgsEl.innerHTML += `<div class="ai-msg bot typing" id="ai-typing">✦ Denkt nach...</div>`;
   msgsEl.scrollTop = msgsEl.scrollHeight;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:AI_SYSTEM,
-        messages:aiBotHistory
-      })
-    });
-    const data = await resp.json();
-    const reply = data.content?.map(c=>c.text||'').join('')||'Fehler bei der KI-Antwort.';
+    const reply = await nvChatCall(aiBotHistory, AI_SYSTEM, 900);
     aiBotHistory.push({role:'assistant', content:reply});
 
-    // Remove typing indicator
     document.getElementById('ai-typing')?.remove();
 
-    // Check for vocab list
     const vocabMatch = reply.match(/<vocab_list>([\s\S]*?)<\/vocab_list>/);
     let displayReply = reply.replace(/<vocab_list>[\s\S]*?<\/vocab_list>/, '').trim();
 
@@ -4199,7 +4271,9 @@ async function sendAiMessage() {
     msgsEl.scrollTop = msgsEl.scrollHeight;
   } catch(e) {
     document.getElementById('ai-typing')?.remove();
-    msgsEl.innerHTML += `<div class="ai-msg bot" style="color:var(--a2)">⚠ Fehler: ${e.message}</div>`;
+    const isKeyErr = e.message.includes('Key') || e.message.includes('401');
+    msgsEl.innerHTML += `<div class="ai-msg bot" style="color:var(--a2)">⚠ ${e.message}${isKeyErr?` <span style="cursor:pointer;text-decoration:underline" onclick="localStorage.removeItem('vf3_nvkey');renderAiBot()">Key ändern</span>`:''}
+    </div>`;
     msgsEl.scrollTop = msgsEl.scrollHeight;
   }
 }
