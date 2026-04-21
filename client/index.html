@@ -1845,29 +1845,7 @@ function deleteSubcat(keyEsc, cat) {
   });
 }
 
-// ===================== SHARE =====================
-async function sharePool(keyEsc) {
-  if(!authToken){toast('Zum Teilen bitte anmelden'); document.getElementById('auth-overlay').classList.remove('hidden'); return;}
-  let realKey=activeKey;
-  for(const [l,ps] of Object.entries(POOLS)) for(const p of Object.keys(ps)) if(esc(mkKey(l,p))===keyEsc){realKey=mkKey(l,p);break;}
-  const {l,p}=spKey(realKey);
-  const poolObj=getPoolObj(realKey);
-  if(!poolObj) return;
-  const pid='pool_'+btoa(realKey).replace(/[^a-z0-9]/gi,'').slice(0,20);
-  try {
-    await apiFetch('/api/pools/'+pid,{method:'PUT',body:JSON.stringify({lang:l,name:p,data:poolObj})});
-    const data=await apiFetch('/api/pools/'+pid+'/share',{method:'POST'});
-    const url=data.url;
-    const body=document.getElementById('pm-body');
-    document.getElementById('pm-title').textContent='"'+p+'" teilen';
-    body.innerHTML='<div style="font-size:11px;color:var(--tx2);margin-bottom:12px;line-height:1.6;">Jeder mit diesem Link kann den Pool importieren — kein Konto nötig.</div>'+
-      '<div class="form-group"><div class="form-label">Link</div><div style="display:flex;gap:6px"><input class="form-input" id="share-url" value="'+url+'" readonly style="flex:1;color:var(--a4);font-size:10px"><button class="btn btn-primary btn-sm" onclick="var i=document.getElementById(\'share-url\');navigator.clipboard.writeText(i.value).then(()=>toast(\'✓ Kopiert!\'))">Kopieren</button></div></div>'+
-      '<div style="display:flex;gap:7px;margin-top:14px;justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="revokeShare(\''+pid+'\')">🔗 Deaktivieren</button><button class="btn btn-ghost" onclick="closePM()">Schließen</button></div>';
-    document.getElementById('pool-modal').classList.add('open');
-  } catch(e){ toast('Fehler: '+e.message); }
-}
-
-async function revokeShare(pid){ try{ await apiFetch('/api/pools/'+pid+'/share',{method:'DELETE'}); closePM(); toast('🔗 Link deaktiviert'); }catch(e){toast('Fehler: '+e.message);} }
+// sharePool → Supabase-Version weiter unten definiert
 
 // ===================== PHOTO IMPORT =====================
 let nvBase64=null, nvMimeType='image/jpeg';
@@ -1932,33 +1910,7 @@ function nvSetStatus(msg,type){
   el.style.cssText='display:block;padding:9px 13px;border-radius:8px;font-size:11px;border:1px solid;'+(type==='ok'?'background:var(--ad);color:var(--a);border-color:var(--a);':type==='err'?'background:var(--a2d);color:var(--a2);border-color:var(--a2);':'background:var(--sur2);color:var(--tx2);border-color:var(--bd);');
 }
 
-async function nvScan() {
-  if(!nvBase64){toast('⚠️ Bild hochladen'); return;}
-  const btn=document.getElementById('nv-scan-btn');
-  btn.disabled=true; btn.textContent='⏳ Scanne...';
-  nvSetStatus('⏳ KI analysiert das Bild...','info');
-  try {
-    let text='';
-    if(authToken){
-      const r=await apiFetch('/api/scan',{method:'POST',body:JSON.stringify({imageBase64:nvBase64,mimeType:nvMimeType})});
-      text=r.text||'';
-    } else {
-      const key=(document.getElementById('nv-key').value||'').trim();
-      if(!key){nvSetStatus('✗ Bitte NVIDIA API Key eingeben oder anmelden','err');btn.disabled=false;btn.textContent='🔍 KI scannen';return;}
-      localStorage.setItem('vf3_nvkey',key);
-      const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'moonshotai/kimi-k2:free',messages:[{role:'user',content:[{type:'text',text:'Extrahiere alle Vokabelpaare aus diesem Bild. Format: Deutsch = Englisch, ein Paar pro Zeile. Nur die Paare, keine Erklärungen.'},{type:'image_url',image_url:{url:'data:'+nvMimeType+';base64,'+nvBase64}}]}],max_tokens:1024,temperature:0.1})});
-      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||'API Fehler');}
-      const d=await r.json();
-      text=d.choices?.[0]?.message?.content?.trim()||'';
-    }
-    const pairs=text.split('\n').filter(l=>l.includes('=')&&l.trim());
-    document.getElementById('nv-pairs').value=text;
-    document.getElementById('nv-result').style.display='block';
-    document.getElementById('nv-import-btn').style.display='inline-flex';
-    nvSetStatus('✓ '+pairs.length+' Vokabelpaare erkannt! Prüfen und importieren.','ok');
-  } catch(e) { nvSetStatus('✗ Fehler: '+e.message,'err'); }
-  btn.disabled=false; btn.textContent='🔍 Erneut scannen';
-}
+// nvScan → Supabase-Version weiter unten definiert
 
 function nvImport() {
   // Use AI-detected language, or fallback
@@ -2025,38 +1977,7 @@ function skipAuth(){
   toast('Lokaler Modus — kein Cloud-Sync');
 }
 
-async function doLogin(){
-  const login=(document.getElementById('a-login').value||'').trim();
-  const pw=document.getElementById('a-pw').value||'';
-  if(!login||!pw){document.getElementById('auth-err').textContent='Alle Felder ausfüllen';return;}
-  const btn=document.getElementById('auth-btn'); btn.disabled=true; btn.textContent='…';
-  try{const d=await apiFetch('/api/login',{method:'POST',body:JSON.stringify({login,password:pw})});onLoginSuccess(d.token,d.user);}
-  catch(e){document.getElementById('auth-err').textContent=e.message;}
-  btn.disabled=false; btn.textContent='Anmelden';
-}
-async function doRegister(){
-  const username=(document.getElementById('a-user').value||'').trim();
-  const email=(document.getElementById('a-email').value||'').trim();
-  const pw=document.getElementById('a-pw2').value||'';
-  if(!username||!email||!pw){document.getElementById('auth-err').textContent='Alle Felder ausfüllen';return;}
-  const btn=document.getElementById('auth-btn'); btn.disabled=true; btn.textContent='…';
-  try{const d=await apiFetch('/api/register',{method:'POST',body:JSON.stringify({username,email,password:pw})});onLoginSuccess(d.token,d.user);}
-  catch(e){document.getElementById('auth-err').textContent=e.message;}
-  btn.disabled=false; btn.textContent='Konto erstellen';
-}
-function onLoginSuccess(token,user){
-  authToken=token; currentUser=user;
-  localStorage.setItem('vf3_token',token);
-  lsSet('vf3_user',user);
-  document.getElementById('auth-overlay').classList.add('hidden');
-  document.getElementById('login-hint-btn').style.display='none';
-  document.getElementById('um-name').textContent=user.username;
-  document.getElementById('um-email').textContent=user.email||'';
-  // Load avatar from localStorage first (instant), then sync from server
-  const localAvatar=localStorage.getItem('vf3_avatar_'+user.username)||'';
-  updateAcctBtn(true, user);
-  syncFromServer(); // will also pull avatar from server
-}
+// doLogin, doRegister, onLoginSuccess, doLogout → Supabase-Versionen weiter unten
 
 function updateAcctBtn(loggedIn, user) {
   const btn=document.getElementById('acct-btn');
@@ -2089,43 +2010,7 @@ function updateUmAvatar(avatarDataUrl) {
   }
 }
 
-function uploadAvatar(input) {
-  const file=input.files[0]; if(!file) return;
-  if(file.size>2*1024*1024){toast('⚠️ Bild max 2 MB');return;}
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const dataUrl=e.target.result;
-    // Resize to max 200px for storage efficiency
-    const resized=await resizeAvatar(dataUrl, 200);
-    const key='vf3_avatar_'+((currentUser&&currentUser.username)||'');
-    localStorage.setItem(key,resized);
-    updateAcctBtn(true,currentUser);
-    document.getElementById('user-menu').classList.remove('open');
-    // Push to server for cross-device sync
-    if(authToken){
-      try{
-        await apiFetch('/api/avatar',{method:'PUT',body:JSON.stringify({avatar:resized})});
-        toast('✓ Profilbild gespeichert & synchronisiert!');
-      } catch(e){ toast('✓ Profilbild lokal gesetzt (Sync fehlgeschlagen)'); }
-    } else { toast('✓ Profilbild gesetzt!'); }
-  };
-  reader.readAsDataURL(file);
-}
-
-function resizeAvatar(dataUrl, maxPx) {
-  return new Promise(resolve=>{
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const scale=Math.min(maxPx/img.width, maxPx/img.height, 1);
-      canvas.width=Math.round(img.width*scale);
-      canvas.height=Math.round(img.height*scale);
-      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-      resolve(canvas.toDataURL('image/jpeg',0.85));
-    };
-    img.src=dataUrl;
-  });
-}
+// uploadAvatar, resizeAvatar → Supabase-Versionen weiter unten definiert
 
 function openAccountSettings(tab='account') {
   document.getElementById('user-menu').classList.remove('open');
@@ -2241,34 +2126,7 @@ function showAuthOverlay() {
   showAuthStep('choose');
 }
 
-function doLogout(){
-  // Clear ALL user data from localStorage
-  const keysToRemove=[];
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    if(k&&(k.startsWith('vf3_')||k.startsWith('vf3_kn_'))) keysToRemove.push(k);
-  }
-  keysToRemove.forEach(k=>localStorage.removeItem(k));
-
-  // Reset state to clean builtin-only
-  authToken=null; currentUser=null;
-  POOLS=JSON.parse(JSON.stringify(BUILTIN));
-  vocab=[]; activeKey=null; activeCat='all'; skipKn=false;
-  mistakeLog={}; sessions=[];
-  const l=Object.keys(POOLS)[0];
-  activeKey=mkKey(l,Object.keys(POOLS[l])[0]);
-  buildVocab(); updateStats();
-
-  // Reset UI
-  document.getElementById('user-menu').classList.remove('open');
-  document.getElementById('auth-overlay').classList.remove('hidden');
-  document.getElementById('auth-err').textContent='';
-  updateAcctBtn(false);
-
-  // Reset to cards screen
-  go('cards');
-  toast('Abgemeldet — Daten gelöscht');
-}
+// doLogout → weiter unten als Supabase-Version definiert
 
 function toggleUserMenu(){
   const m=document.getElementById('user-menu');
@@ -2656,24 +2514,30 @@ async function nvScan() {
 async function initAuth() {
   document.getElementById('auth-overlay').classList.remove('hidden');
   showAuthStep('choose');
-  const statusBox=document.getElementById('auth-server-status-box');
-  
 
-  await checkServerStatus();
+  try {
+    await checkServerStatus();
+  } catch(e) {
+    serverOnline = false;
+    setStatus('offline', 'Supabase nicht erreichbar');
+  }
 
   if(!serverOnline) {
-    
     const btns=document.querySelectorAll('#auth-step-choose button:not(:last-child)');
     btns.forEach(b=>{b.disabled=true;b.style.opacity='.4';b.style.cursor='not-allowed';});
+    // Allow skipping even offline
     return;
   }
-  
 
-  // Try to restore session
-  const {data:{session}} = await sb.auth.getSession();
-  if(session?.user) {
-    await onLoginSuccess(session, session.user);
-    return;
+  try {
+    // Try to restore session
+    const {data:{session}} = await sb.auth.getSession();
+    if(session?.user) {
+      await onLoginSuccess(session, session.user);
+      return;
+    }
+  } catch(e) {
+    console.warn('Session restore failed:', e.message);
   }
   updateAcctBtn(false);
 }
@@ -4051,57 +3915,6 @@ const CHANGELOG = [
       {type:'new', text:'Programmieren nur für Entwickler sichtbar (is_dev Flag)'},
       {type:'fix', text:'Dunkelgrün-Grau Farbschema'},
       {type:'fix', text:'Mobile: Bottom-Navigation, Sheet-Modals'},
-    ]
-  },
-  {
-    version: '1.2.0',
-    label: '',
-    items: [
-      {type:'new', text:'Foto-Import mit NVIDIA Llama 3.2 Vision (Edge Function)'},
-      {type:'new', text:'Pool teilen per Link'},
-      {type:'new', text:'Profilbild Upload'},
-      {type:'new', text:'Magic Link & Passwort vergessen'},
-      {type:'new', text:'Cloud-Sync (Pools, Fortschritt, Profilbild)'},
-    ]
-  },
-  {
-    version: '1.1.0',
-    label: '',
-    items: [
-      {type:'new', text:'Coding-Bereich (C++, Python, HTML)'},
-      {type:'new', text:'Sprach-Labels dynamisch je Pool'},
-      {type:'new', text:'Pool Unterkategorien'},
-      {type:'fix', text:'Quiz-Ergebnis-Screen mit Diagramm'},
-    ]
-  },
-  {
-    version: '1.0.0',
-    label: '',
-    items: [
-      {type:'new', text:'Erste Version von VocabFlow'},
-      {type:'new', text:'Karteikarten, Quiz, Tippen, Zuordnen'},
-      {type:'new', text:'Dark/Light Mode'},
-      {type:'new', text:'Supabase Auth (Login, Register)'},
-    ]
-  }
-];
-  {
-    version: '1.3.0',
-    label: '✓ Aktuell',
-    items: [
-      {type:'new', text:'Statistiken & Lernfortschritt-Dashboard mit Heatmap'},
-      {type:'new', text:'Freunde-Panel (Slide-in) mit Freunde- & Global Top 10-Leaderboard'},
-      {type:'new', text:'Pool teilen über Freunde-Panel (nicht nur per Link)'},
-      {type:'new', text:'Spaced Repetition (SM-2) — intelligente Wiederholungsintervalle'},
-      {type:'new', text:'XP-System in Quiz, Tippen und Zuordnen (nicht Karteikarten)'},
-      {type:'new', text:'Nutzername änderbar in Konto-Einstellungen'},
-      {type:'new', text:'Versions-Log in Konto-Einstellungen'},
-      {type:'new', text:'Feedback-Popup'},
-      {type:'new', text:'Programmieren nur für Entwickler sichtbar (is_dev Flag)'},
-      {type:'fix', text:'Dunkelgrün-Grau Farbschema'},
-      {type:'fix', text:'Mobile: Bottom-Navigation, Sheet-Modals'},
-      {type:'fix', text:'Nutzername-Reset nach Neuladung behoben'},
-      {type:'fix', text:'Freundschaftsanfragen korrekt zugestellt'},
     ]
   },
   {
