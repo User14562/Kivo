@@ -38,9 +38,8 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-he
 .tb-title{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--text)}
 .pool-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s;background:transparent;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pool-pill:hover{border-color:var(--line2);color:var(--text)}
-.server-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--muted)}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.dot.lime{background:var(--lime)}.dot.orange{background:var(--orange)}.dot.blue{background:var(--blue)}.dot.danger{background:var(--danger)}
+.dot.lime{background:var(--lime)}.dot.blue{background:var(--blue)}.dot.danger{background:var(--danger)}
 .avatar-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,#555,#333);border:2px solid var(--line);cursor:pointer;display:grid;place-items:center;font-size:12px;overflow:hidden;flex-shrink:0}
 .avatar-btn img{width:100%;height:100%;object-fit:cover}
 .friend-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);display:grid;place-items:center;font-size:14px;cursor:pointer;transition:all .15s;position:relative}
@@ -355,7 +354,6 @@ textarea.k-input{resize:vertical;min-height:70px}
       </div>
       <div class="tb-right">
         <div class="currency-pill" id="currency-pill" style="display:none">🪙 <span id="currency-val">0</span></div>
-        <div class="server-pill"><span class="dot orange" id="srv-dot"></span><span id="srv-txt">Server</span></div>
         <button class="friend-btn" id="friend-btn" onclick="openFriendPanel()">🏆<div class="friend-notif" id="friend-notif"></div></button>
         <div class="avatar-btn" id="avatar-btn" onclick="toggleUserMenu()">👤</div>
         <div class="user-menu" id="user-menu">
@@ -699,20 +697,12 @@ textarea.k-input{resize:vertical;min-height:70px}
 <!-- ═══════════════════════════════════════════ SCRIPT ══════ -->
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const BACKEND_BASE = 'https://kivo-backend-ywtf.onrender.com';
-const HEALTH_URL   = BACKEND_BASE + '/health';
 const SUPABASE_URL = 'https://mfnlugxssqwihiwkryzi.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_tVbgp6KajZ2m3jM9CwgVEQ_YZ4zOHwE';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ── BUILTIN POOLS ────────────────────────────────────────────
-const BUILTIN = {
-  'Englisch': {
-    'Grundvokabular': { subcats: { 'Alltag': [['Hund','Dog'],['Katze','Cat'],['Haus','House'],['Auto','Car'],['Wasser','Water'],['Essen','Food'],['Buch','Book'],['Zeit','Time'],['Tag','Day'],['Nacht','Night'],['Freund','Friend'],['Familie','Family']] } },
-    'Farben': { subcats: { 'Farben': [['Rot','Red'],['Blau','Blue'],['Grün','Green'],['Gelb','Yellow'],['Schwarz','Black'],['Weiß','White'],['Orange','Orange'],['Lila','Purple'],['Rosa','Pink'],['Braun','Brown']] } },
-    'Zahlen': { subcats: { 'Zahlen': [['Eins','One'],['Zwei','Two'],['Drei','Three'],['Vier','Four'],['Fünf','Five'],['Sechs','Six'],['Sieben','Seven'],['Acht','Eight'],['Neun','Nine'],['Zehn','Ten']] } },
-  }
-};
+// ── POOLS (empty — custom pools loaded from server after login) ──
+const BUILTIN = {};
 
 // ── STATE ────────────────────────────────────────────────────
 let POOLS = {};
@@ -730,8 +720,6 @@ let cIdx = 0, cDeck = [], cFlipped = false;
 let qIdx = 0, qDeck = [], qOk = 0, qNo = 0;
 let tIdx = 0, tDeck = [], tOk = 0, tNo = 0;
 let mPairs = [], mSel = null, mFound = 0;
-let backendOnline = false;
-let retryTimer = null;
 let toastTimer = null;
 let userCurrency = 0;
 let userItems = [];
@@ -757,7 +745,8 @@ function flattenPool(poolObj) {
 }
 
 function loadState() {
-  const custom = lsGet('kivo_custom','{}');
+  // Only load custom pools when logged in — non-logged-in users see nothing
+  const custom = (currentUser ? lsGet('kivo_custom','{}') : {});
   POOLS = JSON.parse(JSON.stringify(BUILTIN));
   for(const [l,ps] of Object.entries(custom)) {
     if(!POOLS[l]) POOLS[l]={};
@@ -874,24 +863,7 @@ document.addEventListener('click', e => {
   if(!e.target.closest('#avatar-btn') && !e.target.closest('#user-menu')) closeUserMenu();
 });
 
-// ── BACKEND HEALTH ───────────────────────────────────────────
-async function checkBackend() {
-  try {
-    const res=await fetch(HEALTH_URL,{method:'GET',cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    document.getElementById('srv-dot').className='dot lime';
-    document.getElementById('srv-txt').textContent='Online';
-    backendOnline=true;
-  } catch(e) {
-    document.getElementById('srv-dot').className='dot orange';
-    document.getElementById('srv-txt').textContent='Offline';
-    backendOnline=false;
-    if(retryTimer) clearTimeout(retryTimer);
-    retryTimer=setTimeout(checkBackend,15000);
-  }
-}
-
-// ── XP SYSTEM ────────────────────────────────────────────────
+// No longer doing health checks// ── XP SYSTEM ────────────────────────────────────────────────
 function addXp(pts) {
   const today=new Date().toISOString().slice(0,10);
   const xp=lsGet('kivo_xp','{}');
@@ -1960,7 +1932,6 @@ function checkShareUrl(){
 // ── INIT ──────────────────────────────────────────────────────
 loadState();
 initAuth();
-checkBackend();
 checkShareUrl();
 // Show feedback popup after 2 minutes
 setTimeout(showFeedback, 120000);
