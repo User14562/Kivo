@@ -698,8 +698,9 @@ textarea.k-input{resize:vertical;min-height:70px}
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
 const SUPABASE_URL = 'https://mfnlugxssqwihiwkryzi.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_tVbgp6KajZ2m3jM9CwgVEQ_YZ4zOHwE';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbmx1Z3hzc3F3aWhpd2tyeXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3OTI5NDgsImV4cCI6MjA5MDM2ODk0OH0.x3xyGK5b8F3ZI9SL26vE9rOuT00Ds3vKVeCc7xQsDGY';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const edgeHeaders = async () => { const { data:{ session } } = await sb.auth.getSession(); return { 'Content-Type':'application/json', 'Authorization':'Bearer '+(session?.access_token||'') }; };
 
 // ── POOLS (empty — custom pools loaded from server after login) ──
 const BUILTIN = {};
@@ -756,7 +757,7 @@ function loadState() {
   sessions = lsGet('kivo_sess','[]');
   const saved = localStorage.getItem('kivo_ak');
   if(saved && getPoolObj(saved)) activeKey=saved;
-  else { const l=Object.keys(POOLS)[0]; activeKey=mkKey(l,Object.keys(POOLS[l])[0]); }
+  else { const l=Object.keys(POOLS)[0]; activeKey=l?mkKey(l,Object.keys(POOLS[l])[0]):null; }
   buildVocab();
 }
 
@@ -864,15 +865,20 @@ document.addEventListener('click', e => {
 });
 
 // No longer doing health checks// ── XP SYSTEM ────────────────────────────────────────────────
-function addXp(pts) {
+async function addXp(pts, reason='learn') {
+  if(currentUser){
+    try{
+      const clientEventId='evt_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+      const r=await fetch(SUPABASE_URL+'/functions/v1/kivo-xp',{method:'POST',headers:await edgeHeaders(),body:JSON.stringify({points:pts,reason,clientEventId})});
+      if(r.ok){const d=await r.json(); lsSet('kivo_xp',d.xp_data||{}); userCurrency=Math.floor((d.xp_total||0)/5); lsSet('kivo_currency',userCurrency); calcStreak(); updateHomeStats(); updateCurrencyDisplay(); return;}
+    }catch(e){}
+  }
   const today=new Date().toISOString().slice(0,10);
   const xp=lsGet('kivo_xp','{}');
   xp[today]=(xp[today]||0)+pts; lsSet('kivo_xp',xp);
-  // Award currency (1 coin per 5 xp)
   userCurrency=Math.floor(getTotalXp()/5);
   lsSet('kivo_currency',userCurrency);
   updateCurrencyDisplay();
-  if(currentUser) syncXpToServer();
   calcStreak(); updateHomeStats();
 }
 function getTotalXp() { return Object.values(lsGet('kivo_xp','{}')).reduce((a,b)=>a+b,0); }
@@ -887,13 +893,7 @@ function updateCurrencyDisplay() {
   if(el) el.style.display=currentUser?'flex':'none';
   if(val) val.textContent=userCurrency;
 }
-async function syncXpToServer() {
-  if(!currentUser) return;
-  try {
-    const xp=lsGet('kivo_xp','{}'); const total=getTotalXp(); const streak=calcStreak();
-    await sb.from('profiles').upsert({id:currentUser.id,username:currentUser.username,email:currentUser.email,xp_total:total,streak,xp_data:xp,updated_at:new Date().toISOString()});
-  } catch(e){}
-}
+async function syncXpToServer() { return; }
 
 // ── SPACED REPETITION (SM-2) ─────────────────────────────────
 const srKey=(pk,id)=>'kivo_sr_'+esc(pk)+'_'+id;
@@ -1230,12 +1230,11 @@ async function generateGapText() {
   const poolName=spKey(activeKey).p;
   outEl.innerHTML=`<div class="k-card" style="display:flex;align-items:center;gap:10px;padding:20px"><div class="gap-spinner"></div><span style="font-size:11px;color:var(--muted)">KI generiert Text...</span></div>`;
   try {
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,
-        system:`Du bist ein Sprachlern-Assistent. Erstelle einen kurzen deutschen Text (4-6 Sätze) zum Thema "${poolName}". Baue genau diese Wörter ein: ${gapVocab.map(v=>v.de).join(', ')}. Markiere jedes mit [[wort]]. Gib NUR den Text zurück.`,
-        messages:[{role:'user',content:`Lückentext für "${poolName}" mit: ${gapVocab.map(v=>v.de).join(', ')}`}]})});
+    const resp=await fetch(SUPABASE_URL+'/functions/v1/kivo-ai',{method:'POST',headers:await edgeHeaders(),
+      body:JSON.stringify({mode:'gap',poolName,words:gapVocab.map(v=>v.de)})});
+    if(!resp.ok) throw new Error('KI-Dienst nicht erreichbar');
     const data=await resp.json();
-    const text=data.content?.map(c=>c.text||'').join('')||'';
+    const text=data.text||'';
     if(!text)throw new Error('Keine Antwort');
     renderGapUI(text);
   } catch(e) {
@@ -1321,10 +1320,11 @@ function aiBotSend(preset) {
 async function fetchAiReply() {
   const msgs=document.getElementById('aibot-msgs'); if(!msgs)return;
   try {
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:AI_SYS,messages:aiBotHistory})});
+    const resp=await fetch(SUPABASE_URL+'/functions/v1/kivo-ai',{method:'POST',headers:await edgeHeaders(),
+      body:JSON.stringify({mode:'chat',system:AI_SYS,messages:aiBotHistory})});
+    if(!resp.ok) throw new Error('KI-Dienst nicht erreichbar');
     const data=await resp.json();
-    const reply=data.content?.map(c=>c.text||'').join('')||'Fehler.';
+    const reply=data.reply||'Fehler.';
     aiBotHistory.push({role:'assistant',content:reply});
     document.getElementById('ai-typing')?.remove();
     const vocabMatch=reply.match(/<vocab_list>([\s\S]*?)<\/vocab_list>/);
@@ -1728,7 +1728,8 @@ async function submitFeedback(){
   const desc=(document.getElementById('fb-desc')?.value||'').trim();
   if(!title){toast('Titel eingeben');return;}
   try{
-    await sb.from('feedback').insert({title,description:desc,user_id:currentUser?.id||null,username:currentUser?.username||'anonym',created_at:new Date().toISOString()});
+    if(!currentUser){toast('Bitte anmelden, damit Feedback sicher gespeichert wird');return;}
+    await sb.from('feedback').insert({title,description:desc,user_id:currentUser.id,username:currentUser.username||'anonym',created_at:new Date().toISOString()});
     toast('✓ Feedback gesendet! Danke 🙏');
     document.getElementById('fb-title').value=''; document.getElementById('fb-desc').value=''; hideFeedback();
   }catch(e){
@@ -1762,22 +1763,10 @@ async function doPhotoScan(){
   const status=document.getElementById('photo-status');
   status.textContent='KI analysiert Bild...'; status.style.color='var(--muted)';
   try{
-    // Try Edge Function first
-    const{data:{session}}=await sb.auth.getSession();
-    const token=session?.access_token;
     let pairs=[];
-    try{
-      const r=await fetch(SUPABASE_URL+'/functions/v1/scan-vocab',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(token||'')},body:JSON.stringify({image:photoBase64,mime:photoMime})});
-      if(!r.ok)throw new Error('Edge function');
-      const d=await r.json(); pairs=d.pairs||[];
-    }catch{
-      // Fallback: NVIDIA direct
-      const nvKey=localStorage.getItem('kivo_nvidia_key')||'';
-      if(!nvKey){status.textContent='⚠ Bitte NVIDIA API Key in Einstellungen eintragen';btn.disabled=false;btn.textContent='🔍 KI scannen';return;}
-      const r=await fetch('https://integrate.api.nvidia.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+nvKey},body:JSON.stringify({model:'meta/llama-3.2-11b-vision-instruct',messages:[{role:'user',content:[{type:'text',text:'Extrahiere alle Vokabelpaare. Format: Deutsch = Englisch, ein Paar pro Zeile. Nur die Paare.'},{type:'image_url',image_url:{url:'data:'+photoMime+';base64,'+photoBase64}}]}],max_tokens:1024,temperature:0.1})});
-      const d=await r.json(); const text=d.choices?.[0]?.message?.content||'';
-      pairs=text.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const[a,...b]=l.split('=');return[a.trim(),b.join('=').trim()];}).filter(([a,b])=>a&&b);
-    }
+    const r=await fetch(SUPABASE_URL+'/functions/v1/scan-vocab',{method:'POST',headers:await edgeHeaders(),body:JSON.stringify({image:photoBase64,mime:photoMime})});
+    if(!r.ok)throw new Error('Foto-Scan Backend nicht erreichbar');
+    const d=await r.json(); pairs=d.pairs||[];
     if(!pairs.length){status.textContent='⚠ Keine Vokabeln erkannt';btn.disabled=false;btn.textContent='🔍 KI scannen';return;}
     const lang='Foto-Import';
     if(!POOLS[lang])POOLS[lang]={};
@@ -1793,7 +1782,7 @@ async function doPhotoScan(){
 // ── SETTINGS ──────────────────────────────────────────────────
 function openSettings(){
   const el=document.getElementById('settings-content'); if(!el)return;
-  const nvKey=localStorage.getItem('kivo_nvidia_key')||'';
+  const nvKey='';
   const cl=[{v:'1.0',l:'✓ Aktuell',items:[{t:'new',x:'Kivo — Neustart mit neuem Design (Dashboard-Look)'},{t:'new',x:'Karteikarten, Quiz, Tippen, Zuordnen, KI-Lückentext, KI-Assistent'},{t:'new',x:'XP-System, Streak, Heatmap, Tagesziele'},{t:'new',x:'Freunde-Panel, Leaderboard, Pool-Sharing'},{t:'new',x:'Nutzer-Profile mit Items & Shop'},{t:'new',x:'Profilvergleich mit Freunden (Stats Vs)'},{t:'new',x:'Supabase Auth, Cloud-Sync, Foto-Import, PWA'}]}];
   el.innerHTML=`
     <div class="auth-tabs" style="margin-bottom:14px">
@@ -1804,7 +1793,7 @@ function openSettings(){
       ${currentUser?`
       <div class="k-group"><label class="k-label">Angemeldet als</label><div style="padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--text)">${currentUser.email}</div></div>
       <div class="k-group"><label class="k-label">Passwort ändern</label><input class="k-input" id="sett-pw" type="password" placeholder="Neues Passwort"><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="changePw()">Speichern</button></div>`:'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Nicht angemeldet</div>'}
-      <div class="k-group"><label class="k-label">NVIDIA API Key (für Foto-Import ohne Backend)</label><input class="k-input" id="sett-nv" type="password" placeholder="nvapi-..." value="${nvKey}"><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="saveNvKey()">Speichern</button></div>
+      <div class="k-group"><label class="k-label">KI-Funktionen</label><div style="padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--muted)">API-Schlüssel laufen sicher über Supabase Edge Functions.</div></div>
       <div class="k-group"><label class="k-label">Tagesziel</label><select class="k-input" id="sett-goal" onchange="this.parentElement.querySelector('small').textContent=''"><option value="10">10 XP / Tag</option><option value="30" selected>30 XP / Tag</option><option value="50">50 XP / Tag</option></select><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="lsSet('kivo_goal',parseInt(document.getElementById('sett-goal').value));updateHomeStats();toast('Ziel gespeichert')">Speichern</button></div>
       ${currentUser?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-danger btn-sm" onclick="doLogout();closeModal('settings-modal')">↩ Abmelden</button></div>`:''}
     </div>
@@ -1819,10 +1808,7 @@ async function changePw(){
   if(!pw||pw.length<6){toast('Mind. 6 Zeichen');return;}
   try{await sb.auth.updateUser({password:pw});toast('✓ Passwort geändert');}catch(e){toast('Fehler: '+e.message);}
 }
-function saveNvKey(){
-  const k=(document.getElementById('sett-nv')?.value||'').trim();
-  localStorage.setItem('kivo_nvidia_key',k); toast('✓ NVIDIA Key gespeichert');
-}
+function saveNvKey(){ toast('KI-Schlüssel werden serverseitig verwaltet'); }
 
 // ── AUTH ──────────────────────────────────────────────────────
 function switchAuthTab(tab){
@@ -1855,8 +1841,6 @@ async function doRegister(){
   try{
     const{data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username}}});
     if(error)throw error;
-    // Create profile
-    if(data.user) await sb.from('profiles').upsert({id:data.user.id,username,email,xp_total:0,streak:0,xp_data:{},created_at:new Date().toISOString()});
     authMsg('✓ Konto erstellt! Bitte E-Mail bestätigen.',true);
   }catch(e){authMsg('Fehler: '+e.message);}
 }
