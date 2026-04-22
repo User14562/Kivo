@@ -746,6 +746,1957 @@ function flattenPool(poolObj) {
 }
 
 function loadState() {
+  const custom = currentUser ? lsGet('kivo_custom','{}') : {};
+  POOLS = JSON.parse(JSON.stringify(BUILTIN));
+  for(const [l,ps] of Object.entries(custom)) {
+    if(!POOLS[l]) POOLS[l]={};
+    for(const [p,obj] of Object.entries(ps)) POOLS[l][p]=obj;
+  }
+  mistakeLog = lsGet('kivo_ml','{}');
+  sessions = lsGet('kivo_sess','[]');
+  const saved = localStorage.getItem('kivo_ak');
+  if(saved && getPoolObj(saved)) activeKey=saved;
+  else { const l=Object.keys(POOLS)[0]; activeKey=l?mkKey(l,Object.keys(POOLS[l])[0]):null; }
+  buildVocab();
+}
+
+function buildVocab() {
+  const pool=getPoolObj(activeKey); if(!pool) return;
+  const knIds=getKnownIds(activeKey);
+  const flat=flattenPool(pool);
+  vocab=flat.map((v,i)=>({...v,id:i,known:knIds.includes(i)}));
+  updateHomeStats();
+  const {l,p}=spKey(activeKey);
+  const lbl=l+' · '+p;
+  document.getElementById('active-pool-lbl').textContent=lbl.length>22?lbl.slice(0,22)+'…':lbl;
+  document.getElementById('home-pool-name').textContent=p;
+}
+
+function saveKnown() { lsSet('kivo_kn_'+activeKey,vocab.filter(v=>v.known).map(v=>v.id)); }
+function saveCustom() {
+  const custom={};
+  for(const [l,ps] of Object.entries(POOLS))
+    for(const [p,obj] of Object.entries(ps))
+      if(!BUILTIN[l]?.[p]){if(!custom[l])custom[l]={};custom[l][p]=obj;}
+  lsSet('kivo_custom',custom);
+}
+function setActivePool(key) {
+  activeKey=key; localStorage.setItem('kivo_ak',key); buildVocab();
+}
+
+function updateHomeStats() {
+  const t=vocab.length, k=vocab.filter(v=>v.known).length;
+  const pct=t>0?Math.round(k/t*100):0;
+  document.getElementById('hm-k').textContent=k;
+  document.getElementById('hm-t').textContent=t;
+  document.getElementById('hm-bar').style.width=pct+'%';
+  document.getElementById('hm-sr').textContent=srDueCount(activeKey);
+  document.getElementById('hm-streak').textContent=calcStreak();
+  const s=calcStreak();
+  document.getElementById('hm-streak-icon').textContent=s>=3?'🔥':'📅';
+  document.getElementById('hm-xp').textContent=getTotalXp().toLocaleString();
+  // Daily goal
+  const goal=parseInt(lsGet('kivo_goal','30'));
+  const sel=document.getElementById('goal-sel'); if(sel)sel.value=goal;
+  const today=new Date().toISOString().slice(0,10);
+  const xpData=lsGet('kivo_xp','{}');
+  const todayXp=xpData[today]||0;
+  document.getElementById('hm-goal-lbl').textContent=todayXp+' / '+goal+' XP';
+  document.getElementById('daily-goal-fill').style.width=Math.min(100,Math.round(todayXp/goal*100))+'%';
+  // Sessions mini
+  const rec=sessions.slice(-5);
+  document.getElementById('hm-sessions').innerHTML=rec.length?rec.map(s=>`<span style="margin-right:6px">${s.pct}% (${s.ok}✓)</span>`).join(''):'Noch keine Sessions';
+}
+
+function saveDailyGoal(){
+  const v=document.getElementById('goal-sel')?.value||'30';
+  lsSet('kivo_goal',parseInt(v)); updateHomeStats(); toast('Tagesziel: '+v+' XP');
+}
+
+// ── SCREEN ROUTER ────────────────────────────────────────────
+const SCREEN_TITLES = { home:'KIVO', cards:'Karteikarten', quiz:'Quiz', typing:'Tippen', matching:'Zuordnen', overview:'Meine Pools', stats:'Statistiken', gap:'KI-Lückentext', aibot:'KI-Assistent', profile:'Mein Profil', shop:'Item Shop' };
+
+function goTo(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.rail-btn[data-s]').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.bn-item[data-s]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name)?.classList.add('active');
+  document.getElementById('rb-'+name)?.classList.add('active');
+  document.querySelector(`.bn-item[data-s="${name}"]`)?.classList.add('active');
+  document.getElementById('tb-title').textContent = SCREEN_TITLES[name]||name.toUpperCase();
+  closeUserMenu();
+  if(name==='cards')    initCards();
+  else if(name==='quiz')    startQuiz();
+  else if(name==='typing')  startTyping();
+  else if(name==='matching') startMatch();
+  else if(name==='overview') renderOverview();
+  else if(name==='stats')   renderStats();
+  else if(name==='gap')     renderGapFill();
+  else if(name==='aibot')   renderAiBot();
+  else if(name==='profile') renderProfile();
+  else if(name==='shop')    renderShop();
+  else if(name==='home')    updateHomeStats();
+}
+
+// ── TOAST & CONFIRM ──────────────────────────────────────────
+function toast(msg) {
+  const wrap=document.getElementById('toast-wrap');
+  const el=document.createElement('div'); el.className='k-toast'; el.textContent=msg;
+  wrap.appendChild(el); setTimeout(()=>el.remove(),2800);
+}
+function confirm2(title,msg,cb) {
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  confirmCb=cb;
+  document.getElementById('confirm-ok').onclick=()=>{document.getElementById('confirm-overlay').classList.remove('open');cb&&cb();};
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+// ── USER MENU ────────────────────────────────────────────────
+function toggleUserMenu() {
+  document.getElementById('user-menu').classList.toggle('open');
+}
+function closeUserMenu() { document.getElementById('user-menu').classList.remove('open'); }
+document.addEventListener('click', e => {
+  if(!e.target.closest('#avatar-btn') && !e.target.closest('#user-menu')) closeUserMenu();
+});
+
+// No longer doing health checks// ── XP SYSTEM ────────────────────────────────────────────────
+async function addXp(pts, reason='learn') {
+  if(currentUser){
+    try{
+      const clientEventId='evt_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+      const r=await fetch(SUPABASE_URL+'/functions/v1/kivo-xp',{method:'POST',headers:await edgeHeaders(),body:JSON.stringify({points:pts,reason,clientEventId})});
+      if(r.ok){const d=await r.json(); lsSet('kivo_xp',d.xp_data||{}); userCurrency=Math.floor((d.xp_total||0)/5); lsSet('kivo_currency',userCurrency); calcStreak(); updateHomeStats(); updateCurrencyDisplay(); return;}
+    }catch(e){}
+  }
+  const today=new Date().toISOString().slice(0,10);
+  const xp=lsGet('kivo_xp','{}');
+  xp[today]=(xp[today]||0)+pts; lsSet('kivo_xp',xp);
+  userCurrency=Math.floor(getTotalXp()/5);
+  lsSet('kivo_currency',userCurrency);
+  updateCurrencyDisplay();
+  calcStreak(); updateHomeStats();
+}
+function getTotalXp() { return Object.values(lsGet('kivo_xp','{}')).reduce((a,b)=>a+b,0); }
+function calcStreak() {
+  const xp=lsGet('kivo_xp','{}'); const today=new Date(); let s=0;
+  for(let i=0;i<365;i++) { const d=new Date(today); d.setDate(d.getDate()-i); const k=d.toISOString().slice(0,10); if(xp[k]&&xp[k]>0)s++; else if(i>0)break; }
+  lsSet('kivo_streak',s); return s;
+}
+function updateCurrencyDisplay() {
+  const el=document.getElementById('currency-pill');
+  const val=document.getElementById('currency-val');
+  if(el) el.style.display=currentUser?'flex':'none';
+  if(val) val.textContent=userCurrency;
+}
+async function syncXpToServer() { return; }
+
+// ── SPACED REPETITION (SM-2) ─────────────────────────────────
+const srKey=(pk,id)=>'kivo_sr_'+esc(pk)+'_'+id;
+function srGet(pk,id) { return lsGet(srKey(pk,id),'{"ef":2.5,"interval":1,"due":0,"reps":0}'); }
+function srUpdate(pk,id,quality,awardXp=true) {
+  let {ef,interval,reps}=srGet(pk,id);
+  if(quality<3){reps=0;interval=1;}
+  else{if(reps===0)interval=1;else if(reps===1)interval=6;else interval=Math.round(interval*ef);reps++;ef=Math.max(1.3,ef+0.1-(5-quality)*(0.08+(5-quality)*0.02));}
+  lsSet(srKey(pk,id),{ef,interval,due:Date.now()+interval*86400000,reps});
+  if(awardXp) addXp(quality>=3?5:1);
+}
+function srDueCount(pk) {
+  const flat=flattenPool(getPoolObj(pk));
+  return flat.filter((_,i)=>srGet(pk,i).due<=Date.now()).length;
+}
+
+// ── FLASHCARDS ────────────────────────────────────────────────
+function initCards() {
+  const skip=document.getElementById('skip-known')?.checked;
+  cDeck=shuf(vocab.filter(v=>!skip||!v.known));
+  cIdx=0; cFlipped=false;
+  if(!cDeck.length){document.getElementById('screen-cards').innerHTML+='';toast('Keine Karten!');return;}
+  renderCard();
+}
+function renderCard() {
+  if(!cDeck.length)return;
+  const v=cDeck[cIdx]; cFlipped=false;
+  const fc=document.getElementById('fc'); fc.classList.remove('flipped');
+  document.getElementById('fc-front-word').textContent=v.de;
+  document.getElementById('fc-back-word').textContent=v.en;
+  document.getElementById('fc-cat-hint').textContent=v.cat||'';
+  document.getElementById('fc-counter').textContent=(cIdx+1)+' / '+cDeck.length;
+  document.getElementById('fc-prog').style.width=Math.round((cIdx+1)/cDeck.length*100)+'%';
+  document.getElementById('fc-btns').style.display='none';
+}
+function flipCard() {
+  cFlipped=!cFlipped;
+  document.getElementById('fc').classList.toggle('flipped',cFlipped);
+  document.getElementById('fc-btns').style.display=cFlipped?'flex':'none';
+}
+function navCard(dir) {
+  cIdx=Math.max(0,Math.min(cDeck.length-1,cIdx+dir));
+  cFlipped=false; renderCard();
+}
+function setKnown(val) {
+  if(!cDeck.length) return;
+  const cur=cDeck[cIdx]; cur.known=val; vocab[cur.id].known=val;
+  saveKnown(); updateHomeStats(); toast(val?'✓ Gekonnt!':'✗ Nicht gekonnt');
+  srUpdate(activeKey,cur.id,val?4:1,false); // no XP for flashcards
+  if(cIdx<cDeck.length-1) { cIdx++; renderCard(); }
+  else toast('🎉 Alle Karten durch!');
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────
+function startQuiz() {
+  qDeck=shuf(vocab); qIdx=0; qOk=0; qNo=0;
+  renderQuiz();
+}
+function renderQuiz() {
+  const el=document.getElementById('quiz-area');
+  if(qIdx>=qDeck.length){endQuiz();return;}
+  const v=qDeck[qIdx];
+  const d2e=document.getElementById('quiz-d2e')?.checked;
+  const q=d2e?v.de:v.en, correct=d2e?v.en:v.de;
+  const others=shuf(vocab.filter(x=>x.id!==v.id)).slice(0,3).map(x=>d2e?x.en:x.de);
+  const opts=shuf([correct,...others]);
+  const pct=Math.round(qIdx/qDeck.length*100);
+  el.innerHTML=`
+    <div class="quiz-hdr">
+      <div style="font-size:11px;color:var(--muted)">Frage ${qIdx+1} / ${qDeck.length}</div>
+      <div class="quiz-scores"><span style="color:var(--lime)">✓ ${qOk}</span> <span style="color:var(--danger)">✗ ${qNo}</span></div>
+    </div>
+    <div class="quiz-progress"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-q-text">${q}</div>
+    <div class="quiz-opts">${opts.map(o=>`<button class="quiz-opt" onclick="answerQuiz('${esc(o)}','${esc(correct)}',this)">${o}</button>`).join('')}</div>
+    <div class="quiz-fb" id="quiz-fb"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-sm" onclick="startQuiz()">↺ Neu</button></div>`;
+}
+function answerQuiz(chosen,correct,btn) {
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  const v=qDeck[qIdx];
+  if(chosen===correct) {
+    btn.classList.add('good'); qOk++;
+    document.getElementById('quiz-fb').textContent='✓ Richtig!';
+    document.getElementById('quiz-fb').style.color='var(--lime)';
+    v.known=true; vocab[v.id].known=true; saveKnown(); updateHomeStats();
+    srUpdate(activeKey,v.id,4);
+  } else {
+    btn.classList.add('bad');
+    document.querySelectorAll('.quiz-opt').forEach(b=>{if(b.textContent===correct.replace(/_/g,' ')||b.onclick?.toString().includes(correct))b.classList.add('good');});
+    qNo++; document.getElementById('quiz-fb').textContent='✗ Richtig: '+correct.replace(/_/g,' ');
+    document.getElementById('quiz-fb').style.color='var(--danger)';
+    mistakeLog[v.de]=(mistakeLog[v.de]||0)+1; lsSet('kivo_ml',mistakeLog);
+    srUpdate(activeKey,v.id,1);
+  }
+  setTimeout(()=>{qIdx++;renderQuiz();},900);
+}
+function endQuiz() {
+  const el=document.getElementById('quiz-area');
+  const pct=qDeck.length?Math.round(qOk/qDeck.length*100):0;
+  sessions.push({ok:qOk,no:qNo,n:qDeck.length,pct}); lsSet('kivo_sess',sessions);
+  el.innerHTML=`
+    <div class="quiz-result">
+      <div class="big-score" style="color:${pct>=70?'var(--lime)':pct>=40?'var(--orange)':'var(--danger)'}">${pct}%</div>
+      <div style="margin:10px 0;font-size:14px;color:var(--muted)">${qOk} richtig · ${qNo} falsch · ${qDeck.length} gesamt</div>
+      <div style="font-size:13px;margin-bottom:18px;color:var(--lime)">+${qOk*5} XP verdient!</div>
+      <button class="btn btn-lime" onclick="startQuiz()">↺ Nochmal</button>
+      <button class="btn btn-sm" style="margin-left:8px" onclick="goTo('stats')">📊 Statistiken</button>
+    </div>`;
+  updateHomeStats();
+}
+
+// ── TYPING ────────────────────────────────────────────────────
+function startTyping() {
+  tDeck=shuf(vocab); tIdx=0; tOk=0; tNo=0; renderTyping();
+}
+function renderTyping() {
+  const el=document.getElementById('typing-area');
+  if(tIdx>=tDeck.length){endTyping();return;}
+  const v=tDeck[tIdx];
+  el.innerHTML=`
+    <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Frage ${tIdx+1} / ${tDeck.length} · ✓ ${tOk} ✗ ${tNo}</div>
+    <div class="t-word">${v.de}</div>
+    <input class="t-input" id="t-inp" placeholder="Englische Übersetzung..." autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')checkTyping()">
+    <div class="t-hint" id="t-hint"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-sm" onclick="showTypingHint()">💡 Tipp</button>
+      <button class="btn btn-lime btn-sm" onclick="checkTyping()">Prüfen ✓</button>
+      <button class="btn btn-sm" onclick="tIdx++;renderTyping()">Überspringen →</button>
+    </div>`;
+  setTimeout(()=>document.getElementById('t-inp')?.focus(),50);
+}
+function showTypingHint() {
+  const v=tDeck[tIdx]; const hint=v.en.slice(0,Math.max(1,Math.ceil(v.en.length*.4)))+'…';
+  document.getElementById('t-hint').textContent='💡 '+hint; document.getElementById('t-hint').style.color='var(--muted)';
+}
+function checkTyping() {
+  const inp=document.getElementById('t-inp'); if(!inp)return;
+  const v=tDeck[tIdx]; const val=inp.value.trim().toLowerCase(); const ans=v.en.toLowerCase().trim();
+  const ok=val===ans||levenshtein(val,ans)<=Math.floor(ans.length*.2);
+  if(ok){
+    inp.className='t-input t-ok'; document.getElementById('t-hint').textContent='✓ Richtig!'; document.getElementById('t-hint').style.color='var(--lime)';
+    tOk++; v.known=true; vocab[v.id].known=true; saveKnown(); updateHomeStats(); srUpdate(activeKey,v.id,4);
+  } else {
+    inp.className='t-input t-no'; document.getElementById('t-hint').textContent='✗ Richtig: '+v.en; document.getElementById('t-hint').style.color='var(--danger)';
+    tNo++; mistakeLog[v.de]=(mistakeLog[v.de]||0)+1; lsSet('kivo_ml',mistakeLog); srUpdate(activeKey,v.id,1);
+  }
+  setTimeout(()=>{tIdx++;renderTyping();},1000);
+}
+function endTyping() {
+  const el=document.getElementById('typing-area');
+  const pct=tDeck.length?Math.round(tOk/tDeck.length*100):0;
+  sessions.push({ok:tOk,no:tNo,n:tDeck.length,pct}); lsSet('kivo_sess',sessions);
+  el.innerHTML=`<div class="quiz-result">
+    <div class="big-score" style="color:${pct>=70?'var(--lime)':pct>=40?'var(--orange)':'var(--danger)'}">${pct}%</div>
+    <div style="margin:10px 0;font-size:14px;color:var(--muted)">${tOk} richtig · ${tNo} falsch</div>
+    <div style="color:var(--lime);font-size:13px;margin-bottom:18px">+${tOk*5} XP!</div>
+    <button class="btn btn-lime" onclick="startTyping()">↺ Nochmal</button></div>`;
+  updateHomeStats();
+}
+function levenshtein(a,b) {
+  const m=a.length,n=b.length; const dp=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);
+  for(let j=0;j<=n;j++)dp[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// ── MATCHING ──────────────────────────────────────────────────
+function startMatch() {
+  mFound=0; mSel=null;
+  const el=document.getElementById('matching-area');
+  const picks=shuf(vocab).slice(0,8);
+  document.getElementById('mc-tot').textContent=picks.length;
+  document.getElementById('mc-cnt').textContent=0;
+  const left=picks.map(v=>({...v,_side:'de'}));
+  const right=shuf(picks).map(v=>({...v,_side:'en'}));
+  mPairs=[...shuf(left),...shuf(right)];
+  el.innerHTML=`<div class="match-grid">${mPairs.map((v,i)=>`<button class="match-card" id="mc-${i}" onclick="pickMatch(${i})">${v._side==='de'?v.de:v.en}</button>`).join('')}</div>`;
+}
+function pickMatch(i) {
+  const v=mPairs[i]; const el=document.getElementById('mc-'+i);
+  if(el.classList.contains('mm')) return;
+  if(mSel && mSel.idx===i) { el.classList.remove('ms'); mSel=null; return; }
+  if(!mSel) { el.classList.add('ms'); mSel={v,el,idx:i}; return; }
+  if(mSel.v.id===v.id && mSel.v._side!==v._side) {
+    el.classList.add('mm'); mSel.el.classList.add('mm'); el.classList.remove('ms');
+    mFound++; document.getElementById('mc-cnt').textContent=mFound;
+    addXp(5); srUpdate(activeKey,v.id,4);
+    mSel=null;
+    if(mFound===mPairs.length/2) setTimeout(()=>{toast('🎉 Alle Paare! +'+mPairs.length/2*5+' XP');startMatch();},600);
+  } else {
+    el.classList.add('mw'); mSel.el.classList.add('mw');
+    setTimeout(()=>{el.classList.remove('mw','ms');mSel.el.classList.remove('mw','ms');mSel=null;},600);
+  }
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────
+function renderOverview() {
+  const el=document.getElementById('overview-content'); if(!el)return;
+  let html='';
+  for(const [lang,pools] of Object.entries(POOLS)) {
+    html+=`<div class="k-section-title" style="margin-top:10px">${lang}</div>`;
+    for(const [pname,poolObj] of Object.entries(pools)) {
+      const key=mkKey(lang,pname);
+      const flat=flattenPool(poolObj);
+      const kn=getKnownIds(key).length;
+      const pct=flat.length?Math.round(kn/flat.length*100):0;
+      const due=srDueCount(key);
+      const isActive=key===activeKey;
+      html+=`<div class="pool-row ${isActive?'active-pool':''}" onclick="setActivePool('${key}');renderOverview();buildVocab()">
+        <div style="flex:1">
+          <div class="pool-row-name">${pname} ${isActive?'<span class="tag lime" style="margin-left:4px">Aktiv</span>':''}</div>
+          <div class="pool-row-sub">${flat.length} Vokabeln · ${pct}% gekonnt ${due>0?`<span class="sr-badge">${due} fällig</span>`:''}</div>
+        </div>
+        <div class="pool-mini-bar"><div class="pool-mini-fill" style="width:${pct}%"></div></div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          ${!BUILTIN[lang]?.[pname]?`<button class="btn btn-sm btn-blue" onclick="event.stopPropagation();openEditPoolModal('${key}')" title="Bearbeiten">✎</button>`:''}
+          <button class="btn btn-sm" onclick="event.stopPropagation();sharePool('${key}')" title="Teilen">🔗</button>
+          ${!BUILTIN[lang]?.[pname]?`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deletePool('${key}')" title="Löschen">✕</button>`:''}
+        </div>
+      </div>`;
+    }
+  }
+  el.innerHTML=html;
+}
+
+function openNewPoolModal() {
+  document.getElementById('npm-title').textContent='Neuer Pool';
+  document.getElementById('new-pool-content').innerHTML=`
+    <div class="k-group"><label class="k-label">Pool-Name</label><input class="k-input" id="np-name" placeholder="z.B. Spanisch Alltag"></div>
+    <div class="k-group"><label class="k-label">Sprache</label><input class="k-input" id="np-lang" value="Englisch" placeholder="Englisch / Spanisch / ..."></div>
+    <div class="k-group"><label class="k-label">Vokabeln (ein Paar pro Zeile: Deutsch = Englisch)</label><textarea class="k-input" id="np-pairs" rows="8" placeholder="Hund = Dog&#10;Katze = Cat&#10;Haus = House"></textarea></div>
+    <button class="btn btn-lime" style="width:100%" onclick="saveNewPool()">Pool erstellen</button>`;
+  openModal('new-pool-modal');
+}
+
+function openEditPoolModal(key) {
+  const {l,p}=spKey(key); const pool=getPoolObj(key); if(!pool)return;
+  const pairs=flattenPool(pool).map(v=>`${v.de} = ${v.en}`).join('\n');
+  document.getElementById('npm-title').textContent='Pool bearbeiten';
+  document.getElementById('new-pool-content').innerHTML=`
+    <div class="k-group"><label class="k-label">Pool-Name</label><input class="k-input" id="np-name" value="${p.replace(/"/g,'&quot;')}"></div>
+    <div class="k-group"><label class="k-label">Sprache</label><input class="k-input" id="np-lang" value="${l.replace(/"/g,'&quot;')}"></div>
+    <div class="k-group"><label class="k-label">Vokabeln (ein Paar pro Zeile: Deutsch = Englisch)</label><textarea class="k-input" id="np-pairs" rows="10">${pairs}</textarea></div>
+    <button class="btn btn-lime" style="width:100%" onclick="saveEditedPool('${key}')">Änderungen speichern</button>`;
+  openModal('new-pool-modal');
+}
+
+function saveNewPool() {
+  const name=(document.getElementById('np-name')?.value||'').trim();
+  const lang=(document.getElementById('np-lang')?.value||'Englisch').trim();
+  const raw=(document.getElementById('np-pairs')?.value||'');
+  if(!name){toast('Bitte Pool-Name eingeben');return;}
+  const pairs=raw.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const[de,...en]=l.split('=');return[de.trim(),en.join('=').trim()];}).filter(([d,e])=>d&&e);
+  if(!pairs.length){toast('Keine gültigen Vokabeln');return;}
+  if(!POOLS[lang])POOLS[lang]={};
+  POOLS[lang][name]={subcats:{[name]:pairs}};
+  saveCustom();
+  if(currentUser) syncPoolToServer(lang,name);
+  closeModal('new-pool-modal'); renderOverview(); setActivePool(mkKey(lang,name));
+  toast('✓ Pool "'+name+'" erstellt!');
+}
+
+async function saveEditedPool(oldKey) {
+  const old=spKey(oldKey);
+  const name=(document.getElementById('np-name')?.value||'').trim();
+  const lang=(document.getElementById('np-lang')?.value||'Englisch').trim();
+  const raw=(document.getElementById('np-pairs')?.value||'');
+  if(!name){toast('Bitte Pool-Name eingeben');return;}
+  const pairs=raw.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const[de,...en]=l.split('=');return[de.trim(),en.join('=').trim()];}).filter(([d,e])=>d&&e);
+  if(!pairs.length){toast('Keine gültigen Vokabeln');return;}
+  if(!POOLS[lang])POOLS[lang]={};
+  if((old.l!==lang||old.p!==name)&&POOLS[old.l]?.[old.p]){delete POOLS[old.l][old.p];if(!Object.keys(POOLS[old.l]).length)delete POOLS[old.l];}
+  POOLS[lang][name]={subcats:{[name]:pairs}}; saveCustom(); await syncPoolToServer(lang,name);
+  activeKey=mkKey(lang,name); localStorage.setItem('kivo_ak',activeKey); closeModal('new-pool-modal'); loadState(); renderOverview(); toast('✓ Pool gespeichert');
+}
+
+async function syncPoolToServer(lang,name) {
+  if(!currentUser)return;
+  try { await sb.from('pools').upsert({id:currentUser.id+'_'+esc(mkKey(lang,name)),user_id:currentUser.id,lang,name,data:POOLS[lang][name],updated_at:new Date().toISOString()}); } catch(e){toast('Cloud-Sync fehlgeschlagen: '+e.message);}
+}
+
+function deletePool(key) {
+  confirm2('Pool löschen?','Alle Fortschritte für diesen Pool werden entfernt.',()=>{
+    const {l,p}=spKey(key);
+    delete POOLS[l][p]; if(!Object.keys(POOLS[l]).length)delete POOLS[l];
+    saveCustom(); if(activeKey===key){const lk=Object.keys(POOLS)[0];activeKey=mkKey(lk,Object.keys(POOLS[lk])[0]);}
+    buildVocab(); renderOverview(); toast('Pool gelöscht');
+  });
+}
+
+function sharePool(key) {
+  const {l,p}=spKey(key);
+  const url=location.origin+location.pathname+'?share='+encodeURIComponent(key)+'&u='+(currentUser?.id||'');
+  navigator.clipboard?.writeText(url).then(()=>toast('🔗 Link kopiert!')).catch(()=>toast(url));
+}
+
+// ── STATISTICS ────────────────────────────────────────────────
+function renderStats() {
+  const el=document.getElementById('stats-content'); if(!el)return;
+  const streak=calcStreak(), totalXp=getTotalXp(), xpData=lsGet('kivo_xp','{}');
+  const t=vocab.length, k=vocab.filter(v=>v.known).length;
+  const heatCells=[];
+  const today=new Date();
+  for(let i=83;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10); const pts=xpData[key]||0;
+    let lvl=pts>=100?4:pts>=50?3:pts>=20?2:pts>0?1:0;
+    heatCells.push(`<div class="hm-cell l${lvl}" title="${key}: ${pts} XP"></div>`);
+  }
+  let poolRows='';
+  for(const[lang,pools] of Object.entries(POOLS)) for(const[pname,poolObj] of Object.entries(pools)){
+    const key=mkKey(lang,pname); const flat=flattenPool(poolObj); const kn=getKnownIds(key).length;
+    const pct=flat.length?Math.round(kn/flat.length*100):0; const due=srDueCount(key);
+    poolRows+=`<div class="pool-prog-row"><span class="ppr-name">${pname}</span>${due>0?`<span class="sr-badge">${due} fällig</span>`:''}<div class="ppr-bar"><div class="ppr-fill" style="width:${pct}%"></div></div><span class="ppr-pct">${pct}%</span></div>`;
+  }
+  const avg=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.pct,0)/sessions.length):0;
+  el.innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">${streak>=3?'🔥':'📅'}</div><div class="stat-big" style="color:var(--orange)">${streak}</div><div class="stat-lbl">Streak</div></div>
+      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">⚡</div><div class="stat-big" style="color:var(--lime)">${totalXp.toLocaleString()}</div><div class="stat-lbl">XP</div></div>
+      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">✅</div><div class="stat-big" style="color:var(--lime)">${k}</div><div class="stat-lbl">Gekonnt</div></div>
+      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">📚</div><div class="stat-big">${t}</div><div class="stat-lbl">Gesamt</div></div>
+      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">🎯</div><div class="stat-big" style="color:var(--blue)">${avg}%</div><div class="stat-lbl">Ø Quiz</div></div>
+      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">🏃</div><div class="stat-big" style="color:var(--purple)">${sessions.length}</div><div class="stat-lbl">Sessions</div></div>
+    </div>
+    <div class="k-card" style="margin-bottom:12px">
+      <div class="k-section-title">Lernaktivität (12 Wochen)</div>
+      <div class="hm-wrap">${heatCells.join('')}</div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:8px;font-size:9px;color:var(--muted)">wenig <div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div> viel</div>
+    </div>
+    <div class="k-card" style="margin-bottom:12px">
+      <div class="k-section-title">Pool-Fortschritt</div>
+      ${poolRows||'<div style="font-size:11px;color:var(--muted)">Noch keine Pools</div>'}
+    </div>
+    ${sessions.length?`<div class="k-card"><div class="k-section-title">Quiz-Verlauf (letzte ${Math.min(10,sessions.length)} Sessions)</div><div style="display:flex;align-items:flex-end;gap:4px;height:50px;margin-top:8px">${sessions.slice(-10).map(s=>{const h=Math.max(8,Math.round(s.pct/100*44));return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;border-radius:3px 3px 0 0;height:${h}px;background:${s.pct>=70?'var(--lime)':s.pct>=40?'var(--orange)':'var(--danger)'};min-height:3px"></div><div style="font-size:8px;color:var(--muted)">${s.pct}%</div></div>`;}).join('')}</div></div>`:''}`;
+}
+
+// ── GAP FILL ──────────────────────────────────────────────────
+function renderGapFill() {
+  const el=document.getElementById('gap-content'); if(!el)return;
+  const flat=flattenPool(getPoolObj(activeKey));
+  if(!flat.length){el.innerHTML=`<div class="k-card" style="text-align:center;padding:40px"><div style="font-size:40px;margin-bottom:12px">📚</div><div style="font-size:13px;margin-bottom:8px">Kein Pool ausgewählt</div><button class="btn btn-lime btn-sm" onclick="openModal('pool-modal')">Pool wählen</button></div>`;return;}
+  const poolName=spKey(activeKey).p;
+  el.innerHTML=`
+    <div class="k-card" style="margin-bottom:14px">
+      <div class="k-section-title">Aktiver Pool: ${poolName}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Die KI generiert einen Text passend zu deinem Pool und baut Lücken ein, die du ausfüllen musst.</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-lime" onclick="generateGapText()">✨ Text generieren</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('pool-modal')">Pool wechseln →</button>
+      </div>
+    </div>
+    <div id="gap-output"></div>`;
+}
+
+async function generateGapText() {
+  const outEl=document.getElementById('gap-output'); if(!outEl)return;
+  const flat=flattenPool(getPoolObj(activeKey));
+  gapVocab=shuf(flat).slice(0,Math.min(6,flat.length));
+  const poolName=spKey(activeKey).p;
+  outEl.innerHTML=`<div class="k-card" style="display:flex;align-items:center;gap:10px;padding:20px"><div class="gap-spinner"></div><span style="font-size:11px;color:var(--muted)">KI generiert Text...</span></div>`;
+  try {
+    const resp=await fetch(SUPABASE_URL+'/functions/v1/kivo-ai',{method:'POST',headers:await edgeHeaders(),
+      body:JSON.stringify({mode:'gap',poolName,words:gapVocab.map(v=>v.de)})});
+    if(!resp.ok) throw new Error('KI-Dienst nicht erreichbar');
+    const data=await resp.json();
+    const text=data.text||'';
+    if(!text)throw new Error('Keine Antwort');
+    renderGapUI(text);
+  } catch(e) {
+    const fallback=gapVocab.map(v=>`Das englische Wort für "${v.de}" ist [[${v.de}]].`).join(' ');
+    renderGapUI(fallback);
+  }
+}
+
+function renderGapUI(raw) {
+  const outEl=document.getElementById('gap-output'); if(!outEl)return;
+  let idx=0;
+  const html=raw.replace(/\[\[([^\]]+)\]\]/g,(_,word)=>{
+    const i=idx++; const v=gapVocab.find(v=>v.de.toLowerCase()===word.toLowerCase())||{de:word,en:'?'};
+    return `<input class="gap-blank" id="gb-${i}" data-answer="${v.de}" placeholder="${'_'.repeat(Math.max(5,word.length))}" size="${Math.max(8,word.length+2)}" autocomplete="off" spellcheck="false" onkeyup="checkGapLive(this)">`;
+  });
+  outEl.innerHTML=`
+    <div class="k-card" style="margin-bottom:12px">
+      <div class="gap-text">${html}</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-lime btn-sm" onclick="checkAllGaps()">✓ Alles prüfen</button>
+        <button class="btn btn-ghost btn-sm" onclick="revealGaps()">👁 Lösung</button>
+        <button class="btn btn-ghost btn-sm" onclick="generateGapText()">↺ Neu</button>
+      </div>
+    </div>
+    <div id="gap-result"></div>
+    <div class="k-card-sm">
+      <div class="k-section-title">Gesucht</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${gapVocab.map(v=>`<span style="padding:3px 9px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--muted)">${v.en}</span>`).join('')}</div>
+    </div>`;
+}
+
+function checkGapLive(inp) {
+  const ans=(inp.dataset.answer||'').toLowerCase().trim(), val=inp.value.toLowerCase().trim();
+  if(!val){inp.className='gap-blank';return;}
+  if(val===ans)inp.className='gap-blank gb-ok';
+}
+function checkAllGaps() {
+  let ok=0,tot=0;
+  document.querySelectorAll('.gap-blank').forEach(inp=>{
+    tot++; const ans=(inp.dataset.answer||'').toLowerCase().trim(), val=inp.value.toLowerCase().trim();
+    if(val===ans){inp.className='gap-blank gb-ok';ok++;}else{inp.className='gap-blank gb-no';}
+  });
+  const pct=tot?Math.round(ok/tot*100):0;
+  const res=document.getElementById('gap-result');
+  if(res){res.innerHTML=`<div class="k-card-sm" style="margin-bottom:12px">${ok===tot?'🎉':'📝'} <strong>${ok}/${tot}</strong> richtig (${pct}%)${ok===tot?` <span style="color:var(--lime)">+${ok*3} XP!</span>`:''}</div>`;
+  if(ok===tot)addXp(ok*3);}
+}
+function revealGaps() {
+  document.querySelectorAll('.gap-blank').forEach(inp=>{inp.value=inp.dataset.answer||'';inp.className='gap-blank gb-ok';inp.disabled=true;});
+}
+
+// ── AI BOT ────────────────────────────────────────────────────
+const AI_SYS=`Du bist Kivo-Assistent — ein freundlicher Sprachlern-Helfer. Du hilfst beim Vokabellernen, erstellst Vokabellisten und beantwortest Fragen. Wenn du eine Vokabelliste erstellst, formatiere sie am Ende als JSON: <vocab_list>{"lang":"Englisch","name":"Listenname","pairs":[{"de":"Wort","en":"Translation"}]}</vocab_list>. Antworte auf Deutsch, kurz und freundlich. Wenn der Nutzer Feedback geben möchte, sag ihm: "Nutze gerne das Feedback-Popup unten rechts oder tippe 'feedback'."`;
+const AI_TIPS=['📚 20 Vokabeln zum Thema Essen','🎨 Farben auf Spanisch','✈️ Reise-Vokabeln','💼 Business-Englisch Basics','🏠 Zimmer & Möbel'];
+
+function renderAiBot() {
+  const wrap=document.getElementById('aibot-wrap'); if(!wrap)return;
+  aiBotHistory=[];
+  wrap.innerHTML=`
+    <div class="aibot-msgs" id="aibot-msgs">
+      <div class="ai-msg bot">👋 Hallo! Ich bin der Kivo-Assistent. Ich kann dir Vokabellisten erstellen, beim Lernen helfen oder Fragen beantworten. Was brauchst du?</div>
+    </div>
+    <div class="ai-suggest-wrap" id="ai-suggests">${AI_TIPS.map(s=>`<div class="ai-suggest" onclick="aiBotSend('${s.replace(/'/g,"\\'")}')"> ${s}</div>`).join('')}</div>
+    <div class="ai-input-row">
+      <input class="k-input" id="aibot-inp" placeholder="Frag mich etwas..." style="flex:1" onkeydown="if(event.key==='Enter')aiBotSend()">
+      <button class="btn btn-lime btn-sm" onclick="aiBotSend()">➤</button>
+    </div>`;
+}
+
+function aiBotSend(preset) {
+  const inp=document.getElementById('aibot-inp');
+  const msg=preset||(inp?.value||'').trim(); if(!msg)return;
+  if(inp) inp.value='';
+  if(msg.toLowerCase().includes('feedback')){showFeedback();return;}
+  const msgs=document.getElementById('aibot-msgs'); if(!msgs)return;
+  aiBotHistory.push({role:'user',content:msg});
+  msgs.innerHTML+=`<div class="ai-msg user">${msg}</div><div class="ai-msg bot typing" id="ai-typing">✦ Denkt nach...</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  document.getElementById('ai-suggests').style.display='none';
+  fetchAiReply();
+}
+
+async function fetchAiReply() {
+  const msgs=document.getElementById('aibot-msgs'); if(!msgs)return;
+  try {
+    const resp=await fetch(SUPABASE_URL+'/functions/v1/kivo-ai',{method:'POST',headers:await edgeHeaders(),
+      body:JSON.stringify({mode:'chat',system:AI_SYS,messages:aiBotHistory})});
+    if(!resp.ok) throw new Error('KI-Dienst nicht erreichbar');
+    const data=await resp.json();
+    const reply=data.reply||'Fehler.';
+    aiBotHistory.push({role:'assistant',content:reply});
+    document.getElementById('ai-typing')?.remove();
+    const vocabMatch=reply.match(/<vocab_list>([\s\S]*?)<\/vocab_list>/);
+    let display=reply.replace(/<vocab_list>[\s\S]*?<\/vocab_list>/,'').trim();
+    let importBtn='';
+    if(vocabMatch){try{const p=JSON.parse(vocabMatch[1].trim());const enc=encodeURIComponent(JSON.stringify(p));importBtn=`<button class="ai-import" onclick="importAiList('${enc}')">📥 Liste importieren (${p.pairs?.length||0} Wörter)</button>`;}catch(e){}}
+    msgs.innerHTML+=`<div class="ai-msg bot">${display.replace(/\n/g,'<br>')}${importBtn}</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  } catch(e) {
+    document.getElementById('ai-typing')?.remove();
+    msgs.innerHTML+=`<div class="ai-msg bot" style="color:var(--danger)">⚠ Fehler: ${e.message}</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  }
+}
+
+async function importAiList(enc) {
+  try {
+    const p=JSON.parse(decodeURIComponent(enc));
+    const lang=p.lang||'KI-Import'; const name=p.name||'KI-Liste';
+    const pairs=p.pairs||[];
+    if(!pairs.length){toast('Keine Vokabeln');return;}
+    const poolData={subcats:{[name]:pairs.map(x=>[x.de,x.en])}};
+    if(!POOLS[lang])POOLS[lang]={};
+    POOLS[lang][name]=poolData; saveCustom();
+    if(currentUser) await syncPoolToServer(lang,name);
+    loadState(); toast('✓ "'+name+'" mit '+pairs.length+' Wörtern importiert!');
+    confirm2('Pool wechseln?','Zu "'+name+'" wechseln und lernen?',()=>{setActivePool(mkKey(lang,name));goTo('cards');});
+  } catch(e){toast('Fehler: '+e.message);}
+}
+
+// ── PROFILE ───────────────────────────────────────────────────
+const SHOP_ITEMS = [
+  {id:'crown',icon:'👑',name:'Krone',price:50,desc:'Zeige deine Dominanz'},
+  {id:'fire',icon:'🔥',name:'Flamme',price:30,desc:'Du bist on fire'},
+  {id:'star',icon:'⭐',name:'Stern',price:20,desc:'Du bist ein Star'},
+  {id:'diamond',icon:'💎',name:'Diamant',price:80,desc:'Seltenste Item'},
+  {id:'rocket',icon:'🚀',name:'Rakete',price:40,desc:'Lern auf die nächste Ebene'},
+  {id:'trophy',icon:'🏆',name:'Pokal',price:60,desc:'Champion-Abzeichen'},
+  {id:'rainbow',icon:'🌈',name:'Regenbogen',price:35,desc:'Farbenfroh lernen'},
+  {id:'lightning',icon:'⚡',name:'Blitz',price:25,desc:'Schnell wie der Blitz'},
+];
+
+function renderProfile(targetUser=null) {
+  const el=document.getElementById('profile-content'); if(!el)return;
+  const user=targetUser||currentUser;
+  if(!user&&!targetUser){
+    el.innerHTML=`<div class="k-card" style="text-align:center;padding:40px">
+      <div style="font-size:40px;margin-bottom:12px">👤</div>
+      <div style="font-size:14px;margin-bottom:8px">Noch nicht angemeldet</div>
+      <button class="btn btn-lime" onclick="openModal('auth-modal')">Jetzt anmelden</button>
+    </div>`;
+    return;
+  }
+  const xp=currentUser?getTotalXp():0, streak=currentUser?calcStreak():0;
+  const av=localStorage.getItem('kivo_avatar_'+(user?.username||''))||'';
+  const items=currentUser?JSON.parse(localStorage.getItem('kivo_items')||'[]'):[];
+  const equipped=JSON.parse(localStorage.getItem('kivo_equipped')||'[]');
+  el.innerHTML=`
+    <div class="profile-hero">
+      <div class="profile-av" id="prof-av">${av?`<img src="${av}">`:'👤'}</div>
+      <div style="flex:1">
+        <div style="font-size:20px;font-weight:800;margin-bottom:4px">@${user?.username||'Gast'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${user?.email||''}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--lime)">${xp.toLocaleString()}</div><div style="font-size:9px;color:var(--muted)">XP</div></div>
+          <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--orange)">${streak}</div><div style="font-size:9px;color:var(--muted)">Streak</div></div>
+          <div style="text-align:center"><div style="font-size:18px;font-weight:700">${sessions.length}</div><div style="font-size:9px;color:var(--muted)">Sessions</div></div>
+        </div>
+      </div>
+      ${currentUser?`<button class="btn btn-sm" onclick="document.getElementById('avatar-inp').click()">📷</button><input type="file" id="avatar-inp" accept="image/*" style="display:none" onchange="uploadAvatar(this)">`:'' }
+    </div>
+
+    <!-- Ausgerüstete Items -->
+    <div class="k-card-sm" style="margin-bottom:12px">
+      <div class="k-section-title">Ausgerüstete Items</div>
+      <div class="profile-items-row" id="equipped-row">
+        ${equipped.length?equipped.map(id=>{const it=SHOP_ITEMS.find(i=>i.id===id);return it?`<div class="profile-item-badge" title="${it.name}">${it.icon}</div>`:''}).join(''):'<div style="font-size:11px;color:var(--muted)">Keine Items ausgerüstet — kaufe Items im Shop</div>'}
+      </div>
+    </div>
+
+    <!-- Stats Vergleich (wenn eigenes Profil oder Freundesprofil) -->
+    ${currentUser?`
+    <div class="k-card-sm" style="margin-bottom:12px">
+      <div class="k-section-title">Statistiken</div>
+      ${renderStatsVs(null)}
+    </div>`:'' }
+
+    ${currentUser?`
+    <div class="k-card-sm">
+      <div class="k-section-title">Einstellungen</div>
+      <div class="k-group"><label class="k-label">Nutzername ändern</label>
+        <div style="display:flex;gap:6px"><input class="k-input" id="prof-uname" value="${currentUser?.username||''}" style="flex:1"><button class="btn btn-ok btn-sm" onclick="changeUsername()">Speichern</button></div>
+        <div id="uname-msg" style="font-size:9px;margin-top:4px;color:var(--muted)"></div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">↩ Abmelden</button>
+    </div>`:''}`;
+}
+
+function renderStatsVs(otherProfile) {
+  const myXp=getTotalXp(), myStreak=calcStreak(), myKnown=vocab.filter(v=>v.known).length;
+  if(!otherProfile) return `
+    <div class="vs-bar"><div class="vs-lbl" style="font-size:10px;color:var(--muted)">XP</div><div class="vs-bars"><div class="vs-bar-me" style="width:${Math.min(100,myXp/10)}px"></div></div><div style="font-size:10px;color:var(--lime);min-width:40px;text-align:right">${myXp}</div></div>
+    <div class="vs-bar"><div class="vs-lbl" style="font-size:10px;color:var(--muted)">Streak</div><div class="vs-bars"><div class="vs-bar-me" style="width:${Math.min(100,myStreak*8)}px"></div></div><div style="font-size:10px;color:var(--orange);min-width:40px;text-align:right">${myStreak}d</div></div>
+    <div class="vs-bar"><div class="vs-lbl" style="font-size:10px;color:var(--muted)">Gekonnt</div><div class="vs-bars"><div class="vs-bar-me" style="width:${Math.min(100,myKnown*5)}px"></div></div><div style="font-size:10px;color:var(--lime);min-width:40px;text-align:right">${myKnown}</div></div>`;
+  // Comparison with another user
+  const theirXp=otherProfile.xp_total||0, theirStreak=otherProfile.streak||0;
+  const maxXp=Math.max(myXp,theirXp,1), maxS=Math.max(myStreak,theirStreak,1);
+  return `
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:9px;color:var(--muted)"><span style="color:var(--lime)">● Du</span><span style="color:var(--blue)">● @${otherProfile.username}</span></div>
+    <div class="vs-bar"><div class="vs-lbl">XP</div><div class="vs-bars"><div class="vs-bar-me" style="width:${Math.round(myXp/maxXp*120)}px"></div><div class="vs-bar-them" style="width:${Math.round(theirXp/maxXp*120)}px"></div></div><div style="font-size:9px;color:var(--muted);min-width:60px;text-align:right">${myXp} / ${theirXp}</div></div>
+    <div class="vs-bar"><div class="vs-lbl">Streak</div><div class="vs-bars"><div class="vs-bar-me" style="width:${Math.round(myStreak/maxS*120)}px"></div><div class="vs-bar-them" style="width:${Math.round(theirStreak/maxS*120)}px"></div></div><div style="font-size:9px;color:var(--muted);min-width:60px;text-align:right">${myStreak}d / ${theirStreak}d</div></div>`;
+}
+
+async function uploadAvatar(inp) {
+  const file=inp.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const url=e.target.result;
+    localStorage.setItem('kivo_avatar_'+(currentUser?.username||''),url);
+    document.getElementById('prof-av').innerHTML=`<img src="${url}">`;
+    document.getElementById('avatar-btn').innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    if(currentUser){try{await sb.from('profiles').update({avatar_url:url}).eq('id',currentUser.id);}catch(e){}}
+    toast('✓ Profilbild gespeichert');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function changeUsername() {
+  if(!currentUser)return;
+  const newName=(document.getElementById('prof-uname')?.value||'').trim();
+  const msg=document.getElementById('uname-msg');
+  if(!newName||newName.length<3){if(msg)msg.textContent='Mind. 3 Zeichen';return;}
+  if(!/^[a-zA-Z0-9_.-]+$/.test(newName)){if(msg)msg.textContent='Nur a-z 0-9 _ . -';return;}
+  if(msg)msg.textContent='Prüfe...';
+  try {
+    const {data:ex}=await sb.from('profiles').select('id').eq('username',newName).neq('id',currentUser.id).maybeSingle();
+    if(ex){if(msg)msg.textContent='Bereits vergeben';return;}
+    await sb.from('profiles').update({username:newName}).eq('id',currentUser.id);
+    currentUser.username=newName;
+    document.getElementById('um-name').textContent=newName;
+    if(msg)msg.textContent='✓ Gespeichert!';
+    toast('✓ Nutzername geändert');
+  } catch(e){if(msg)msg.textContent='Fehler: '+e.message;}
+}
+
+// ── SHOP ──────────────────────────────────────────────────────
+function renderShop() {
+  const el=document.getElementById('shop-content'); if(!el)return;
+  userCurrency=lsGet('kivo_currency',Math.floor(getTotalXp()/5));
+  userItems=JSON.parse(localStorage.getItem('kivo_items')||'[]');
+  equippedItems=JSON.parse(localStorage.getItem('kivo_equipped')||'[]');
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="currency-pill">🪙 ${userCurrency} Münzen</div>
+      <div style="font-size:10px;color:var(--muted)">Münzen = XP / 5</div>
+    </div>
+    <div class="k-section-title">Verfügbare Items</div>
+    <div class="shop-grid">${SHOP_ITEMS.map(it=>{
+      const owned=userItems.includes(it.id);
+      const equipped=equippedItems.includes(it.id);
+      return `<div class="shop-item ${owned?'owned':''}" onclick="${owned?`toggleEquip('${it.id}')`:`buyItem('${it.id}')`}">
+        <div class="shop-item-icon">${it.icon}</div>
+        <div class="shop-item-name">${it.name}</div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:6px">${it.desc}</div>
+        ${owned?`<div class="tag ${equipped?'lime':''}"> ${equipped?'✓ Ausgerüstet':'Ausrüsten'}</div>`:`<div class="shop-item-price">🪙 ${it.price}</div>`}
+      </div>`;
+    }).join('')}</div>`;
+}
+
+function buyItem(id) {
+  const it=SHOP_ITEMS.find(i=>i.id===id); if(!it)return;
+  if(userCurrency<it.price){toast('Nicht genug Münzen! ('+it.price+' benötigt)');return;}
+  confirm2('Item kaufen?',it.icon+' '+it.name+' für 🪙 '+it.price+' kaufen?',()=>{
+    userCurrency-=it.price; lsSet('kivo_currency',userCurrency);
+    userItems.push(id); localStorage.setItem('kivo_items',JSON.stringify(userItems));
+    toast('✓ '+it.icon+' '+it.name+' gekauft!'); renderShop(); updateCurrencyDisplay();
+  });
+}
+
+function toggleEquip(id) {
+  const idx=equippedItems.indexOf(id);
+  if(idx>=0)equippedItems.splice(idx,1); else { if(equippedItems.length>=3)equippedItems.shift(); equippedItems.push(id); }
+  localStorage.setItem('kivo_equipped',JSON.stringify(equippedItems));
+  renderShop(); renderProfile();
+}
+
+// ── FRIEND PANEL ──────────────────────────────────────────────
+function openFriendPanel() {
+  document.getElementById('fp-overlay').classList.add('open');
+  document.getElementById('fp-panel').classList.add('open');
+  loadFriendPanel();
+}
+function closeFriendPanel() {
+  document.getElementById('fp-overlay').classList.remove('open');
+  document.getElementById('fp-panel').classList.remove('open');
+}
+function switchFpTab(tab) {
+  fpTab=tab;
+  document.querySelectorAll('.fp-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('fpt-'+tab)?.classList.add('active');
+  ['board','global','social','pools'].forEach(t=>{
+    const e=document.getElementById('fp-'+t+'-content'); if(e)e.style.display=t===tab?'':'none';
+  });
+  if(tab==='global')loadGlobalLb();
+  else if(tab==='pools')loadFpPools();
+}
+
+async function loadFriendPanel() {
+  if(!currentUser){document.getElementById('fp-board-content').innerHTML=`<div style="text-align:center;padding:30px"><div style="font-size:36px;margin-bottom:10px">🔒</div><div style="font-size:12px;margin-bottom:12px">Anmeldung erforderlich</div><button class="btn btn-lime btn-sm" onclick="closeFriendPanel();openModal('auth-modal')">Anmelden</button></div>`;return;}
+  document.getElementById('fp-board-content').innerHTML='<div style="text-align:center;padding:20px;font-size:10px;color:var(--muted)">Lade...</div>';
+  try {
+    await syncXpToServer();
+    const{data:links}=await sb.from('friendships').select('friend_id,user_id,status').or('user_id.eq.'+currentUser.id+',friend_id.eq.'+currentUser.id);
+    const accepted=(links||[]).filter(f=>f.status==='accepted');
+    fpFriendIds=accepted.map(f=>f.user_id===currentUser.id?f.friend_id:f.user_id);
+    const pendingIn=(links||[]).filter(f=>f.status==='pending'&&f.friend_id===currentUser.id);
+    const badge=document.getElementById('fp-req-badge');
+    if(badge){badge.textContent=pendingIn.length;badge.style.display=pendingIn.length>0?'':'none';}
+    document.getElementById('friend-notif').classList.toggle('show',pendingIn.length>0);
+
+    const allIds=[...fpFriendIds,currentUser.id];
+    const{data:profs}=await sb.rpc('get_public_profiles',{_ids:allIds});
+    const sorted=(profs||[]).sort((a,b)=>(b.xp_total||0)-(a.xp_total||0));
+    const myXp=getTotalXp(),myStreak=calcStreak();
+    const rEmoji=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const rClass=i=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+
+    let boardHtml=sorted.length<=1?`<div style="text-align:center;padding:24px"><div style="font-size:32px;margin-bottom:10px">👥</div><div style="font-size:12px;margin-bottom:10px">Noch keine Freunde</div><button class="btn btn-lime btn-sm" onclick="switchFpTab('social')">➕ Freund hinzufügen</button></div>`:
+      sorted.map((p,i)=>{
+        const isMe=p.id===currentUser.id;
+        const xp=isMe?myXp:(p.xp_total||0), streak=isMe?myStreak:(p.streak||0);
+        const av=p.avatar_url?`<img src="${p.avatar_url}">`:(p.username||'?')[0].toUpperCase();
+        const isFriend=fpFriendIds.includes(p.id);
+        return `<div class="friend-row ${isMe?'me':''}">
+          <div class="f-rank ${rClass(i)}">${rEmoji(i)}</div>
+          <div class="f-av">${av}</div>
+          <div class="f-info"><div class="f-name">@${p.username||'?'} ${isMe?'<span class="tag lime">Du</span>':''}</div><div class="f-pts">⚡ ${xp.toLocaleString()} · ${streak>=2?'🔥':'📅'} ${streak}d</div></div>
+          ${isFriend&&!isMe?`<button class="btn btn-danger btn-sm" onclick="fpRemove('${p.id}')">✗</button>`:''}
+          ${!isMe&&currentUser?`<button class="btn btn-sm btn-blue" onclick="viewFriendProfile('${p.id}','${p.username}')">👤</button>`:''}
+        </div>`;
+      }).join('');
+    document.getElementById('fp-board-content').innerHTML=boardHtml;
+
+    // Social tab
+    let socialHtml='';
+    if(pendingIn.length>0){
+      const uids=pendingIn.map(p=>p.user_id);
+      const{data:rp}=await sb.rpc('get_public_profiles',{_ids:uids});
+      socialHtml=`<div class="k-section-title" style="margin-bottom:8px">Eingehende Anfragen</div>`
+        +(rp||[]).map(p=>`<div class="friend-req-row" style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:6px">
+          <div class="f-av" style="width:28px;height:28px;font-size:10px">${(p.username||'?')[0].toUpperCase()}</div>
+          <span style="flex:1;font-size:11px">@${p.username}</span>
+          <button class="btn btn-ok btn-sm" onclick="fpAccept('${p.id}')">✓</button>
+          <button class="btn btn-danger btn-sm" onclick="fpDecline('${p.id}')">✗</button>
+        </div>`).join('');
+      socialHtml+='<div style="height:14px"></div>';
+    }
+    // Pool invites
+    const{data:poolInvs}=await sb.from('pool_shares').select('id,pool_name,from_username,data').eq('to_user_id',currentUser.id).eq('accepted',false);
+    if((poolInvs||[]).length){
+      socialHtml+=`<div class="k-section-title" style="margin-bottom:8px">Pool-Einladungen</div>`;
+      socialHtml+=(poolInvs||[]).map(inv=>`<div class="pool-inv-row">
+        <span style="font-size:16px">📚</span>
+        <div style="flex:1"><div style="font-size:11px;font-weight:600">${inv.pool_name}</div><div style="font-size:9px;color:var(--muted)">von @${inv.from_username}</div></div>
+        <button class="btn btn-ok btn-sm" onclick="acceptPoolInv('${inv.id}','${inv.pool_name}',this)">✓</button>
+        <button class="btn btn-danger btn-sm" onclick="declinePoolInv('${inv.id}')">✗</button>
+      </div>`).join('');
+      socialHtml+='<div style="height:14px"></div>';
+    }
+    socialHtml+=`<div class="k-section-title" style="margin-bottom:8px">Freund hinzufügen</div>
+      <div style="display:flex;gap:7px;margin-bottom:8px"><input class="k-input" id="fp-search" placeholder="Nutzername..."><button class="btn btn-lime btn-sm" onclick="fpAdd()">Senden</button></div>
+      <div id="fp-add-res"></div>`;
+    document.getElementById('fp-social-content').innerHTML=socialHtml;
+  } catch(e){document.getElementById('fp-board-content').innerHTML=`<div style="font-size:11px;color:var(--danger);padding:20px;text-align:center">⚠ ${e.message}</div>`;}
+}
+
+async function loadGlobalLb() {
+  const el=document.getElementById('fp-global-content'); if(!el)return;
+  el.innerHTML='<div style="padding:20px;text-align:center;font-size:10px;color:var(--muted)">Lade...</div>';
+  try {
+    const{data:profs}=await sb.rpc('get_global_leaderboard',{_limit:10});
+    const rEmoji=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    const rClass=i=>i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    el.innerHTML='<div class="k-section-title" style="margin-bottom:8px">Global Top 10</div>'
+      +(profs||[]).map((p,i)=>{
+        const isMe=currentUser&&p.id===currentUser.id;
+        const av=p.avatar_url?`<img src="${p.avatar_url}">`:(p.username||'?')[0].toUpperCase();
+        return `<div class="friend-row ${isMe?'me':''}">
+          <div class="f-rank ${rClass(i)}">${rEmoji(i)}</div>
+          <div class="f-av">${av}</div>
+          <div class="f-info"><div class="f-name">@${p.username||'?'} ${isMe?'<span class="tag lime">Du</span>':''}</div><div class="f-pts">⚡ ${(p.xp_total||0).toLocaleString()} · ${(p.streak||0)>=2?'🔥':'📅'} ${p.streak||0}d</div></div>
+        </div>`;
+      }).join('');
+  } catch(e){el.innerHTML=`<div style="font-size:11px;color:var(--danger);padding:20px;text-align:center">⚠ ${e.message}</div>`;}
+}
+
+async function loadFpPools() {
+  const el=document.getElementById('fp-pools-content'); if(!el)return;
+  if(!currentUser){el.innerHTML='<div style="padding:20px;font-size:11px;color:var(--muted)">Anmeldung erforderlich</div>';return;}
+  if(!fpFriendIds.length){el.innerHTML='<div style="padding:20px;font-size:11px;color:var(--muted)">Keine Freunde vorhanden</div>';return;}
+  const{data:fProfs}=await sb.rpc('get_public_profiles',{_ids:fpFriendIds});
+  const friendMap=Object.fromEntries((fProfs||[]).map(p=>[p.id,p.username]));
+  let poolOpts='<option value="">Pool wählen...</option>';
+  for(const[lang,pools] of Object.entries(POOLS))
+    for(const[pname] of Object.entries(pools))
+      poolOpts+=`<option value="${esc(mkKey(lang,pname))}" data-key="${mkKey(lang,pname)}" data-name="${pname}">${pname} (${lang})</option>`;
+  el.innerHTML=`
+    <div class="k-section-title" style="margin-bottom:8px">Pool an Freund senden</div>
+    <div class="k-group"><select class="k-input" id="fp-pool-sel">${poolOpts}</select></div>
+    <div class="k-group"><select class="k-input" id="fp-friend-sel"><option value="">Freund wählen...</option>${Object.entries(friendMap).map(([id,n])=>`<option value="${id}">@${n}</option>`).join('')}</select></div>
+    <button class="btn btn-lime" style="width:100%" onclick="sendPool()">📤 Pool senden</button>
+    <div id="fp-pool-res" style="margin-top:8px;font-size:10px"></div>`;
+}
+
+async function fpAdd() {
+  if(!currentUser){openModal('auth-modal');return;}
+  const uname=(document.getElementById('fp-search')?.value||'').trim();
+  const res=document.getElementById('fp-add-res');
+  if(!uname){if(res)res.innerHTML='<div style="color:var(--danger)">Nutzername eingeben</div>';return;}
+  if(uname===currentUser.username){if(res)res.innerHTML='<div style="color:var(--orange)">Das bist du 😄</div>';return;}
+  if(res)res.innerHTML='<div style="color:var(--muted)">Suche...</div>';
+  try {
+    const{data:found}=await sb.rpc('search_public_profile',{_username:uname});
+    const p=Array.isArray(found)?found[0]:found;
+    if(!p){if(res)res.innerHTML=`<div style="color:var(--danger)">@${uname} nicht gefunden</div>`;return;}
+    const{data:ex}=await sb.from('friendships').select('id,status').or(`and(user_id.eq.${currentUser.id},friend_id.eq.${p.id}),and(user_id.eq.${p.id},friend_id.eq.${currentUser.id})`).maybeSingle();
+    if(ex){if(res)res.innerHTML=`<div style="color:var(--orange)">${ex.status==='pending'?'Anfrage gesendet ⏳':'Bereits befreundet ✓'}</div>`;return;}
+    await sb.from('friendships').insert({user_id:currentUser.id,friend_id:p.id,status:'pending'});
+    if(res)res.innerHTML=`<div style="color:var(--lime)">✓ Anfrage an @${uname} gesendet!</div>`;
+    document.getElementById('fp-search').value='';
+  } catch(e){if(res)res.innerHTML=`<div style="color:var(--danger)">${e.message}</div>`;}
+}
+
+async function fpAccept(uid){
+  try{await sb.from('friendships').update({status:'accepted'}).eq('user_id',uid).eq('friend_id',currentUser.id);toast('✓ Freundschaft angenommen!');loadFriendPanel();}catch(e){toast(e.message);}
+}
+async function fpDecline(uid){
+  try{await sb.from('friendships').delete().eq('user_id',uid).eq('friend_id',currentUser.id);toast('Abgelehnt');loadFriendPanel();}catch(e){toast(e.message);}
+}
+async function fpRemove(uid){
+  confirm2('Freund entfernen?','Diese Person wird entfernt.',async()=>{
+    try{await sb.from('friendships').delete().or(`and(user_id.eq.${currentUser.id},friend_id.eq.${uid}),and(user_id.eq.${uid},friend_id.eq.${currentUser.id})`);toast('Entfernt');loadFriendPanel();}catch(e){toast(e.message);}
+  });
+}
+
+async function sendPool(){
+  const sel=document.getElementById('fp-pool-sel'); const toId=document.getElementById('fp-friend-sel')?.value;
+  const res=document.getElementById('fp-pool-res');
+  const poolKey=sel?.options[sel.selectedIndex]?.dataset?.key||''; const poolName=sel?.options[sel.selectedIndex]?.dataset?.name||'';
+  if(!poolKey||!toId){if(res)res.innerHTML='<span style="color:var(--danger)">Bitte Pool und Freund wählen</span>';return;}
+  const pool=getPoolObj(poolKey);
+  try{
+    await sb.from('pool_shares').insert({from_user_id:currentUser.id,from_username:currentUser.username,to_user_id:toId,pool_key:esc(poolKey),pool_name:poolName,data:pool,accepted:false,created_at:new Date().toISOString()});
+    if(res)res.innerHTML='<span style="color:var(--lime)">✓ Pool gesendet!</span>'; toast('📤 Pool gesendet!');
+  }catch(e){if(res)res.innerHTML=`<span style="color:var(--danger)">${e.message}</span>`;}
+}
+
+async function acceptPoolInv(invId,poolName,btn){
+  try{
+    const{data:inv}=await sb.from('pool_shares').select('data,pool_name').eq('id',invId).maybeSingle();
+    if(!inv?.data){toast('Fehler: Daten fehlen');return;}
+    const lang='Import'; const name=inv.pool_name||poolName;
+    if(!POOLS[lang])POOLS[lang]={};
+    POOLS[lang][name]=inv.data; saveCustom();
+    if(currentUser)await syncPoolToServer(lang,name);
+    await sb.from('pool_shares').update({accepted:true}).eq('id',invId);
+    loadState(); toast('✓ Pool "'+name+'" übernommen!'); loadFriendPanel();
+  }catch(e){toast(e.message);}
+}
+async function declinePoolInv(invId){
+  try{await sb.from('pool_shares').update({accepted:true}).eq('id',invId);toast('Abgelehnt');loadFriendPanel();}catch(e){toast(e.message);}
+}
+
+async function viewFriendProfile(uid,username){
+  closeFriendPanel();
+  try{
+    const{data:rows}=await sb.rpc('get_public_profiles',{_ids:[uid]});
+    const p=Array.isArray(rows)?rows[0]:rows;
+    const el=document.getElementById('profile-content');
+    const av=p?.avatar_url?`<img src="${p.avatar_url}">`:(username||'?')[0].toUpperCase();
+    el.innerHTML=`
+      <button class="btn btn-sm btn-ghost" onclick="renderProfile()" style="margin-bottom:12px">← Zurück</button>
+      <div class="profile-hero">
+        <div class="profile-av">${av}</div>
+        <div style="flex:1">
+          <div style="font-size:20px;font-weight:800;margin-bottom:4px">@${p?.username||username}</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+            <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--lime)">${(p?.xp_total||0).toLocaleString()}</div><div style="font-size:9px;color:var(--muted)">XP</div></div>
+            <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--orange)">${p?.streak||0}</div><div style="font-size:9px;color:var(--muted)">Streak</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="k-card-sm"><div class="k-section-title">Vergleich mit dir</div>${renderStatsVs(p)}</div>`;
+    goTo('profile');
+  }catch(e){toast('Fehler: '+e.message);}
+}
+
+// ── FEEDBACK ──────────────────────────────────────────────────
+function showFeedback(){document.getElementById('feedback-popup')?.classList.remove('hidden');}
+function hideFeedback(){document.getElementById('feedback-popup')?.classList.add('hidden');}
+async function submitFeedback(){
+  const title=(document.getElementById('fb-title')?.value||'').trim();
+  const desc=(document.getElementById('fb-desc')?.value||'').trim();
+  if(!title){toast('Titel eingeben');return;}
+  try{
+    if(!currentUser){toast('Bitte anmelden, damit Feedback sicher gespeichert wird');return;}
+    await sb.from('feedback').insert({title,description:desc,user_id:currentUser.id,username:currentUser.username||'anonym',created_at:new Date().toISOString()});
+    toast('✓ Feedback gesendet! Danke 🙏');
+    document.getElementById('fb-title').value=''; document.getElementById('fb-desc').value=''; hideFeedback();
+  }catch(e){
+    const q=lsGet('kivo_fb_q','[]'); q.push({title,desc,ts:Date.now()}); lsSet('kivo_fb_q',q);
+    toast('✓ Gespeichert (wird übertragen)'); hideFeedback();
+  }
+}
+
+// ── PHOTO IMPORT ──────────────────────────────────────────────
+let photoBase64='', photoMime='';
+function handlePhotoFile(inp){
+  const file=inp.files[0]; if(!file)return;
+  photoMime=file.type||'image/jpeg';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    photoBase64=e.target.result.split(',')[1];
+    const prev=document.getElementById('photo-preview');
+    prev.src=e.target.result; prev.style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+function handlePhotoDrop(e){
+  e.preventDefault(); document.getElementById('drop-zone').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0]; if(!file)return;
+  const inp=document.getElementById('photo-file-inp'); const dt=new DataTransfer(); dt.items.add(file); inp.files=dt.files; handlePhotoFile(inp);
+}
+async function doPhotoScan(){
+  if(!photoBase64){toast('Bitte zuerst ein Bild hochladen');return;}
+  const poolName=(document.getElementById('photo-pool-name')?.value||'Foto-Import').trim();
+  const btn=document.getElementById('photo-scan-btn'); btn.disabled=true; btn.textContent='Scannt...';
+  const status=document.getElementById('photo-status');
+  status.textContent='KI analysiert Bild...'; status.style.color='var(--muted)';
+  try{
+    let pairs=[];
+    const r=await fetch(SUPABASE_URL+'/functions/v1/scan-vocab',{method:'POST',headers:await edgeHeaders(),body:JSON.stringify({image:photoBase64,mime:photoMime})});
+    if(!r.ok)throw new Error('Foto-Scan Backend nicht erreichbar');
+    const d=await r.json(); pairs=d.pairs||[];
+    if(!pairs.length){status.textContent='⚠ Keine Vokabeln erkannt';btn.disabled=false;btn.textContent='🔍 KI scannen';return;}
+    const lang='Foto-Import';
+    if(!POOLS[lang])POOLS[lang]={};
+    POOLS[lang][poolName]={subcats:{[poolName]:pairs}};
+    saveCustom(); if(currentUser)syncPoolToServer(lang,poolName);
+    loadState(); setActivePool(mkKey(lang,poolName));
+    status.textContent=`✓ ${pairs.length} Vokabelpaare erkannt!`; status.style.color='var(--lime)';
+    closeModal('photo-modal'); toast('✓ Pool "'+poolName+'" mit '+pairs.length+' Paaren erstellt!');
+  }catch(e){status.textContent='⚠ Fehler: '+e.message; status.style.color='var(--danger)';}
+  btn.disabled=false; btn.textContent='🔍 KI scannen';
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────
+function openSettings(){
+  const el=document.getElementById('settings-content'); if(!el)return;
+  const nvKey='';
+  const cl=[{v:'1.0',l:'✓ Aktuell',items:[{t:'new',x:'Kivo — Neustart mit neuem Design (Dashboard-Look)'},{t:'new',x:'Karteikarten, Quiz, Tippen, Zuordnen, KI-Lückentext, KI-Assistent'},{t:'new',x:'XP-System, Streak, Heatmap, Tagesziele'},{t:'new',x:'Freunde-Panel, Leaderboard, Pool-Sharing'},{t:'new',x:'Nutzer-Profile mit Items & Shop'},{t:'new',x:'Profilvergleich mit Freunden (Stats Vs)'},{t:'new',x:'Supabase Auth, Cloud-Sync, Foto-Import, PWA'}]}];
+  el.innerHTML=`
+    <div class="auth-tabs" style="margin-bottom:14px">
+      <button class="auth-tab active" onclick="this.parentElement.querySelectorAll('.auth-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('sett-account').style.display='block';document.getElementById('sett-cl').style.display='none'">Konto</button>
+      <button class="auth-tab" onclick="this.parentElement.querySelectorAll('.auth-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('sett-account').style.display='none';document.getElementById('sett-cl').style.display='block'">Versions-Log</button>
+    </div>
+    <div id="sett-account">
+      ${currentUser?`
+      <div class="k-group"><label class="k-label">Angemeldet als</label><div style="padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--text)">${currentUser.email}</div></div>
+      <div class="k-group"><label class="k-label">Passwort ändern</label><input class="k-input" id="sett-pw" type="password" placeholder="Neues Passwort"><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="changePw()">Speichern</button></div>`:'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Nicht angemeldet</div>'}
+      <div class="k-group"><label class="k-label">KI-Funktionen</label><div style="padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--muted)">API-Schlüssel laufen sicher über Supabase Edge Functions.</div></div>
+      <div class="k-group"><label class="k-label">Tagesziel</label><select class="k-input" id="sett-goal" onchange="this.parentElement.querySelector('small').textContent=''"><option value="10">10 XP / Tag</option><option value="30" selected>30 XP / Tag</option><option value="50">50 XP / Tag</option></select><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="lsSet('kivo_goal',parseInt(document.getElementById('sett-goal').value));updateHomeStats();toast('Ziel gespeichert')">Speichern</button></div>
+      ${currentUser?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-danger btn-sm" onclick="doLogout();closeModal('settings-modal')">↩ Abmelden</button></div>`:''}
+    </div>
+    <div id="sett-cl" style="display:none">
+      ${cl.map(v=>`<div class="cl-entry"><div class="cl-ver"><span class="cl-ver-num">v${v.v}</span>${v.l?`<span class="cl-badge">${v.l}</span>`:''}</div>${v.items.map(it=>`<div class="cl-item"><div class="cl-dot ${it.t==='fix'?'fix':it.t==='remove'?'remove':''}"></div><span>${it.x}</span></div>`).join('')}</div>`).join('')}
+    </div>`;
+  openModal('settings-modal');
+}
+
+async function changePw(){
+  const pw=document.getElementById('sett-pw')?.value;
+  if(!pw||pw.length<6){toast('Mind. 6 Zeichen');return;}
+  try{await sb.auth.updateUser({password:pw});toast('✓ Passwort geändert');}catch(e){toast('Fehler: '+e.message);}
+}
+function saveNvKey(){ toast('KI-Schlüssel werden serverseitig verwaltet'); }
+
+// ── AUTH ──────────────────────────────────────────────────────
+function switchAuthTab(tab){
+  ['login','register','magic','forgot'].forEach(t=>{
+    document.getElementById('auth-'+t+'-form').style.display=t===tab?'block':'none';
+    document.getElementById('at-'+t)?.classList.toggle('active',t===tab);
+  });
+  document.getElementById('auth-msg').textContent='';
+}
+function authMsg(m,ok){const el=document.getElementById('auth-msg');el.textContent=m;el.style.color=ok?'var(--lime)':'var(--danger)';}
+
+async function doLogin(){
+  const email=document.getElementById('login-email')?.value.trim();
+  const pw=document.getElementById('login-pw')?.value;
+  if(!email||!pw){authMsg('Bitte alle Felder ausfüllen');return;}
+  authMsg('Anmelden...');
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pw});
+    if(error)throw error;
+    await hydrateSession(data.session);
+    closeModal('auth-modal'); toast('✓ Willkommen zurück!');
+  }catch(e){authMsg('Fehler: '+e.message);}
+}
+async function doRegister(){
+  const username=document.getElementById('reg-username')?.value.trim();
+  const email=document.getElementById('reg-email')?.value.trim();
+  const pw=document.getElementById('reg-pw')?.value;
+  if(!username||!email||!pw){authMsg('Bitte alle Felder ausfüllen');return;}
+  if(pw.length<6){authMsg('Passwort mind. 6 Zeichen');return;}
+  authMsg('Registrieren...');
+  try{
+    const{data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username}}});
+    if(error)throw error;
+    authMsg('✓ Konto erstellt! Bitte E-Mail bestätigen.',true);
+  }catch(e){authMsg('Fehler: '+e.message);}
+}
+async function doMagicLink(){
+  const email=document.getElementById('magic-email')?.value.trim();
+  if(!email){authMsg('E-Mail eingeben');return;}
+  try{await sb.auth.signInWithOtp({email});authMsg('✓ Magic Link gesendet!',true);}catch(e){authMsg('Fehler: '+e.message);}
+}
+async function doForgotPw(){
+  const email=document.getElementById('forgot-email')?.value.trim();
+  if(!email){authMsg('E-Mail eingeben');return;}
+  try{await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});authMsg('✓ Reset-Link gesendet!',true);}catch(e){authMsg('Fehler: '+e.message);}
+}
+async function doLogout(){
+  await sb.auth.signOut(); currentUser=null; updateUserUi(null); toast('Abgemeldet');
+}
+function updateUserUi(user){
+  const loggedIn=!!user;
+  document.getElementById('um-name').textContent=user?.username||'Gast';
+  document.getElementById('um-email').textContent=user?.email||'';
+  document.getElementById('um-logout').style.display=loggedIn?'flex':'none';
+  document.querySelector('[onclick="closeUserMenu();openModal(\'auth-modal\')"]').style.display=loggedIn?'none':'flex';
+  const av=user?localStorage.getItem('kivo_avatar_'+(user.username||''))||'':null;
+  document.getElementById('avatar-btn').innerHTML=av?`<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤';
+  updateCurrencyDisplay();
+}
+async function hydrateSession(session){
+  if(session?.user){
+    const uid=session.user.id;
+    const{data:prof}=await sb.from('profiles').select('*').eq('id',uid).maybeSingle();
+    currentUser={id:uid,email:session.user.email,username:prof?.username||session.user.user_metadata?.username||session.user.email?.split('@')[0]||'User'};
+    if(prof?.xp_data){const local=lsGet('kivo_xp','{}');const merged={...(prof.xp_data||{})};for(const[d,p] of Object.entries(local))merged[d]=Math.max(merged[d]||0,p);lsSet('kivo_xp',merged);}
+    if(prof?.is_dev)document.getElementById('rb-coding')?.style.setProperty('display','flex');
+    if(prof?.avatar_url){localStorage.setItem('kivo_avatar_'+currentUser.username,prof.avatar_url);}
+    const{data:poolRows}=await sb.from('pools').select('*').eq('user_id',uid);
+    const customFromServer={};
+    (poolRows||[]).forEach(row=>{if(row.lang&&row.name&&row.data){if(!customFromServer[row.lang])customFromServer[row.lang]={};customFromServer[row.lang][row.name]=row.data;}});
+    lsSet('kivo_custom',customFromServer);
+    const{data:progRows}=await sb.from('progress').select('*').eq('user_id',uid);
+    (progRows||[]).forEach(row=>{if(row.pool_key&&row.known_ids)lsSet('kivo_kn_'+row.pool_key,row.known_ids);});
+    loadState(); updateUserUi(currentUser); checkPendingFriendReqs();
+  } else {
+    currentUser=null; updateUserUi(null); loadState();
+  }
+}
+async function initAuth(){
+  const{data:{session}}=await sb.auth.getSession();
+  await hydrateSession(session);
+  sb.auth.onAuthStateChange((event,session)=>{setTimeout(()=>hydrateSession(session),0);});
+}
+
+async function checkPendingFriendReqs(){
+  if(!currentUser)return;
+  try{const{data}=await sb.from('friendships').select('id').eq('friend_id',currentUser.id).eq('status','pending');document.getElementById('friend-notif').classList.toggle('show',(data||[]).length>0);}catch(e){}
+}
+
+// ── SHARE URL ─────────────────────────────────────────────────
+function checkShareUrl(){
+  const params=new URLSearchParams(location.search);
+  const shareKey=params.get('share');
+  if(!shareKey)return;
+  const{l,p}=spKey(decodeURIComponent(shareKey));
+  if(POOLS[l]?.[p]){setActivePool(decodeURIComponent(shareKey));toast('Pool "'+p+'" aktiviert!');}
+}
+
+// ── PWA MANIFEST ──────────────────────────────────────────────
+(function(){
+  const manifest={name:'Kivo',short_name:'Kivo',description:'Kivo Lernplattform',start_url:'.',display:'standalone',background_color:'#060709',theme_color:'#060709',icons:[{src:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="32" fill="#060709"/><circle cx="96" cy="88" r="44" fill="#b7ff56"/><text x="96" y="104" font-size="44" text-anchor="middle" fill="#0f1a00" font-family="sans-serif" font-weight="900">K</text></svg>'),sizes:'192x192',type:'image/svg+xml'}]};
+  const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));document.head.appendChild(link);
+})();
+
+// ── INIT ──────────────────────────────────────────────────────
+loadState();
+initAuth();
+checkShareUrl();
+// Show feedback popup after 2 minutes
+setTimeout(showFeedback, 120000);
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#060709">
+<title>Kivo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --page:#060709; --canvas:#070809; --panel:#15171c; --panel-2:#1a1d24;
+  --line:#2a2e39; --line2:#333847; --text:#f4f6fb; --muted:#9ba3b4; --muted2:#6b7385;
+  --lime:#b7ff56; --lime-d:rgba(183,255,86,.1); --lime-d2:rgba(183,255,86,.05);
+  --orange:#ffae34; --orange-d:rgba(255,174,52,.1);
+  --blue:#7eb2ff; --blue-d:rgba(126,178,255,.1);
+  --danger:#ff7f8b; --danger-d:rgba(255,127,139,.1);
+  --purple:#c084fc; --purple-d:rgba(192,132,252,.1);
+  --shadow:0 30px 60px rgba(0,0,0,.42); --shadow-sm:0 4px 20px rgba(0,0,0,.3);
+  --r:16px; --r-sm:10px; --r-lg:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-height:100vh;color:var(--text);overflow-x:hidden}
+
+/* ── LAYOUT ─────────────────────────────── */
+.shell{display:flex;height:100vh;overflow:hidden}
+.rail{width:58px;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:16px 0;border-right:1px solid var(--line);background:var(--canvas)}
+.rail-top,.rail-bot{display:flex;flex-direction:column;align-items:center;gap:10px}
+.rail-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);display:grid;place-items:center;font-size:13px;cursor:pointer;transition:all .15s;flex-shrink:0}
+.rail-btn:hover{border-color:var(--line2);color:var(--text)}
+.rail-btn.active{border-color:#5a7fcc;background:#131928;color:var(--blue)}
+.rail-btn.lime-active{border-color:var(--lime);background:var(--lime-d2);color:var(--lime)}
+.brand-btn{width:40px;height:40px;border-radius:50%;background:var(--lime);color:#0f1a00;display:grid;place-items:center;font-size:16px;font-weight:900;border:none;cursor:pointer;flex-shrink:0}
+
+.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--line);flex-shrink:0;gap:10px}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-right{display:flex;align-items:center;gap:8px}
+.tb-title{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--text)}
+.pool-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s;background:transparent;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pool-pill:hover{border-color:var(--line2);color:var(--text)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.lime{background:var(--lime)}.dot.blue{background:var(--blue)}.dot.danger{background:var(--danger)}
+.avatar-btn{width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,#555,#333);border:2px solid var(--line);cursor:pointer;display:grid;place-items:center;font-size:12px;overflow:hidden;flex-shrink:0}
+.avatar-btn img{width:100%;height:100%;object-fit:cover}
+.friend-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);display:grid;place-items:center;font-size:14px;cursor:pointer;transition:all .15s;position:relative}
+.friend-btn:hover{border-color:var(--lime);color:var(--lime)}
+.friend-notif{position:absolute;top:-2px;right:-2px;width:9px;height:9px;background:var(--danger);border-radius:50%;border:2px solid var(--canvas);display:none}
+.friend-notif.show{display:block}
+
+.screens{flex:1;overflow-y:auto;padding:20px 22px 80px}
+
+/* ── BOTTOM NAV (mobile) ──────────────── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--panel);border-top:1px solid var(--line);z-index:60;flex-direction:row;padding-bottom:env(safe-area-inset-bottom,0)}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:var(--muted);cursor:pointer;border:none;background:none;font-family:Inter,sans-serif;padding:6px 0;transition:all .15s}
+.bn-item.active{color:var(--lime)}
+.bn-icon{font-size:17px;line-height:1}
+
+/* ── SCREENS ─────────────────────────── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── CARDS SHARED ────────────────────── */
+.k-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px}
+.k-card-sm{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.k-grid{display:grid;gap:14px;grid-template-columns:1fr}
+.k-row{display:flex;align-items:center;gap:10px}
+.k-section-title{font-size:9px;color:var(--muted2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
+
+/* ── BUTTONS ─────────────────────────── */
+.btn{border:1px solid var(--line);background:#111319;color:#e7edf9;border-radius:var(--r-sm);padding:8px 12px;font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+.btn:hover{border-color:var(--line2);background:#181d28}
+.btn-lime{background:var(--lime);color:#0f1a00;border:none;font-weight:700}
+.btn-lime:hover{background:#c9ff6a}
+.btn-ghost{background:transparent;border-color:var(--line)}
+.btn-danger{border-color:#4a2229;color:var(--danger);background:var(--danger-d)}
+.btn-ok{border-color:#2a4a1e;color:var(--lime);background:var(--lime-d)}
+.btn-blue{border-color:#1e3a5a;color:var(--blue);background:var(--blue-d)}
+.btn-sm{padding:5px 9px;font-size:10px;border-radius:8px}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+
+/* ── FORM ────────────────────────────── */
+.k-input{width:100%;padding:9px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:border .15s}
+.k-input:focus{border-color:#5a7fcc}
+.k-input::placeholder{color:var(--muted2)}
+.k-label{font-size:10px;color:var(--muted);margin-bottom:5px;display:block;letter-spacing:.5px}
+.k-group{margin-bottom:12px}
+select.k-input{cursor:pointer}
+textarea.k-input{resize:vertical;min-height:70px}
+
+/* ── TAGS ────────────────────────────── */
+.tag{font-size:9px;border:1px solid var(--line);border-radius:999px;padding:3px 8px;color:var(--muted);white-space:nowrap}
+.tag.lime{border-color:rgba(183,255,86,.3);color:var(--lime);background:var(--lime-d)}
+.tag.orange{border-color:rgba(255,174,52,.3);color:var(--orange);background:var(--orange-d)}
+.tag.blue{border-color:rgba(126,178,255,.3);color:var(--blue);background:var(--blue-d)}
+.tag.purple{border-color:rgba(192,132,252,.3);color:var(--purple);background:var(--purple-d)}
+
+/* ── TOAST ───────────────────────────── */
+.toast-wrap{position:fixed;right:16px;bottom:70px;display:grid;gap:6px;z-index:200}
+.k-toast{background:var(--panel-2);border:1px solid var(--line2);color:var(--text);padding:10px 14px;border-radius:var(--r-sm);font-size:11px;min-width:200px;animation:fadeIn .2s ease;box-shadow:var(--shadow-sm)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CONFIRM DIALOG ──────────────────── */
+.confirm-overlay{position:fixed;inset:0;background:rgba(2,4,8,.7);z-index:300;display:none;place-items:center;padding:20px}
+.confirm-overlay.open{display:grid}
+.confirm-box{max-width:380px;width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);padding:22px}
+.confirm-title{font-size:15px;font-weight:700;margin-bottom:8px}
+.confirm-msg{font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.6}
+
+/* ── MODAL ───────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(2,4,8,.7);z-index:200;display:none;place-items:center;padding:20px}
+.modal-overlay.open{display:grid}
+.modal{max-width:520px;width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);padding:22px;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:12px}
+.modal-close:hover{color:var(--danger)}
+
+/* ── AUTH ────────────────────────────── */
+.auth-tabs{display:flex;background:var(--panel-2);border-radius:var(--r-sm);padding:3px;margin-bottom:16px}
+.auth-tab{flex:1;padding:7px;border-radius:8px;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s}
+.auth-tab.active{background:var(--panel);color:var(--text);box-shadow:var(--shadow-sm)}
+
+/* ── FLASHCARD ───────────────────────── */
+.fc-wrap{perspective:1000px;margin-bottom:16px}
+.fc{width:100%;height:200px;position:relative;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.4,0,.2,1);cursor:pointer;border-radius:var(--r-lg)}
+.fc.flipped{transform:rotateY(180deg)}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;border:1px solid var(--line)}
+.fc-front{background:var(--panel)}
+.fc-back{background:var(--panel-2);transform:rotateY(180deg)}
+.fc-word{font-size:28px;font-weight:800;letter-spacing:.3px;text-align:center}
+.fc-hint{font-size:11px;color:var(--muted);margin-top:8px}
+.fc-counter{font-size:10px;color:var(--muted2);text-align:center;margin-bottom:10px}
+.fc-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.fc-nav{display:flex;gap:8px;justify-content:center;margin-top:10px}
+.fc-progress{height:3px;background:var(--line);border-radius:3px;margin-bottom:12px;overflow:hidden}
+.fc-progress-fill{height:100%;background:var(--lime);border-radius:3px;transition:width .3s}
+
+/* ── QUIZ ────────────────────────────── */
+.quiz-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.quiz-progress{height:3px;background:var(--line);border-radius:3px;margin-bottom:16px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:var(--lime);border-radius:3px;transition:width .3s}
+.quiz-q-text{font-size:18px;font-weight:700;margin-bottom:16px;line-height:1.4}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.quiz-opt{padding:12px 14px;border-radius:var(--r-sm);border:1px solid var(--line2);background:var(--panel-2);color:var(--text);text-align:left;cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;line-height:1.4}
+.quiz-opt:hover{border-color:#5a7fcc;background:#131928}
+.quiz-opt.good{border-color:rgba(183,255,86,.4);background:rgba(183,255,86,.08);color:var(--lime)}
+.quiz-opt.bad{border-color:rgba(255,127,139,.4);background:rgba(255,127,139,.08);color:var(--danger)}
+.quiz-fb{font-size:12px;color:var(--muted);margin-bottom:10px;min-height:18px}
+.quiz-scores{display:flex;gap:14px;font-size:11px}
+.quiz-result{text-align:center;padding:24px 0}
+.quiz-result .big-score{font-size:56px;font-weight:900;line-height:1}
+
+/* ── TYPING ──────────────────────────── */
+.t-word{font-size:32px;font-weight:800;text-align:center;padding:30px;background:var(--panel-2);border-radius:var(--r-lg);border:1px solid var(--line);margin-bottom:14px}
+.t-input{width:100%;padding:12px 14px;background:var(--panel-2);border:2px solid var(--line);border-radius:var(--r-sm);color:var(--text);font-size:14px;font-family:inherit;outline:none;text-align:center;transition:border .15s;margin-bottom:8px}
+.t-input:focus{border-color:#5a7fcc}
+.t-input.t-ok{border-color:rgba(183,255,86,.5);color:var(--lime)}
+.t-input.t-no{border-color:rgba(255,127,139,.5);color:var(--danger)}
+.t-hint{font-size:11px;color:var(--muted);text-align:center;min-height:18px;margin-bottom:10px}
+
+/* ── MATCHING ────────────────────────── */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.match-card{padding:10px 12px;border-radius:var(--r-sm);border:1px solid var(--line2);background:var(--panel-2);cursor:pointer;font-size:11px;text-align:center;transition:all .15s;min-height:44px;display:flex;align-items:center;justify-content:center}
+.match-card:hover{border-color:#5a7fcc}
+.match-card.ms{border-color:var(--lime);background:var(--lime-d);color:var(--lime)}
+.match-card.mm{border-color:rgba(183,255,86,.2);background:rgba(183,255,86,.04);color:var(--muted2);pointer-events:none;opacity:.5}
+.match-card.mw{border-color:var(--danger);animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* ── OVERVIEW ────────────────────────── */
+.pool-row{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.pool-row:hover{border-color:var(--line2)}
+.pool-row.active-pool{border-color:rgba(183,255,86,.3);background:var(--lime-d2)}
+.pool-row-name{flex:1;font-size:12px;font-weight:600}
+.pool-row-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.pool-mini-bar{width:60px;height:3px;background:var(--line);border-radius:3px;overflow:hidden;flex-shrink:0}
+.pool-mini-fill{height:100%;background:var(--lime);border-radius:3px}
+
+/* ── STATS ───────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat-box{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-align:center}
+.stat-big{font-size:26px;font-weight:900;line-height:1;margin-bottom:2px}
+.stat-lbl{font-size:8px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase}
+.hm-wrap{display:flex;flex-wrap:wrap;gap:2px;margin-top:6px}
+.hm-cell{width:11px;height:11px;border-radius:2px;background:var(--panel-2)}
+.hm-cell.l1{background:rgba(183,255,86,.2)}.hm-cell.l2{background:rgba(183,255,86,.45)}.hm-cell.l3{background:rgba(183,255,86,.7)}.hm-cell.l4{background:var(--lime)}
+.pool-prog-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px}
+.ppr-name{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.ppr-bar{flex:0 0 60px;height:3px;background:var(--line);border-radius:3px;overflow:hidden}
+.ppr-fill{height:100%;background:var(--lime);border-radius:3px}
+.ppr-pct{font-size:9px;color:var(--muted);min-width:28px;text-align:right}
+.daily-goal-bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.daily-goal-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--lime),#d8ff8f);transition:width .4s}
+
+/* ── FRIEND PANEL ────────────────────── */
+.fp-overlay{position:fixed;inset:0;background:rgba(2,4,8,.6);z-index:150;opacity:0;pointer-events:none;transition:opacity .25s}
+.fp-overlay.open{opacity:1;pointer-events:all}
+.fp-panel{position:fixed;top:0;right:-420px;width:400px;max-width:100vw;height:100vh;background:var(--panel);border-left:1px solid var(--line2);display:flex;flex-direction:column;z-index:151;transition:right .3s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}
+.fp-panel.open{right:0}
+.fp-head{padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.fp-body{flex:1;overflow-y:auto;padding:14px 18px 20px}
+.fp-tabs{display:flex;background:var(--panel-2);border-radius:var(--r-sm);padding:3px;margin-bottom:14px}
+.fp-tab{flex:1;padding:6px;border-radius:8px;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:10px;cursor:pointer;transition:all .15s}
+.fp-tab.active{background:var(--panel);color:var(--text)}
+.req-badge{display:inline-flex;align-items:center;justify-content:center;min-width:15px;height:15px;background:var(--danger);border-radius:999px;font-size:8px;color:#fff;padding:0 3px;margin-left:3px;font-weight:700}
+.friend-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:6px;transition:all .15s}
+.friend-row.me{border-color:rgba(183,255,86,.25);background:var(--lime-d2)}
+.f-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,#555,#333);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;overflow:hidden}
+.f-av img{width:100%;height:100%;object-fit:cover}
+.f-info{flex:1;min-width:0}
+.f-name{font-size:11px;font-weight:600;color:var(--text)}
+.f-pts{font-size:9px;color:var(--muted);margin-top:1px}
+.f-rank{font-size:18px;font-weight:900;min-width:28px;text-align:center;flex-shrink:0}
+.rank-1{color:#fec84b}.rank-2{color:#c0c0c0}.rank-3{color:#cd7f32}
+.pool-inv-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--blue-d);border:1px solid rgba(126,178,255,.2);border-radius:var(--r-sm);margin-bottom:6px;font-size:11px}
+
+/* ── GAP FILL ────────────────────────── */
+.gap-text{font-size:14px;line-height:2.4;padding:16px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:14px}
+.gap-blank{display:inline-block;min-width:80px;border:none;border-bottom:2px solid var(--lime);background:transparent;padding:2px 6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;transition:border .15s;vertical-align:middle}
+.gap-blank:focus{border-bottom-color:var(--blue)}
+.gap-blank.gb-ok{border-bottom-color:var(--lime);color:var(--lime)}
+.gap-blank.gb-no{border-bottom-color:var(--danger);color:var(--danger)}
+.gap-spinner{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--lime);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+
+/* ── AI BOT ──────────────────────────── */
+.aibot-wrap{display:flex;flex-direction:column;height:calc(100vh - 130px)}
+.aibot-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:10px}
+.ai-msg{max-width:85%;padding:10px 13px;border-radius:14px;font-size:11px;line-height:1.6}
+.ai-msg.user{align-self:flex-end;background:var(--lime-d);border:1px solid rgba(183,255,86,.2);color:var(--text);border-radius:14px 14px 4px 14px}
+.ai-msg.bot{align-self:flex-start;background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:14px 14px 14px 4px}
+.ai-msg.typing{color:var(--muted)}
+.ai-suggest-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0}
+.ai-suggest{padding:5px 10px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.ai-suggest:hover{border-color:var(--lime);color:var(--lime)}
+.ai-import{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:5px 10px;background:var(--lime-d);border:1px solid rgba(183,255,86,.3);border-radius:8px;font-size:10px;color:var(--lime);cursor:pointer;font-family:inherit}
+.ai-input-row{display:flex;gap:8px;flex-shrink:0;margin-top:10px}
+
+/* ── PROFILE (user & others) ─────────── */
+.profile-hero{display:flex;align-items:center;gap:16px;padding:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:14px}
+.profile-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(140deg,#555,#333);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden}
+.profile-av img{width:100%;height:100%;object-fit:cover}
+.profile-items-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.profile-item-badge{width:32px;height:32px;border-radius:8px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-size:16px;cursor:pointer;transition:all .15s}
+.profile-item-badge:hover{border-color:var(--lime)}
+.vs-bar{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.vs-lbl{font-size:10px;color:var(--muted);min-width:70px}
+.vs-bars{flex:1;display:flex;gap:3px;align-items:center}
+.vs-bar-me{height:6px;border-radius:3px;background:var(--lime)}
+.vs-bar-them{height:6px;border-radius:3px;background:var(--blue)}
+
+/* ── SHOP ────────────────────────────── */
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.shop-item{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;transition:all .15s}
+.shop-item:hover{border-color:var(--lime);background:var(--lime-d2)}
+.shop-item-icon{font-size:32px;margin-bottom:8px}
+.shop-item-name{font-size:11px;font-weight:600;margin-bottom:4px}
+.shop-item-price{font-size:10px;color:var(--orange)}
+.shop-item.owned{border-color:rgba(183,255,86,.3);background:var(--lime-d2)}
+.currency-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid rgba(255,174,52,.3);border-radius:999px;font-size:11px;color:var(--orange);background:var(--orange-d)}
+
+/* ── FEEDBACK ────────────────────────── */
+.feedback-popup{position:fixed;bottom:70px;right:16px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);padding:14px 16px;width:270px;box-shadow:var(--shadow);z-index:100;animation:fadeIn .2s ease}
+.feedback-popup.hidden{display:none}
+
+/* ── CHANGELOG ───────────────────────── */
+.cl-entry{padding:14px 16px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px}
+.cl-ver{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cl-ver-num{font-size:15px;font-weight:800}
+.cl-badge{font-size:8px;padding:2px 7px;border-radius:999px;border:1px solid rgba(183,255,86,.4);background:var(--lime-d);color:var(--lime)}
+.cl-item{display:flex;gap:7px;font-size:10px;color:var(--muted);padding:2px 0;line-height:1.5}
+.cl-dot{width:5px;height:5px;border-radius:50%;background:var(--lime);flex-shrink:0;margin-top:5px}
+.cl-dot.fix{background:var(--orange)}.cl-dot.remove{background:var(--danger)}
+
+/* ── SR BADGE ────────────────────────── */
+.sr-badge{font-size:9px;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,174,52,.3);background:var(--orange-d);color:var(--orange)}
+
+/* ── USER MENU ───────────────────────── */
+.user-menu{position:absolute;top:50px;right:16px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r);min-width:180px;z-index:180;box-shadow:var(--shadow-sm);display:none}
+.user-menu.open{display:block}
+.um-item{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:11px;cursor:pointer;transition:background .15s;color:var(--text)}
+.um-item:hover{background:var(--panel-2)}
+.um-item:first-child{border-radius:var(--r) var(--r) 0 0}
+.um-item:last-child{border-radius:0 0 var(--r) var(--r)}
+.um-sep{height:1px;background:var(--line);margin:2px 0}
+.um-name{font-size:12px;font-weight:700;padding:10px 14px;color:var(--text)}
+.um-email{font-size:9px;color:var(--muted);padding:0 14px 8px;border-bottom:1px solid var(--line)}
+
+/* ── PHOTO IMPORT ────────────────────── */
+.drop-zone{border:2px dashed var(--line2);border-radius:var(--r-lg);padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--lime);background:var(--lime-d2)}
+.drop-zone img{max-width:100%;max-height:200px;border-radius:var(--r-sm);margin-top:10px}
+
+/* ── MOBILE ──────────────────────────── */
+@media(max-width:760px){
+  .rail{display:none}
+  .main-area{width:100%}
+  .screens{padding:14px 14px 70px}
+  .bottom-nav{display:flex}
+  .stats-grid{grid-template-columns:repeat(3,1fr);gap:6px}
+  .stat-box{padding:10px 6px}
+  .stat-big{font-size:20px}
+  .quiz-opts{grid-template-columns:1fr}
+  .match-grid{grid-template-columns:1fr 1fr}
+  .fc{height:170px}
+  .fp-panel{width:100%;border-left:none;border-top:1px solid var(--line2);border-radius:var(--r-lg) var(--r-lg) 0 0;top:auto;bottom:-100%;height:90vh;right:0;transition:bottom .3s cubic-bezier(.4,0,.2,1)}
+  .fp-panel.open{bottom:0;right:0}
+  .modal{border-radius:var(--r-lg) var(--r-lg) 0 0;position:fixed;bottom:-100%;left:0;right:0;max-width:100%;max-height:90vh;border-radius:var(--r-lg) var(--r-lg) 0 0;transition:bottom .3s}
+  .modal-overlay.open .modal{bottom:0}
+  .modal-overlay{align-items:flex-end;padding:0}
+  .shop-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+}
+@media(min-width:980px){
+  .k-grid{grid-template-columns:1.1fr .9fr}
+  .k-grid .full{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+
+<!-- ── SHELL ─────────────────────────────────────────────────────── -->
+<div class="shell">
+
+  <!-- RAIL (desktop sidebar icons) -->
+  <nav class="rail" id="rail">
+    <div class="rail-top">
+      <button class="brand-btn" onclick="goTo('home')" title="Kivo">K</button>
+      <button class="rail-btn active" id="rb-home" data-s="home" onclick="goTo('home')" title="Home">🏠</button>
+      <button class="rail-btn" id="rb-cards" data-s="cards" onclick="goTo('cards')" title="Karteikarten">🃏</button>
+      <button class="rail-btn" id="rb-quiz" data-s="quiz" onclick="goTo('quiz')" title="Quiz">🎯</button>
+      <button class="rail-btn" id="rb-typing" data-s="typing" onclick="goTo('typing')" title="Tippen">⌨️</button>
+      <button class="rail-btn" id="rb-matching" data-s="matching" onclick="goTo('matching')" title="Zuordnen">🔗</button>
+      <button class="rail-btn" id="rb-gap" data-s="gap" onclick="goTo('gap')" title="KI-Lückentext">🤖</button>
+      <button class="rail-btn" id="rb-aibot" data-s="aibot" onclick="goTo('aibot')" title="KI-Assistent">💬</button>
+    </div>
+    <div class="rail-bot">
+      <button class="rail-btn" id="rb-overview" data-s="overview" onclick="goTo('overview')" title="Pools">📋</button>
+      <button class="rail-btn" id="rb-stats" data-s="stats" onclick="goTo('stats')" title="Statistiken">📊</button>
+      <button class="rail-btn" id="rb-shop" data-s="shop" onclick="goTo('shop')" title="Shop">🛍</button>
+      <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil">👤</button>
+    </div>
+  </nav>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-title" id="tb-title">KIVO</div>
+        <button class="pool-pill" id="pool-pill-btn" onclick="openModal('pool-modal')">
+          <span>📚</span><span id="active-pool-lbl">Pool wählen</span>
+        </button>
+      </div>
+      <div class="tb-right">
+        <div class="currency-pill" id="currency-pill" style="display:none">🪙 <span id="currency-val">0</span></div>
+        <button class="friend-btn" id="friend-btn" onclick="openFriendPanel()">🏆<div class="friend-notif" id="friend-notif"></div></button>
+        <div class="avatar-btn" id="avatar-btn" onclick="toggleUserMenu()">👤</div>
+        <div class="user-menu" id="user-menu">
+          <div class="um-name" id="um-name">Gast</div>
+          <div class="um-email" id="um-email"></div>
+          <div class="um-item" onclick="closeUserMenu();openModal('auth-modal')">🔑 Anmelden</div>
+          <div class="um-sep"></div>
+          <div class="um-item" onclick="closeUserMenu();openSettings()">⚙ Einstellungen</div>
+          <div class="um-item" onclick="closeUserMenu();goTo('profile')">👤 Mein Profil</div>
+          <div class="um-item" onclick="closeUserMenu();goTo('shop')">🛍 Shop</div>
+          <div class="um-sep"></div>
+          <div class="um-item" onclick="closeUserMenu();openModal('photo-modal')">📷 Foto-Import</div>
+          <div class="um-item" onclick="closeUserMenu();showFeedback()">💬 Feedback</div>
+          <div class="um-sep"></div>
+          <div class="um-item" id="um-logout" style="display:none;color:var(--danger)" onclick="doLogout()">↩ Abmelden</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREENS -->
+    <div class="screens">
+
+      <!-- HOME ─────────────────────────────────── -->
+      <div class="screen active" id="screen-home">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:36px;font-weight:900;letter-spacing:.5px">KIVO</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Deine Lernplattform</div>
+          </div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap" id="home-quick-actions">
+            <button class="btn btn-lime" onclick="goTo('cards')">🃏 Lernen</button>
+            <button class="btn" onclick="openModal('pool-modal')">📚 Pool wählen</button>
+            <button class="btn" onclick="openModal('photo-modal')">📷 Foto-Import</button>
+          </div>
+        </div>
+
+        <div class="k-grid">
+          <!-- Stats overview -->
+          <div class="k-card">
+            <div class="k-section-title">Aktueller Pool</div>
+            <div style="font-size:20px;font-weight:800;margin-bottom:10px" id="home-pool-name">–</div>
+            <div style="display:flex;gap:10px;margin-bottom:12px">
+              <div style="flex:1;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--lime)" id="hm-k">0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Gekonnt</div></div>
+              <div style="flex:1;text-align:center"><div style="font-size:24px;font-weight:900" id="hm-t">0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Gesamt</div></div>
+              <div style="flex:1;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--orange)" id="hm-sr">0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">SR fällig</div></div>
+            </div>
+            <div style="height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:12px"><div style="height:100%;background:var(--lime);border-radius:4px;transition:width .4s" id="hm-bar"></div></div>
+            <div class="btn-row" style="margin-top:0">
+              <button class="btn btn-lime btn-sm" onclick="goTo('cards')">🃏 Karteikarten</button>
+              <button class="btn btn-sm" onclick="goTo('quiz')">🎯 Quiz</button>
+              <button class="btn btn-sm" onclick="goTo('typing')">⌨️ Tippen</button>
+              <button class="btn btn-sm" onclick="goTo('matching')">🔗 Zuordnen</button>
+            </div>
+          </div>
+
+          <!-- Streak & XP -->
+          <div class="k-card">
+            <div class="k-section-title">Lernfortschritt</div>
+            <div style="display:flex;gap:10px;margin-bottom:14px">
+              <div style="flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;text-align:center">
+                <div style="font-size:28px;margin-bottom:2px" id="hm-streak-icon">📅</div>
+                <div style="font-size:22px;font-weight:900;color:var(--orange)" id="hm-streak">0</div>
+                <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Streak</div>
+              </div>
+              <div style="flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;text-align:center">
+                <div style="font-size:28px;margin-bottom:2px">⚡</div>
+                <div style="font-size:22px;font-weight:900;color:var(--lime)" id="hm-xp">0</div>
+                <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Gesamt XP</div>
+              </div>
+            </div>
+            <div class="k-section-title">Tagesziel</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="font-size:11px;color:var(--muted)" id="hm-goal-lbl">0 / 30 XP</div>
+              <select class="k-input" id="goal-sel" style="width:auto;padding:4px 8px;font-size:10px" onchange="saveDailyGoal()">
+                <option value="10">10 XP</option>
+                <option value="30" selected>30 XP</option>
+                <option value="50">50 XP</option>
+              </select>
+            </div>
+            <div class="daily-goal-bar"><div class="daily-goal-fill" id="daily-goal-fill" style="width:0%"></div></div>
+            <div style="height:10px"></div>
+            <div class="k-section-title">Letzte Sessions</div>
+            <div id="hm-sessions" style="font-size:10px;color:var(--muted)">–</div>
+          </div>
+
+          <!-- Feature map -->
+          <div class="k-card full">
+            <div class="k-section-title">Kivo Feature Map</div>
+            <div style="display:grid;gap:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>Karteikarten, Quiz, Tippen, Zuordnen, Lückentext, KI-Bot</span><span class="tag lime">Lernen</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>XP, Streak, Dashboard, Verlauf, Heatmap, Tagesziele</span><span class="tag orange">Gamification</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>Leaderboard, Freunde, Pool-Sharing, Profile, Items, Shop</span><span class="tag blue">Community</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>Supabase Auth, Cloud-Sync, Magic Link, PWA, NVIDIA Vision</span><span class="tag purple">Platform</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KARTEIKARTEN ─────────────────────────── -->
+      <div class="screen" id="screen-cards">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:18px;font-weight:800">Karteikarten</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <label style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer">
+              <input type="checkbox" id="skip-known" onchange="initCards()"> Bekannte überspringen
+            </label>
+          </div>
+        </div>
+        <div class="fc-progress"><div class="fc-progress-fill" id="fc-prog" style="width:0%"></div></div>
+        <div class="fc-counter" id="fc-counter">0 / 0</div>
+        <div class="fc-wrap" onclick="flipCard()">
+          <div class="fc" id="fc">
+            <div class="fc-face fc-front">
+              <div class="fc-word" id="fc-front-word">–</div>
+              <div class="fc-hint">Tippe um umzudrehen</div>
+            </div>
+            <div class="fc-face fc-back">
+              <div class="fc-word" id="fc-back-word">–</div>
+              <div class="fc-hint" id="fc-cat-hint"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-actions" id="fc-btns" style="display:none">
+          <button class="btn btn-danger btn-sm" onclick="setKnown(false)">✗ Nicht gekonnt</button>
+          <button class="btn btn-ok btn-sm" onclick="setKnown(true)">✓ Gekonnt</button>
+        </div>
+        <div class="fc-nav">
+          <button class="btn btn-sm" onclick="navCard(-1)">← Zurück</button>
+          <button class="btn btn-sm" onclick="flipCard()">↩ Umdrehen</button>
+          <button class="btn btn-sm" onclick="navCard(1)">Weiter →</button>
+        </div>
+        <div style="text-align:center;margin-top:14px;font-size:10px;color:var(--muted)">Kein XP für Karteikarten — nutze Quiz oder Tippen für XP</div>
+      </div>
+
+      <!-- QUIZ ─────────────────────────────────── -->
+      <div class="screen" id="screen-quiz">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:18px;font-weight:800">Quiz</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <label style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer">
+              <input type="checkbox" id="quiz-d2e"> Übersetzungsrichtung ↔
+            </label>
+          </div>
+        </div>
+        <div id="quiz-area"></div>
+      </div>
+
+      <!-- TIPPEN ──────────────────────────────── -->
+      <div class="screen" id="screen-typing">
+        <div style="font-size:18px;font-weight:800;margin-bottom:14px">Tippen</div>
+        <div id="typing-area"></div>
+      </div>
+
+      <!-- ZUORDNEN ────────────────────────────── -->
+      <div class="screen" id="screen-matching">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:18px;font-weight:800">Zuordnen</div>
+          <div style="font-size:11px;color:var(--muted)">Gefunden: <span id="mc-cnt">0</span> / <span id="mc-tot">0</span></div>
+        </div>
+        <div id="matching-area"></div>
+      </div>
+
+      <!-- ÜBERSICHT ────────────────────────────── -->
+      <div class="screen" id="screen-overview">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:18px;font-weight:800">Meine Pools</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-lime" onclick="openNewPoolModal()">+ Neuer Pool</button>
+            <button class="btn btn-sm" onclick="openModal('photo-modal')">📷 Foto-Import</button>
+          </div>
+        </div>
+        <div id="overview-content"></div>
+      </div>
+
+      <!-- STATISTIKEN ─────────────────────────── -->
+      <div class="screen" id="screen-stats">
+        <div style="font-size:18px;font-weight:800;margin-bottom:14px">Statistiken</div>
+        <div id="stats-content"></div>
+      </div>
+
+      <!-- KI-LÜCKENTEXT ───────────────────────── -->
+      <div class="screen" id="screen-gap">
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px">KI-Lückentext</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px">KI generiert einen Text passend zu deinem Pool — füll die Lücken aus</div>
+        <div id="gap-content"></div>
+      </div>
+
+      <!-- KI-ASSISTENT ────────────────────────── -->
+      <div class="screen" id="screen-aibot">
+        <div style="font-size:18px;font-weight:800;margin-bottom:14px">KI-Assistent</div>
+        <div class="aibot-wrap" id="aibot-wrap"></div>
+      </div>
+
+      <!-- PROFIL ──────────────────────────────── -->
+      <div class="screen" id="screen-profile">
+        <div style="font-size:18px;font-weight:800;margin-bottom:14px">Mein Profil</div>
+        <div id="profile-content"></div>
+      </div>
+
+      <!-- SHOP ────────────────────────────────── -->
+      <div class="screen" id="screen-shop">
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px">Item Shop</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Kaufe Items mit Münzen oder schalte sie im Pass frei. Münzen kaufst du mit XP.</div>
+        <div id="shop-content"></div>
+      </div>
+
+    </div><!-- /screens -->
+  </div><!-- /main-area -->
+</div><!-- /shell -->
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" data-s="home" onclick="goTo('home')"><span class="bn-icon">🏠</span>Home</button>
+  <button class="bn-item" data-s="cards" onclick="goTo('cards')"><span class="bn-icon">🃏</span>Lernen</button>
+  <button class="bn-item" data-s="quiz" onclick="goTo('quiz')"><span class="bn-icon">🎯</span>Quiz</button>
+  <button class="bn-item" data-s="overview" onclick="goTo('overview')"><span class="bn-icon">📋</span>Pools</button>
+  <button class="bn-item" data-s="stats" onclick="goTo('stats')"><span class="bn-icon">📊</span>Stats</button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Bestätigen</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="document.getElementById('confirm-overlay').classList.remove('open')">Abbrechen</button>
+      <button class="btn btn-danger btn-sm" id="confirm-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal" onclick="if(event.target===this)closeModal('auth-modal')">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Anmelden / Registrieren</div><button class="modal-close" onclick="closeModal('auth-modal')">✕</button></div>
+    <div class="auth-tabs"><button class="auth-tab active" id="at-login" onclick="switchAuthTab('login')">Anmelden</button><button class="auth-tab" id="at-register" onclick="switchAuthTab('register')">Registrieren</button><button class="auth-tab" id="at-magic" onclick="switchAuthTab('magic')">Magic Link</button></div>
+    <div id="auth-login-form">
+      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="login-email" type="email" placeholder="deine@email.de"></div>
+      <div class="k-group"><label class="k-label">Passwort</label><input class="k-input" id="login-pw" type="password" placeholder="Passwort"></div>
+      <button class="btn btn-lime" style="width:100%" onclick="doLogin()">Anmelden</button>
+      <div style="text-align:center;margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="switchAuthTab('forgot')">Passwort vergessen?</button></div>
+    </div>
+    <div id="auth-register-form" style="display:none">
+      <div class="k-group"><label class="k-label">Nutzername</label><input class="k-input" id="reg-username" placeholder="nutzername"></div>
+      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="reg-email" type="email" placeholder="deine@email.de"></div>
+      <div class="k-group"><label class="k-label">Passwort</label><input class="k-input" id="reg-pw" type="password" placeholder="mind. 6 Zeichen"></div>
+      <button class="btn btn-lime" style="width:100%" onclick="doRegister()">Registrieren</button>
+    </div>
+    <div id="auth-magic-form" style="display:none">
+      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="magic-email" type="email" placeholder="deine@email.de"></div>
+      <button class="btn btn-lime" style="width:100%" onclick="doMagicLink()">Magic Link senden</button>
+    </div>
+    <div id="auth-forgot-form" style="display:none">
+      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="forgot-email" type="email" placeholder="deine@email.de"></div>
+      <button class="btn btn-lime" style="width:100%" onclick="doForgotPw()">Reset-Link senden</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="switchAuthTab('login')">← Zurück</button>
+    </div>
+    <div id="auth-msg" style="font-size:11px;margin-top:10px;text-align:center"></div>
+  </div>
+</div>
+
+<!-- POOL MODAL -->
+<div class="modal-overlay" id="pool-modal" onclick="if(event.target===this)closeModal('pool-modal')">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">Pool wählen / erstellen</div><button class="modal-close" onclick="closeModal('pool-modal')">✕</button></div>
+    <div id="pool-modal-content"></div>
+  </div>
+</div>
+
+<!-- NEW POOL MODAL -->
+<div class="modal-overlay" id="new-pool-modal" onclick="if(event.target===this)closeModal('new-pool-modal')">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" id="npm-title">Neuer Pool</div><button class="modal-close" onclick="closeModal('new-pool-modal')">✕</button></div>
+    <div id="new-pool-content"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeModal('settings-modal')">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">⚙ Einstellungen</div><button class="modal-close" onclick="closeModal('settings-modal')">✕</button></div>
+    <div id="settings-content"></div>
+  </div>
+</div>
+
+<!-- PHOTO IMPORT MODAL -->
+<div class="modal-overlay" id="photo-modal" onclick="if(event.target===this)closeModal('photo-modal')">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">📷 Foto-Import</div><button class="modal-close" onclick="closeModal('photo-modal')">✕</button></div>
+    <div id="photo-content">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('photo-file-inp').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handlePhotoDrop(event)">
+        <div style="font-size:36px;margin-bottom:10px">📷</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">Bild hochladen</div>
+        <div style="font-size:10px;color:var(--muted)">Klicke oder ziehe ein Bild hierher</div>
+        <img id="photo-preview" style="display:none">
+      </div>
+      <input type="file" id="photo-file-inp" accept="image/*" style="display:none" onchange="handlePhotoFile(this)">
+      <div class="k-group"><label class="k-label">Pool-Name für Import</label><input class="k-input" id="photo-pool-name" placeholder="z.B. Meine Wörterliste"></div>
+      <button class="btn btn-lime" id="photo-scan-btn" style="width:100%" onclick="doPhotoScan()">🔍 KI scannen</button>
+      <div id="photo-status" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK POPUP -->
+<div class="feedback-popup hidden" id="feedback-popup">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <div style="font-size:12px;font-weight:600">💬 Feedback & Ideen</div>
+    <button class="modal-close" onclick="hideFeedback()">✕</button>
+  </div>
+  <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Bug gefunden oder Idee? Schreib es uns!</div>
+  <div class="k-group"><input class="k-input" id="fb-title" placeholder="Titel"></div>
+  <div class="k-group"><textarea class="k-input" id="fb-desc" placeholder="Beschreibung..." style="min-height:60px"></textarea></div>
+  <button class="btn btn-lime" style="width:100%" onclick="submitFeedback()">Absenden ✓</button>
+</div>
+
+<!-- FRIEND PANEL -->
+<div class="fp-overlay" id="fp-overlay" onclick="closeFriendPanel()"></div>
+<div class="fp-panel" id="fp-panel">
+  <div class="fp-head">
+    <div style="font-size:14px;font-weight:700">🏆 Freunde & Leaderboard</div>
+    <button class="modal-close" onclick="closeFriendPanel()">✕</button>
+  </div>
+  <div class="fp-body">
+    <div class="fp-tabs">
+      <button class="fp-tab active" id="fpt-board" onclick="switchFpTab('board')">👥 Freunde</button>
+      <button class="fp-tab" id="fpt-global" onclick="switchFpTab('global')">🌍 Global</button>
+      <button class="fp-tab" id="fpt-social" onclick="switchFpTab('social')">➕ Anfragen <span id="fp-req-badge" style="display:none" class="req-badge">0</span></button>
+      <button class="fp-tab" id="fpt-pools" onclick="switchFpTab('pools')">📤 Pools</button>
+    </div>
+    <div id="fp-board-content"></div>
+    <div id="fp-global-content" style="display:none"></div>
+    <div id="fp-social-content" style="display:none"></div>
+    <div id="fp-pools-content" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SCRIPT ══════ -->
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const SUPABASE_URL = 'https://mfnlugxssqwihiwkryzi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbmx1Z3hzc3F3aWhpd2tyeXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3OTI5NDgsImV4cCI6MjA5MDM2ODk0OH0.x3xyGK5b8F3ZI9SL26vE9rOuT00Ds3vKVeCc7xQsDGY';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const edgeHeaders = async () => { const { data:{ session } } = await sb.auth.getSession(); return { 'Content-Type':'application/json', 'Authorization':'Bearer '+(session?.access_token||'') }; };
+
+// ── POOLS (empty — custom pools loaded from server after login) ──
+const BUILTIN = {};
+
+// ── STATE ────────────────────────────────────────────────────
+let POOLS = {};
+let activeKey = null;
+let vocab = [];
+let mistakeLog = {};
+let sessions = [];
+let currentUser = null;
+let fpFriendIds = [];
+let fpTab = 'board';
+let aiBotHistory = [];
+let gapVocab = [];
+let confirmCb = null;
+let cIdx = 0, cDeck = [], cFlipped = false;
+let qIdx = 0, qDeck = [], qOk = 0, qNo = 0;
+let tIdx = 0, tDeck = [], tOk = 0, tNo = 0;
+let mPairs = [], mSel = null, mFound = 0;
+let toastTimer = null;
+let userCurrency = 0;
+let userItems = [];
+let equippedItems = [];
+
+// ── STORAGE ──────────────────────────────────────────────────
+const lsGet = (k,d) => { try { return JSON.parse(localStorage.getItem(k)??d); } catch(e) { return JSON.parse(d); } };
+const lsSet = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch(e){} };
+const mkKey = (l,p) => l+'|||'+p;
+const spKey = k => { const x=k.split('|||'); return {l:x[0],p:x[1]}; };
+const esc = s => s.replace(/[^a-z0-9]/gi,'_');
+const shuf = arr => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+function getPoolObj(key) { const {l,p}=spKey(key); return POOLS[l]?.[p]||null; }
+function getKnownIds(key) { return lsGet('kivo_kn_'+key,'[]'); }
+function flattenPool(poolObj) {
+  if(!poolObj) return [];
+  if(Array.isArray(poolObj)) return poolObj.map((v,i)=>({...v,id:i}));
+  const pairs=[];
+  for(const [cat,ps] of Object.entries(poolObj.subcats||{}))
+    for(const p of ps) pairs.push({de:p[0],en:p[1],cat});
+  return pairs;
+}
+
+function loadState() {
   // Only load custom pools when logged in — non-logged-in users see nothing
   const custom = (currentUser ? lsGet('kivo_custom','{}') : {});
   POOLS = JSON.parse(JSON.stringify(BUILTIN));
