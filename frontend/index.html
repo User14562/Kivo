@@ -267,6 +267,7 @@ textarea.k-input{resize:vertical;min-height:70px}
 .home-kicker{font-size:13px;color:var(--muted);margin-top:4px}.home-title{font-size:24px;font-weight:900;letter-spacing:0}.home-metrics{display:flex;align-items:center;gap:16px}.metric-chip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.metric-chip .gem{color:var(--lime)}
 .dashboard-grid{display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(220px,1fr) minmax(220px,1fr);gap:14px;margin-bottom:26px}.dash-card{min-height:188px}.progress-card{background:linear-gradient(145deg,#3f7752,#254733);border-color:rgba(139,210,159,.24)}.progress-ring-wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:18px}.level-num{font-size:52px;font-weight:950;line-height:1}.ring{width:112px;height:112px;border-radius:50%;background:conic-gradient(var(--lime) var(--ring-pct,65%),rgba(255,255,255,.18) 0);display:grid;place-items:center;position:relative}.ring::before{content:'';width:82px;height:82px;border-radius:50%;background:#3f7752}.challenge-card .daily-goal-bar{height:9px}.course-visual{height:86px;border-radius:8px;background:linear-gradient(180deg,#7eb892,#24343a);border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;margin:10px auto 12px;max-width:150px;color:#0c1712;font-weight:900}.course-visual::before{content:'▣\A ▱ ▱ ▱';white-space:pre;color:#d8ffe2;text-align:left;line-height:1.5}.course-link{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
 .course-grid-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.course-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:14px}.course-tile{min-height:116px;border-radius:10px;padding:16px;border:1px solid rgba(255,255,255,.05);background:linear-gradient(145deg,#22253a,#171d24);cursor:pointer;transition:transform .15s,border-color .15s}.course-tile:hover{transform:translateY(-2px);border-color:rgba(139,210,159,.35)}.course-tile:nth-child(2){background:linear-gradient(145deg,#1e3b34,#172322)}.course-tile:nth-child(3){background:linear-gradient(145deg,#373026,#1f2224)}.course-tile:nth-child(4){background:linear-gradient(145deg,#1d3346,#17202a)}.tile-icon{font-size:28px;margin-bottom:18px}.tile-title{font-size:13px;font-weight:850}.tile-sub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.35}
+.app-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}.app-page-title{font-size:26px;font-weight:950;letter-spacing:0}.app-page-sub{font-size:12px;color:var(--muted);margin-top:4px}.language-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:18px}.language-card{min-height:126px;border-radius:10px;padding:18px;border:1px solid rgba(255,255,255,.05);background:linear-gradient(145deg,#172822,#10171b);cursor:pointer;transition:transform .15s,border-color .15s}.language-card:hover,.language-card.active{transform:translateY(-2px);border-color:rgba(139,210,159,.38);background:linear-gradient(145deg,#24543a,#111a18)}.learning-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.learn-card{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px;cursor:pointer;transition:all .15s}.learn-card:hover{border-color:rgba(139,210,159,.36);transform:translateY(-1px)}.quest-grid,.community-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.quest-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.quest-row:last-child{border-bottom:0}.quest-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--lime-d);flex-shrink:0}.team-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);margin-bottom:8px}.reward-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:18px;border:1px solid rgba(255,177,74,.16);border-radius:10px;background:linear-gradient(145deg,rgba(255,177,74,.14),rgba(139,210,159,.05))}
 
 /* ── FEEDBACK ────────────────────────── */
 .feedback-popup{position:fixed;bottom:70px;right:16px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);padding:14px 16px;width:270px;box-shadow:var(--shadow);z-index:100;animation:fadeIn .2s ease}
@@ -335,19 +336,16 @@ textarea.k-input{resize:vertical;min-height:70px}
   <nav class="rail" id="rail">
     <div class="rail-top">
       <button class="brand-btn" onclick="goTo('home')" title="Kivo">K</button>
-      <button class="rail-btn active" id="rb-home" data-s="home" onclick="goTo('home')" title="Home">🏠</button>
-      <button class="rail-btn" id="rb-cards" data-s="cards" onclick="goTo('cards')" title="Karteikarten">🃏</button>
-      <button class="rail-btn" id="rb-quiz" data-s="quiz" onclick="goTo('quiz')" title="Quiz">🎯</button>
-      <button class="rail-btn" id="rb-typing" data-s="typing" onclick="goTo('typing')" title="Tippen">⌨️</button>
-      <button class="rail-btn" id="rb-matching" data-s="matching" onclick="goTo('matching')" title="Zuordnen">🔗</button>
-      <button class="rail-btn" id="rb-gap" data-s="gap" onclick="goTo('gap')" title="KI-Lückentext">🤖</button>
-      <button class="rail-btn" id="rb-aibot" data-s="aibot" onclick="goTo('aibot')" title="KI-Assistent">💬</button>
+      <button class="rail-btn active" id="rb-home" data-s="home" onclick="goTo('home')" title="Dashboard">🏠</button>
+      <button class="rail-btn" id="rb-courses" data-s="courses" onclick="goTo('courses')" title="Kurse">▣</button>
+      <button class="rail-btn" id="rb-challenges" data-s="challenges" onclick="goTo('challenges')" title="Challenges">🛡️</button>
+      <button class="rail-btn" id="rb-community" data-s="community" onclick="goTo('community')" title="Community">👥</button>
+      <button class="rail-btn" id="rb-shop" data-s="shop" onclick="goTo('shop')" title="Belohnungen">🏆</button>
+      <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil">👤</button>
     </div>
     <div class="rail-bot">
-      <button class="rail-btn" id="rb-overview" data-s="overview" onclick="goTo('overview')" title="Pools">📋</button>
-      <button class="rail-btn" id="rb-stats" data-s="stats" onclick="goTo('stats')" title="Statistiken">📊</button>
-      <button class="rail-btn" id="rb-shop" data-s="shop" onclick="goTo('shop')" title="Shop">🛍</button>
-      <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil">👤</button>
+      <button class="rail-btn" id="rb-aibot" data-s="aibot" onclick="goTo('aibot')" title="KI-Assistent">💬</button>
+      <button class="rail-btn" id="rb-overview" data-s="overview" onclick="goTo('overview')" title="Pool-Verwaltung">📋</button>
     </div>
   </nav>
 
@@ -413,19 +411,19 @@ textarea.k-input{resize:vertical;min-height:70px}
             <div style="font-size:13px;margin-bottom:14px">Löse 3 Lern-Aufgaben</div>
             <div style="font-size:18px;font-weight:850;margin-bottom:10px"><span id="hm-k">0</span> / <span id="hm-t">0</span></div>
             <div class="daily-goal-bar"><div class="daily-goal-fill" id="hm-bar" style="width:0%"></div></div>
-            <button class="btn btn-lime" style="margin-top:28px" onclick="goTo('cards')">Zur Challenge</button>
+            <button class="btn btn-lime" style="margin-top:28px" onclick="goTo('challenges')">Zur Challenge</button>
           </div>
           <div class="k-card dash-card">
             <div style="font-size:17px;font-weight:850">Empfohlener Kurs</div>
             <div class="course-visual"></div>
             <div style="font-size:13px;font-weight:850" id="home-pool-name">–</div>
-            <button class="course-link btn btn-ghost" style="width:100%;margin-top:8px" onclick="goTo('cards')"><span>Weiterlernen ❯</span><span>›</span></button>
+            <button class="course-link btn btn-ghost" style="width:100%;margin-top:8px" onclick="goTo('courses')"><span>Weiterlernen ❯</span><span>›</span></button>
           </div>
         </div>
 
         <div class="course-grid-head">
           <div style="font-size:18px;font-weight:900">Kurs-Empfehlungen</div>
-          <button class="btn btn-ghost btn-sm" onclick="goTo('overview')">Alle anzeigen</button>
+          <button class="btn btn-ghost btn-sm" onclick="goTo('courses')">Alle anzeigen</button>
         </div>
         <div class="course-grid">
           <div class="course-tile" onclick="goTo('cards')"><div class="tile-icon">🃏</div><div class="tile-title">Karteikarten</div><div class="tile-sub">Schnell wiederholen</div></div>
@@ -444,6 +442,33 @@ textarea.k-input{resize:vertical;min-height:70px}
             <div id="hm-sessions" style="font-size:10px;color:var(--muted);margin-top:10px">–</div>
           </div>
         </div>
+      </div>
+
+      <!-- KURSE ─────────────────────────────────── -->
+      <div class="screen" id="screen-courses">
+        <div class="app-page-head">
+          <div><div class="app-page-title">Kurse</div><div class="app-page-sub">Wähle eine Sprache und danach, was du lernen willst.</div></div>
+          <button class="btn btn-lime btn-sm" onclick="openNewPoolModal()">+ Eigener Kurs</button>
+        </div>
+        <div id="courses-content"></div>
+      </div>
+
+      <!-- CHALLENGES ────────────────────────────── -->
+      <div class="screen" id="screen-challenges">
+        <div class="app-page-head">
+          <div><div class="app-page-title">Challenges</div><div class="app-page-sub">Daily und Weekly Quests als Vorschau.</div></div>
+          <span class="tag orange">Beispiele</span>
+        </div>
+        <div id="challenges-content"></div>
+      </div>
+
+      <!-- COMMUNITY ─────────────────────────────── -->
+      <div class="screen" id="screen-community">
+        <div class="app-page-head">
+          <div><div class="app-page-title">Community</div><div class="app-page-sub">Freunde, Global Leaderboard und Team-Vorschau.</div></div>
+          <button class="btn btn-lime btn-sm" onclick="openFriendPanel()">Freund hinzufügen</button>
+        </div>
+        <div id="community-content"></div>
       </div>
 
       <!-- KARTEIKARTEN ─────────────────────────── -->
@@ -549,8 +574,8 @@ textarea.k-input{resize:vertical;min-height:70px}
 
       <!-- SHOP ────────────────────────────────── -->
       <div class="screen" id="screen-shop">
-        <div style="font-size:18px;font-weight:800;margin-bottom:6px">Item Shop</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Kaufe Items mit Münzen oder schalte sie im Pass frei. Münzen kaufst du mit XP.</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px">Belohnungen</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Ein Shop für Items, Badges und kosmetische Belohnungen.</div>
         <div id="shop-content"></div>
       </div>
 
@@ -560,11 +585,11 @@ textarea.k-input{resize:vertical;min-height:70px}
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bn-item active" data-s="home" onclick="goTo('home')"><span class="bn-icon">🏠</span>Home</button>
-  <button class="bn-item" data-s="cards" onclick="goTo('cards')"><span class="bn-icon">🃏</span>Lernen</button>
-  <button class="bn-item" data-s="quiz" onclick="goTo('quiz')"><span class="bn-icon">🎯</span>Quiz</button>
-  <button class="bn-item" data-s="overview" onclick="goTo('overview')"><span class="bn-icon">📋</span>Pools</button>
-  <button class="bn-item" data-s="stats" onclick="goTo('stats')"><span class="bn-icon">📊</span>Stats</button>
+  <button class="bn-item active" data-s="home" onclick="goTo('home')"><span class="bn-icon">🏠</span>Dashboard</button>
+  <button class="bn-item" data-s="courses" onclick="goTo('courses')"><span class="bn-icon">▣</span>Kurse</button>
+  <button class="bn-item" data-s="challenges" onclick="goTo('challenges')"><span class="bn-icon">🛡️</span>Quests</button>
+  <button class="bn-item" data-s="community" onclick="goTo('community')"><span class="bn-icon">👥</span>Community</button>
+  <button class="bn-item" data-s="profile" onclick="goTo('profile')"><span class="bn-icon">👤</span>Profil</button>
 </nav>
 
 <!-- TOAST -->
@@ -719,6 +744,7 @@ let toastTimer = null;
 let userCurrency = 0;
 let userItems = [];
 let equippedItems = [];
+let selectedCourseLang = null;
 
 // ── STORAGE ──────────────────────────────────────────────────
 const lsGet = (k,d) => { try { return JSON.parse(localStorage.getItem(k)??d); } catch(e) { return JSON.parse(d); } };
@@ -815,7 +841,7 @@ function saveDailyGoal(){
 }
 
 // ── SCREEN ROUTER ────────────────────────────────────────────
-const SCREEN_TITLES = { home:'KIVO', cards:'Karteikarten', quiz:'Quiz', typing:'Tippen', matching:'Zuordnen', overview:'Meine Pools', stats:'Statistiken', gap:'KI-Lückentext', aibot:'KI-Assistent', profile:'Mein Profil', shop:'Item Shop' };
+const SCREEN_TITLES = { home:'Dashboard', courses:'Kurse', challenges:'Challenges', community:'Community', cards:'Karteikarten', quiz:'Quiz', typing:'Tippen', matching:'Zuordnen', overview:'Pool-Verwaltung', stats:'Statistiken', gap:'KI-Lückentext', aibot:'KI-Assistent', profile:'Profil', shop:'Belohnungen' };
 
 function goTo(name, opts={}) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -830,6 +856,9 @@ function goTo(name, opts={}) {
   else if(name==='quiz')    startQuiz();
   else if(name==='typing')  startTyping();
   else if(name==='matching') startMatch();
+  else if(name==='courses')  renderCourses();
+  else if(name==='challenges') renderChallenges();
+  else if(name==='community') renderCommunity();
   else if(name==='overview') renderOverview();
   else if(name==='stats')   renderStats();
   else if(name==='gap')     renderGapFill();
@@ -1090,6 +1119,45 @@ function pickMatch(i) {
     el.classList.add('mw'); mSel.el.classList.add('mw');
     setTimeout(()=>{el.classList.remove('mw','ms');mSel.el.classList.remove('mw','ms');mSel=null;},600);
   }
+}
+
+
+// ── COURSE HUB ─────────────────────────────────────────────────
+function poolCountForLang(lang){return Object.keys(POOLS[lang]||{}).length;}
+function renderCourses() {
+  const el=document.getElementById('courses-content'); if(!el)return;
+  const langs=Object.keys(POOLS);
+  if(!selectedCourseLang||!POOLS[selectedCourseLang]) selectedCourseLang=langs[0]||null;
+  if(!langs.length){el.innerHTML=`<div class="k-card" style="text-align:center;padding:42px"><div style="font-size:42px;margin-bottom:12px">▣</div><div style="font-size:14px;font-weight:800;margin-bottom:8px">Noch keine Kurse</div><div style="font-size:11px;color:var(--muted);margin-bottom:14px">Erstelle zuerst einen eigenen Pool.</div><button class="btn btn-lime btn-sm" onclick="openNewPoolModal()">+ Kurs erstellen</button></div>`;return;}
+  const langCards=langs.map((lang,i)=>`<div class="language-card ${lang===selectedCourseLang?'active':''}" onclick="selectCourseLang('${lang.replace(/'/g,"\\'")}')"><div style="font-size:30px;margin-bottom:18px">${['🗣️','🌍','📘','💬','✍️'][i%5]}</div><div class="tile-title">${lang}</div><div class="tile-sub">${poolCountForLang(lang)} Lernbereich${poolCountForLang(lang)===1?'':'e'}</div></div>`).join('');
+  const pools=Object.entries(POOLS[selectedCourseLang]||{});
+  const poolCards=pools.map(([pname,poolObj])=>{const key=mkKey(selectedCourseLang,pname);const flat=flattenPool(poolObj);const pct=flat.length?Math.round(getKnownIds(key).length/flat.length*100):0;return `<div class="learn-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:10px"><div><div style="font-size:14px;font-weight:850">${pname}</div><div class="tile-sub">${flat.length} Vokabeln · ${pct}% gelernt</div></div>${key===activeKey?'<span class="tag lime">Aktiv</span>':''}</div><div class="daily-goal-bar"><div class="daily-goal-fill" style="width:${pct}%"></div></div><div class="btn-row"><button class="btn btn-lime btn-sm" onclick="setActivePool('${key}');goTo('cards')">Karteikarten</button><button class="btn btn-sm" onclick="setActivePool('${key}');goTo('quiz')">Quiz</button><button class="btn btn-sm" onclick="setActivePool('${key}');goTo('typing')">Tippen</button><button class="btn btn-sm" onclick="setActivePool('${key}');goTo('matching')">Zuordnen</button><button class="btn btn-ghost btn-sm" onclick="setActivePool('${key}');goTo('gap')">KI</button></div></div>`}).join('');
+  el.innerHTML=`<div class="language-grid">${langCards}</div><div class="course-grid-head"><div style="font-size:18px;font-weight:900">${selectedCourseLang||'Kurse'} lernen</div><button class="btn btn-ghost btn-sm" onclick="goTo('overview')">Pools bearbeiten</button></div><div class="learning-grid">${poolCards}</div>`;
+}
+function selectCourseLang(lang){selectedCourseLang=lang;renderCourses();}
+
+// ── CHALLENGE HUB ──────────────────────────────────────────────
+function renderChallenges(){
+  const el=document.getElementById('challenges-content'); if(!el)return;
+  const known=vocab.filter(v=>v.known).length, total=vocab.length||1;
+  el.innerHTML=`<div class="quest-grid"><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Daily Quests</div><div class="quest-row"><div class="quest-icon">🎯</div><div style="flex:1"><div class="f-name">3 Aufgaben lösen</div><div class="f-pts">${Math.min(known,3)} / 3 erledigt</div></div><span class="tag lime">+15 XP</span></div><div class="quest-row"><div class="quest-icon">🃏</div><div style="flex:1"><div class="f-name">10 Karten wiederholen</div><div class="f-pts">Beispiel-Quest</div></div><span class="tag orange">+10 Münzen</span></div><div class="quest-row"><div class="quest-icon">🔥</div><div style="flex:1"><div class="f-name">Streak halten</div><div class="f-pts">Heute lernen</div></div><span class="tag lime">Aktiv</span></div><button class="btn btn-lime" style="width:100%;margin-top:14px" onclick="goTo('courses')">Jetzt lernen</button></div><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Weekly Quests</div><div class="quest-row"><div class="quest-icon">🏆</div><div style="flex:1"><div class="f-name">250 XP sammeln</div><div class="f-pts">${getTotalXp()%250} / 250 diese Woche</div></div></div><div class="quest-row"><div class="quest-icon">📚</div><div style="flex:1"><div class="f-name">Einen Kurs abschließen</div><div class="f-pts">${Math.round(known/total*100)}% im aktiven Kurs</div></div></div><div class="quest-row"><div class="quest-icon">👥</div><div style="flex:1"><div class="f-name">Mit Freund vergleichen</div><div class="f-pts">Community-Quest Vorschau</div></div></div></div></div>`;
+}
+
+// ── COMMUNITY HUB ──────────────────────────────────────────────
+async function renderCommunity(){
+  const el=document.getElementById('community-content'); if(!el)return;
+  if(!currentUser){el.innerHTML=`<div class="k-card" style="text-align:center;padding:42px"><div style="font-size:42px;margin-bottom:12px">👥</div><div style="font-size:14px;font-weight:800;margin-bottom:8px">Anmeldung erforderlich</div><button class="btn btn-lime" onclick="openModal('auth-modal')">Anmelden</button></div>`;return;}
+  el.innerHTML='<div style="padding:20px;font-size:11px;color:var(--muted)">Community wird geladen...</div>';
+  try{
+    const {data:links}=await sb.from('friendships').select('friend_id,user_id,status').or('user_id.eq.'+currentUser.id+',friend_id.eq.'+currentUser.id);
+    const accepted=(links||[]).filter(f=>f.status==='accepted');
+    const friendIds=accepted.map(f=>f.user_id===currentUser.id?f.friend_id:f.user_id);
+    const {data:friends}=friendIds.length?await sb.rpc('get_public_profiles',{_ids:friendIds}):{data:[]};
+    const {data:global}=await sb.rpc('get_global_leaderboard',{_limit:5});
+    const friendHtml=(friends||[]).length?(friends||[]).map(p=>`<div class="friend-row"><div class="f-av profile-link" onclick="viewFriendProfile('${p.id}','${p.username||''}')">${p.avatar_url?`<img src="${p.avatar_url}">`:(p.username||'?')[0].toUpperCase()}</div><div class="f-info profile-link" onclick="viewFriendProfile('${p.id}','${p.username||''}')"><div class="f-name">${p.username||'?'}</div><div class="f-pts">⚡ ${(p.xp_total||0).toLocaleString()} · 🔥 ${p.streak||0}d</div></div></div>`).join(''):`<div style="font-size:11px;color:var(--muted);padding:10px 0">Noch keine Freunde.</div><button class="btn btn-lime btn-sm" onclick="openFriendPanel();switchFpTab('social')">Freund hinzufügen</button>`;
+    const globalHtml=(global||[]).map((p,i)=>`<div class="friend-row ${currentUser&&p.id===currentUser.id?'me':''}"><div class="f-rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div><div class="f-info ${p.id!==currentUser.id?'profile-link':''}" ${p.id!==currentUser.id?`onclick="viewFriendProfile('${p.id}','${p.username||''}')"`:''}><div class="f-name">${p.username||'?'} ${p.id===currentUser.id?'<span class="tag lime">Du</span>':''}</div><div class="f-pts">⚡ ${(p.xp_total||0).toLocaleString()}</div></div></div>`).join('');
+    el.innerHTML=`<div class="community-grid"><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Freunde</div>${friendHtml}</div><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Global Leaderboard</div>${globalHtml||'<div style="font-size:11px;color:var(--muted)">Noch keine Einträge.</div>'}<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openFriendPanel();switchFpTab('global')">Top 10 öffnen</button></div><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Teams</div><div class="team-card"><div><div class="f-name">Team Grünfuchs</div><div class="f-pts">12 Mitglieder · Beispiel</div></div><span class="tag lime">Offen</span></div><div class="team-card"><div><div class="f-name">XP Hunters</div><div class="f-pts">Weekly Race · Beispiel</div></div><span class="tag orange">Bald</span></div><div class="team-card"><div><div class="f-name">Sprach-Crew</div><div class="f-pts">Gemeinsame Ziele · Beispiel</div></div><span class="tag blue">Bald</span></div></div></div>`;
+  }catch(e){el.innerHTML=`<div style="font-size:11px;color:var(--danger);padding:20px">⚠ ${e.message}</div>`;}
 }
 
 // ── OVERVIEW ──────────────────────────────────────────────────
