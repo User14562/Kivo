@@ -8,10 +8,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
-  --page:#060709; --canvas:#070809; --panel:#15171c; --panel-2:#1a1d24;
-  --line:#2a2e39; --line2:#333847; --text:#f4f6fb; --muted:#9ba3b4; --muted2:#6b7385;
-  --lime:#b7ff56; --lime-d:rgba(183,255,86,.1); --lime-d2:rgba(183,255,86,.05);
-  --orange:#ffae34; --orange-d:rgba(255,174,52,.1);
+  --page:#080d10; --canvas:#070c10; --panel:#151b20; --panel-2:#1b2228;
+  --line:#253039; --line2:#34424d; --text:#f4f7f4; --muted:#aab3b0; --muted2:#737e7d;
+  --lime:#8bd29f; --lime-d:rgba(139,210,159,.14); --lime-d2:rgba(139,210,159,.07);
+  --orange:#ffb14a; --orange-d:rgba(255,177,74,.12);
   --blue:#7eb2ff; --blue-d:rgba(126,178,255,.1);
   --danger:#ff7f8b; --danger-d:rgba(255,127,139,.1);
   --purple:#c084fc; --purple-d:rgba(192,132,252,.1);
@@ -19,23 +19,25 @@
   --r:16px; --r-sm:10px; --r-lg:22px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-height:100vh;color:var(--text);overflow-x:hidden}
+body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:radial-gradient(circle at 45% 15%,rgba(139,210,159,.08),transparent 32%),var(--page);min-height:100vh;color:var(--text);overflow-x:hidden}
 
 /* ── LAYOUT ─────────────────────────────── */
-.shell{display:flex;height:100vh;overflow:hidden}
-.rail{width:58px;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:16px 0;border-right:1px solid var(--line);background:var(--canvas)}
-.rail-top,.rail-bot{display:flex;flex-direction:column;align-items:center;gap:10px}
-.rail-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--muted);display:grid;place-items:center;font-size:13px;cursor:pointer;transition:all .15s;flex-shrink:0}
-.rail-btn:hover{border-color:var(--line2);color:var(--text)}
-.rail-btn.active{border-color:#5a7fcc;background:#131928;color:var(--blue)}
+.shell{display:flex;height:100vh;overflow:hidden;background:linear-gradient(90deg,rgba(7,12,16,.98),rgba(9,14,17,.96))}
+.rail{width:176px;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between;padding:22px 12px;border-right:1px solid rgba(139,210,159,.08);background:linear-gradient(180deg,#080d11,#05080b)}
+.rail-top,.rail-bot{display:flex;flex-direction:column;gap:8px}
+.rail-btn{width:100%;height:42px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;font-weight:650;cursor:pointer;transition:all .15s;flex-shrink:0;text-align:left}
+.rail-btn:hover{border-color:var(--line);color:var(--text);background:rgba(255,255,255,.03)}
+.rail-btn.active{border-color:rgba(139,210,159,.28);background:linear-gradient(135deg,rgba(139,210,159,.32),rgba(139,210,159,.12));color:var(--text);box-shadow:0 10px 28px rgba(139,210,159,.08)}
 .rail-btn.lime-active{border-color:var(--lime);background:var(--lime-d2);color:var(--lime)}
-.brand-btn{width:40px;height:40px;border-radius:50%;background:var(--lime);color:#0f1a00;display:grid;place-items:center;font-size:16px;font-weight:900;border:none;cursor:pointer;flex-shrink:0}
+.brand-btn{width:132px;height:42px;border-radius:0;background:transparent;border:none;cursor:pointer;flex-shrink:0;background-image:url('/kivo-logo.png');background-size:contain;background-position:left center;background-repeat:no-repeat;margin:0 0 14px 8px;color:transparent;font-size:0}
+.brand-btn::after{content:''}
+.rail-btn::after{content:attr(title)}
 
-.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--line);flex-shrink:0;gap:10px}
+.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column;background:#0b1115}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 26px 10px;border-bottom:0;flex-shrink:0;gap:10px}
 .tb-left{display:flex;align-items:center;gap:10px}
 .tb-right{display:flex;align-items:center;gap:8px}
-.tb-title{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--text)}
+.tb-title{font-size:26px;font-weight:900;letter-spacing:0;color:var(--text)}
 .pool-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s;background:transparent;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pool-pill:hover{border-color:var(--line2);color:var(--text)}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -47,7 +49,7 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-he
 .friend-notif{position:absolute;top:-2px;right:-2px;width:9px;height:9px;background:var(--danger);border-radius:50%;border:2px solid var(--canvas);display:none}
 .friend-notif.show{display:block}
 
-.screens{flex:1;overflow-y:auto;padding:20px 22px 80px}
+.screens{flex:1;overflow-y:auto;padding:12px 26px 80px}
 
 /* ── BOTTOM NAV (mobile) ──────────────── */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--panel);border-top:1px solid var(--line);z-index:60;flex-direction:row;padding-bottom:env(safe-area-inset-bottom,0)}
@@ -60,16 +62,16 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-he
 .screen.active{display:block}
 
 /* ── CARDS SHARED ────────────────────── */
-.k-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px}
-.k-card-sm{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.k-card{background:linear-gradient(145deg,var(--panel),#12181d);border:1px solid rgba(255,255,255,.04);border-radius:10px;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.18)}
+.k-card-sm{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
 .k-grid{display:grid;gap:14px;grid-template-columns:1fr}
 .k-row{display:flex;align-items:center;gap:10px}
 .k-section-title{font-size:9px;color:var(--muted2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;font-weight:600}
 
 /* ── BUTTONS ─────────────────────────── */
-.btn{border:1px solid var(--line);background:#111319;color:#e7edf9;border-radius:var(--r-sm);padding:8px 12px;font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
-.btn:hover{border-color:var(--line2);background:#181d28}
-.btn-lime{background:var(--lime);color:#0f1a00;border:none;font-weight:700}
+.btn{border:1px solid var(--line);background:#12191e;color:#e7edf9;border-radius:8px;padding:8px 12px;font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap}
+.btn:hover{border-color:var(--line2);background:#182127}
+.btn-lime{background:#4d8b62;color:#f7fff9;border:none;font-weight:800}
 .btn-lime:hover{background:#c9ff6a}
 .btn-ghost{background:transparent;border-color:var(--line)}
 .btn-danger{border-color:#4a2229;color:var(--danger);background:var(--danger-d)}
@@ -260,6 +262,12 @@ textarea.k-input{resize:vertical;min-height:70px}
 .shop-item.owned{border-color:rgba(183,255,86,.3);background:var(--lime-d2)}
 .currency-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid rgba(255,174,52,.3);border-radius:999px;font-size:11px;color:var(--orange);background:var(--orange-d)}
 
+/* ── DASHBOARD REDESIGN ──────────────── */
+.home-welcome{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.home-kicker{font-size:13px;color:var(--muted);margin-top:4px}.home-title{font-size:24px;font-weight:900;letter-spacing:0}.home-metrics{display:flex;align-items:center;gap:16px}.metric-chip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.metric-chip .gem{color:var(--lime)}
+.dashboard-grid{display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(220px,1fr) minmax(220px,1fr);gap:14px;margin-bottom:26px}.dash-card{min-height:188px}.progress-card{background:linear-gradient(145deg,#3f7752,#254733);border-color:rgba(139,210,159,.24)}.progress-ring-wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:18px}.level-num{font-size:52px;font-weight:950;line-height:1}.ring{width:112px;height:112px;border-radius:50%;background:conic-gradient(var(--lime) var(--ring-pct,65%),rgba(255,255,255,.18) 0);display:grid;place-items:center;position:relative}.ring::before{content:'';width:82px;height:82px;border-radius:50%;background:#3f7752}.challenge-card .daily-goal-bar{height:9px}.course-visual{height:86px;border-radius:8px;background:linear-gradient(180deg,#7eb892,#24343a);border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;margin:10px auto 12px;max-width:150px;color:#0c1712;font-weight:900}.course-visual::before{content:'▣\A ▱ ▱ ▱';white-space:pre;color:#d8ffe2;text-align:left;line-height:1.5}.course-link{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
+.course-grid-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.course-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:14px}.course-tile{min-height:116px;border-radius:10px;padding:16px;border:1px solid rgba(255,255,255,.05);background:linear-gradient(145deg,#22253a,#171d24);cursor:pointer;transition:transform .15s,border-color .15s}.course-tile:hover{transform:translateY(-2px);border-color:rgba(139,210,159,.35)}.course-tile:nth-child(2){background:linear-gradient(145deg,#1e3b34,#172322)}.course-tile:nth-child(3){background:linear-gradient(145deg,#373026,#1f2224)}.course-tile:nth-child(4){background:linear-gradient(145deg,#1d3346,#17202a)}.tile-icon{font-size:28px;margin-bottom:18px}.tile-title{font-size:13px;font-weight:850}.tile-sub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.35}
+
 /* ── FEEDBACK ────────────────────────── */
 .feedback-popup{position:fixed;bottom:70px;right:16px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);padding:14px 16px;width:270px;box-shadow:var(--shadow);z-index:100;animation:fadeIn .2s ease}
 .feedback-popup.hidden{display:none}
@@ -310,6 +318,7 @@ textarea.k-input{resize:vertical;min-height:70px}
   .modal-overlay.open .modal{bottom:0}
   .modal-overlay{align-items:flex-end;padding:0}
   .shop-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .topbar{padding:14px}.tb-title{font-size:18px}.home-title{font-size:22px}.dashboard-grid,.course-grid{grid-template-columns:1fr}.home-metrics{width:100%;justify-content:space-between}.screens{padding:10px 14px 70px}
 }
 @media(min-width:980px){
   .k-grid{grid-template-columns:1.1fr .9fr}
@@ -379,76 +388,60 @@ textarea.k-input{resize:vertical;min-height:70px}
 
       <!-- HOME ─────────────────────────────────── -->
       <div class="screen active" id="screen-home">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div class="home-welcome">
           <div>
-            <div style="font-size:36px;font-weight:900;letter-spacing:.5px">KIVO</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">Deine Lernplattform</div>
+            <div class="home-title">Hallo, <span id="home-user-name">Lerner</span>! 👋</div>
+            <div class="home-kicker">Weiter so! Dein Wissen wächst.</div>
           </div>
-          <div style="display:flex;gap:7px;flex-wrap:wrap" id="home-quick-actions">
-            <button class="btn btn-lime" onclick="goTo('cards')">🃏 Lernen</button>
-            <button class="btn" onclick="openModal('pool-modal')">📚 Pool wählen</button>
-            <button class="btn" onclick="openModal('photo-modal')">📷 Foto-Import</button>
+          <div class="home-metrics">
+            <div class="metric-chip">🔥 <span id="hm-streak-top">0</span></div>
+            <div class="metric-chip"><span class="gem">◆</span> <span id="currency-val-home">0</span></div>
+            <div class="avatar-btn" onclick="toggleUserMenu()">👤</div>
           </div>
         </div>
 
-        <div class="k-grid">
-          <!-- Stats overview -->
-          <div class="k-card">
-            <div class="k-section-title">Aktueller Pool</div>
-            <div style="font-size:20px;font-weight:800;margin-bottom:10px" id="home-pool-name">–</div>
-            <div style="display:flex;gap:10px;margin-bottom:12px">
-              <div style="flex:1;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--lime)" id="hm-k">0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Gekonnt</div></div>
-              <div style="flex:1;text-align:center"><div style="font-size:24px;font-weight:900" id="hm-t">0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Gesamt</div></div>
-              <div style="flex:1;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--orange)" id="hm-sr">0</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">SR fällig</div></div>
-            </div>
-            <div style="height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:12px"><div style="height:100%;background:var(--lime);border-radius:4px;transition:width .4s" id="hm-bar"></div></div>
-            <div class="btn-row" style="margin-top:0">
-              <button class="btn btn-lime btn-sm" onclick="goTo('cards')">🃏 Karteikarten</button>
-              <button class="btn btn-sm" onclick="goTo('quiz')">🎯 Quiz</button>
-              <button class="btn btn-sm" onclick="goTo('typing')">⌨️ Tippen</button>
-              <button class="btn btn-sm" onclick="goTo('matching')">🔗 Zuordnen</button>
+        <div class="dashboard-grid">
+          <div class="k-card dash-card progress-card">
+            <div style="font-size:17px;font-weight:850">Fortschrittsübersicht</div>
+            <div class="progress-ring-wrap">
+              <div><div style="font-size:13px;margin-bottom:8px;color:rgba(255,255,255,.78)">Level</div><div class="level-num" id="hm-level">1</div><div style="font-size:13px;margin-top:8px;color:rgba(255,255,255,.78)"><span id="hm-xp">0</span> / <span id="hm-next-xp">500</span> XP</div></div>
+              <div class="ring" id="hm-ring"></div>
             </div>
           </div>
-
-          <!-- Streak & XP -->
-          <div class="k-card">
-            <div class="k-section-title">Lernfortschritt</div>
-            <div style="display:flex;gap:10px;margin-bottom:14px">
-              <div style="flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;text-align:center">
-                <div style="font-size:28px;margin-bottom:2px" id="hm-streak-icon">📅</div>
-                <div style="font-size:22px;font-weight:900;color:var(--orange)" id="hm-streak">0</div>
-                <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Streak</div>
-              </div>
-              <div style="flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;text-align:center">
-                <div style="font-size:28px;margin-bottom:2px">⚡</div>
-                <div style="font-size:22px;font-weight:900;color:var(--lime)" id="hm-xp">0</div>
-                <div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Gesamt XP</div>
-              </div>
-            </div>
-            <div class="k-section-title">Tagesziel</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-              <div style="font-size:11px;color:var(--muted)" id="hm-goal-lbl">0 / 30 XP</div>
-              <select class="k-input" id="goal-sel" style="width:auto;padding:4px 8px;font-size:10px" onchange="saveDailyGoal()">
-                <option value="10">10 XP</option>
-                <option value="30" selected>30 XP</option>
-                <option value="50">50 XP</option>
-              </select>
-            </div>
-            <div class="daily-goal-bar"><div class="daily-goal-fill" id="daily-goal-fill" style="width:0%"></div></div>
-            <div style="height:10px"></div>
-            <div class="k-section-title">Letzte Sessions</div>
-            <div id="hm-sessions" style="font-size:10px;color:var(--muted)">–</div>
+          <div class="k-card dash-card challenge-card">
+            <div style="font-size:17px;font-weight:850;margin-bottom:18px">Tägliche Challenge</div>
+            <div style="font-size:13px;margin-bottom:14px">Löse 3 Lern-Aufgaben</div>
+            <div style="font-size:18px;font-weight:850;margin-bottom:10px"><span id="hm-k">0</span> / <span id="hm-t">0</span></div>
+            <div class="daily-goal-bar"><div class="daily-goal-fill" id="hm-bar" style="width:0%"></div></div>
+            <button class="btn btn-lime" style="margin-top:28px" onclick="goTo('cards')">Zur Challenge</button>
           </div>
+          <div class="k-card dash-card">
+            <div style="font-size:17px;font-weight:850">Empfohlener Kurs</div>
+            <div class="course-visual"></div>
+            <div style="font-size:13px;font-weight:850" id="home-pool-name">–</div>
+            <button class="course-link btn btn-ghost" style="width:100%;margin-top:8px" onclick="goTo('cards')"><span>Weiterlernen ❯</span><span>›</span></button>
+          </div>
+        </div>
 
-          <!-- Feature map -->
+        <div class="course-grid-head">
+          <div style="font-size:18px;font-weight:900">Kurs-Empfehlungen</div>
+          <button class="btn btn-ghost btn-sm" onclick="goTo('overview')">Alle anzeigen</button>
+        </div>
+        <div class="course-grid">
+          <div class="course-tile" onclick="goTo('cards')"><div class="tile-icon">🃏</div><div class="tile-title">Karteikarten</div><div class="tile-sub">Schnell wiederholen</div></div>
+          <div class="course-tile" onclick="goTo('quiz')"><div class="tile-icon">🏛️</div><div class="tile-title">Quiz</div><div class="tile-sub">Wissen testen</div></div>
+          <div class="course-tile" onclick="goTo('typing')"><div class="tile-icon">🚩</div><div class="tile-title">Tippen</div><div class="tile-sub">Aktiv erinnern</div></div>
+          <div class="course-tile" onclick="goTo('matching')"><div class="tile-icon">🏅</div><div class="tile-title">Zuordnen</div><div class="tile-sub">Logisch verbinden</div></div>
+        </div>
+
+        <div class="k-grid" style="margin-top:18px">
           <div class="k-card full">
-            <div class="k-section-title">Kivo Feature Map</div>
-            <div style="display:grid;gap:6px">
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>Karteikarten, Quiz, Tippen, Zuordnen, Lückentext, KI-Bot</span><span class="tag lime">Lernen</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>XP, Streak, Dashboard, Verlauf, Heatmap, Tagesziele</span><span class="tag orange">Gamification</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>Leaderboard, Freunde, Pool-Sharing, Profile, Items, Shop</span><span class="tag blue">Community</span></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:11px"><span>Supabase Auth, Cloud-Sync, Magic Link, PWA, NVIDIA Vision</span><span class="tag purple">Platform</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div><div class="k-section-title">Aktueller Pool</div><div style="font-size:13px;color:var(--muted)"><span id="hm-sr">0</span> Wiederholungen fällig · <span id="hm-goal-lbl">0 / 30 XP</span></div></div>
+              <div class="btn-row" style="margin-top:0"><button class="btn btn-sm" onclick="openModal('pool-modal')">📚 Pool wählen</button><button class="btn btn-sm" onclick="openModal('photo-modal')">📷 Foto-Import</button><select class="k-input" id="goal-sel" style="width:auto;padding:5px 8px;font-size:10px" onchange="saveDailyGoal()"><option value="10">10 XP</option><option value="30" selected>30 XP</option><option value="50">50 XP</option></select></div>
             </div>
+            <div class="daily-goal-bar" style="margin-top:12px"><div class="daily-goal-fill" id="daily-goal-fill" style="width:0%"></div></div>
+            <div id="hm-sessions" style="font-size:10px;color:var(--muted);margin-top:10px">–</div>
           </div>
         </div>
       </div>
@@ -788,14 +781,21 @@ function setActivePool(key) {
 function updateHomeStats() {
   const t=vocab.length, k=vocab.filter(v=>v.known).length;
   const pct=t>0?Math.round(k/t*100):0;
-  document.getElementById('hm-k').textContent=k;
-  document.getElementById('hm-t').textContent=t;
-  document.getElementById('hm-bar').style.width=pct+'%';
+  document.getElementById('hm-k').textContent=Math.min(k,3);
+  document.getElementById('hm-t').textContent=Math.min(Math.max(t,3),3);
+  document.getElementById('hm-bar').style.width=Math.min(100,Math.round(Math.min(k,3)/3*100))+'%';
   document.getElementById('hm-sr').textContent=srDueCount(activeKey);
-  document.getElementById('hm-streak').textContent=calcStreak();
   const s=calcStreak();
-  document.getElementById('hm-streak-icon').textContent=s>=3?'🔥':'📅';
-  document.getElementById('hm-xp').textContent=getTotalXp().toLocaleString();
+  const xpTotal=getTotalXp();
+  const level=Math.max(1,Math.floor(xpTotal/500)+1);
+  const levelStart=(level-1)*500, next=level*500, levelPct=Math.round((xpTotal-levelStart)/(next-levelStart)*100);
+  document.getElementById('hm-streak-top').textContent=s;
+  document.getElementById('hm-xp').textContent=xpTotal.toLocaleString();
+  document.getElementById('hm-level').textContent=level;
+  document.getElementById('hm-next-xp').textContent=next.toLocaleString();
+  document.getElementById('hm-ring').style.setProperty('--ring-pct',Math.max(4,levelPct)+'%');
+  document.getElementById('currency-val-home').textContent=userCurrency;
+  document.getElementById('home-user-name').textContent=currentUser?.username||'Lerner';
   // Daily goal
   const goal=parseInt(lsGet('kivo_goal','30'));
   const sel=document.getElementById('goal-sel'); if(sel)sel.value=goal;
@@ -892,6 +892,8 @@ function updateCurrencyDisplay() {
   const val=document.getElementById('currency-val');
   if(el) el.style.display=currentUser?'flex':'none';
   if(val) val.textContent=userCurrency;
+  const homeVal=document.getElementById('currency-val-home');
+  if(homeVal) homeVal.textContent=userCurrency;
 }
 async function syncXpToServer() { return; }
 
