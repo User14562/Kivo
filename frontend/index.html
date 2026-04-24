@@ -8,14 +8,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
-  --page:#1E1E1E; --canvas:#1E1E1E; --panel:#2D2D2D; --panel-2:#2D2D2D;
-  --line:#4E8B6E; --line2:#6AC28A; --text:#E6E6E6; --muted:#A8D5B2; --muted2:#A8D5B2;
-  --lime:#6AC28A; --lime-d:color-mix(in srgb,#6AC28A 18%,transparent); --lime-d2:color-mix(in srgb,#6AC28A 9%,transparent);
-  --orange:#A8D5B2; --orange-d:color-mix(in srgb,#A8D5B2 16%,transparent);
-  --blue:#6AC28A; --blue-d:color-mix(in srgb,#6AC28A 12%,transparent);
-  --danger:#A8D5B2; --danger-d:color-mix(in srgb,#A8D5B2 12%,transparent);
-  --purple:#4E8B6E; --purple-d:color-mix(in srgb,#4E8B6E 12%,transparent);
-  --shadow:0 30px 60px color-mix(in srgb,#1E1E1E 70%,transparent); --shadow-sm:0 4px 20px color-mix(in srgb,#1E1E1E 60%,transparent);
+  /* Erweiterte grün/dunkel-grau Palette */
+  --page:#161A17; --canvas:#161A17; --panel:#1F2521; --panel-2:#262D28;
+  --line:#33403A; --line2:#4E8B6E; --text:#ECEFEC; --muted:#9AB1A2; --muted2:#7A8E83;
+  --lime:#6AC28A; --lime-2:#8AD9A8; --lime-d:color-mix(in srgb,#6AC28A 18%,transparent); --lime-d2:color-mix(in srgb,#6AC28A 10%,transparent);
+  --orange:#C7E3B8; --orange-d:color-mix(in srgb,#C7E3B8 14%,transparent);
+  --blue:#7CC8A0; --blue-d:color-mix(in srgb,#7CC8A0 12%,transparent);
+  --danger:#E08A7A; --danger-d:color-mix(in srgb,#E08A7A 14%,transparent);
+  --purple:#4E8B6E; --purple-d:color-mix(in srgb,#4E8B6E 14%,transparent);
+  --shadow:0 30px 60px color-mix(in srgb,#0A0F0C 70%,transparent); --shadow-sm:0 4px 20px color-mix(in srgb,#0A0F0C 60%,transparent);
   --r:16px; --r-sm:10px; --r-lg:22px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -33,7 +34,7 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-he
 .brand-btn::after{content:''}
 .rail-btn::after{content:attr(title)}
 
-.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--page)}
+.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--page);position:relative}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 26px 10px;border-bottom:0;flex-shrink:0;gap:10px}
 .tb-left{display:flex;align-items:center;gap:10px}
 .tb-right{display:flex;align-items:center;gap:8px}
@@ -264,7 +265,7 @@ textarea.k-input{resize:vertical;min-height:70px}
 
 /* ── DASHBOARD REDESIGN ──────────────── */
 .home-welcome{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-.home-kicker{font-size:13px;color:var(--muted);margin-top:4px}.home-title{font-size:24px;font-weight:900;letter-spacing:0}.home-metrics{display:flex;align-items:center;gap:16px}.metric-chip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.metric-chip .gem{color:var(--lime)}
+.home-kicker{font-size:13px;color:var(--muted);margin-top:4px}.home-title{font-size:26px;font-weight:950;letter-spacing:0;line-height:1.15}.home-metrics{display:flex;align-items:center;gap:16px}.metric-chip{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.metric-chip .gem{color:var(--lime)}
 .dashboard-grid{display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(220px,1fr) minmax(220px,1fr);gap:14px;margin-bottom:26px}.dash-card{min-height:188px}.progress-card{background:linear-gradient(145deg,#4E8B6E,#2D2D2D);border-color:color-mix(in srgb,#6AC28A 24%,transparent)}.progress-ring-wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:18px}.level-num{font-size:52px;font-weight:950;line-height:1}.ring{width:112px;height:112px;border-radius:50%;background:conic-gradient(var(--lime) var(--ring-pct,65%),color-mix(in srgb,#E6E6E6 18%,transparent) 0);display:grid;place-items:center;position:relative}.ring::before{content:'';width:82px;height:82px;border-radius:50%;background:#4E8B6E}.challenge-card .daily-goal-bar{height:9px}.course-visual{height:86px;border-radius:8px;background:linear-gradient(180deg,#6AC28A,#2D2D2D);border:1px solid color-mix(in srgb,#E6E6E6 12%,transparent);display:grid;place-items:center;margin:10px auto 12px;max-width:150px;color:#1E1E1E;font-weight:900}.course-visual::before{content:'▣\A ▱ ▱ ▱';white-space:pre;color:#A8D5B2;text-align:left;line-height:1.5}.course-link{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted)}
 .course-grid-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.course-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:14px}.course-tile{min-height:116px;border-radius:10px;padding:16px;border:1px solid color-mix(in srgb,#E6E6E6 5%,transparent);background:linear-gradient(145deg,#2D2D2D,#1E1E1E);cursor:pointer;transition:transform .15s,border-color .15s}.course-tile:hover{transform:translateY(-2px);border-color:color-mix(in srgb,#6AC28A 35%,transparent)}.course-tile:nth-child(2){background:linear-gradient(145deg,#4E8B6E,#1E1E1E)}.course-tile:nth-child(3){background:linear-gradient(145deg,#2D2D2D,#1E1E1E)}.course-tile:nth-child(4){background:linear-gradient(145deg,#2D2D2D,#1E1E1E)}.tile-icon{font-size:28px;margin-bottom:18px}.tile-title{font-size:13px;font-weight:850}.tile-sub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.35}
 .app-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}.app-page-title{font-size:26px;font-weight:950;letter-spacing:0}.app-page-sub{font-size:12px;color:var(--muted);margin-top:4px}.language-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:18px}.language-card{min-height:126px;border-radius:10px;padding:18px;border:1px solid color-mix(in srgb,#E6E6E6 5%,transparent);background:linear-gradient(145deg,#2D2D2D,#1E1E1E);cursor:pointer;transition:transform .15s,border-color .15s}.language-card:hover,.language-card.active{transform:translateY(-2px);border-color:color-mix(in srgb,#6AC28A 38%,transparent);background:linear-gradient(145deg,#4E8B6E,#1E1E1E)}.learning-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.learn-card{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px;cursor:pointer;transition:all .15s}.learn-card:hover{border-color:color-mix(in srgb,#6AC28A 36%,transparent);transform:translateY(-1px)}.quest-grid,.community-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.quest-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.quest-row:last-child{border-bottom:0}.quest-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--lime-d);flex-shrink:0}.team-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);margin-bottom:8px}.reward-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:18px;border:1px solid color-mix(in srgb,#A8D5B2 16%,transparent);border-radius:10px;background:linear-gradient(145deg,color-mix(in srgb,#A8D5B2 14%,transparent),color-mix(in srgb,#6AC28A 5%,transparent))}
@@ -319,7 +320,7 @@ textarea.k-input{resize:vertical;min-height:70px}
   .modal-overlay.open .modal{bottom:0}
   .modal-overlay{align-items:flex-end;padding:0}
   .shop-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
-  .topbar{padding:14px}.tb-title{font-size:18px}.home-title{font-size:22px}.dashboard-grid,.course-grid{grid-template-columns:1fr}.home-metrics{width:100%;justify-content:space-between}.screens{padding:10px 14px 70px}
+  .topbar{padding:14px}.tb-title{font-size:18px}.home-title,.app-page-title{font-size:22px}.dashboard-grid,.course-grid{grid-template-columns:1fr}.home-metrics{width:100%;justify-content:space-between}.screens{padding:10px 14px 70px}
 }
 @media(min-width:980px){
   .k-grid{grid-template-columns:1.1fr .9fr}
@@ -387,7 +388,7 @@ textarea.k-input{resize:vertical;min-height:70px}
           <div class="home-metrics">
             <div class="metric-chip">🔥 <span id="hm-streak-top">0</span></div>
             <div class="metric-chip"><span class="gem">◆</span> <span id="currency-val-home">0</span></div>
-            <div class="avatar-btn" onclick="toggleUserMenu()">👤</div>
+            <div class="avatar-btn" id="dash-avatar-btn" onclick="event.stopPropagation();toggleUserMenu()" title="Profilmenü">👤</div>
           </div>
         </div>
 
@@ -561,14 +562,13 @@ textarea.k-input{resize:vertical;min-height:70px}
 
       <!-- PROFIL ──────────────────────────────── -->
       <div class="screen" id="screen-profile">
-        <div style="font-size:18px;font-weight:800;margin-bottom:14px">Mein Profil</div>
+        <div class="app-page-head"><div><div class="app-page-title">Mein Profil</div><div class="app-page-sub">Deine Statistiken, Avatar und Account-Einstellungen.</div></div></div>
         <div id="profile-content"></div>
       </div>
 
       <!-- SHOP ────────────────────────────────── -->
       <div class="screen" id="screen-shop">
-        <div style="font-size:18px;font-weight:800;margin-bottom:6px">Belohnungen</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Ein Shop für Items, Badges und kosmetische Belohnungen.</div>
+        <div class="app-page-head"><div><div class="app-page-title">Belohnungen</div><div class="app-page-sub">Ein Shop für Items, Badges und kosmetische Belohnungen.</div></div></div>
         <div id="shop-content"></div>
       </div>
 
@@ -883,7 +883,7 @@ function toggleUserMenu() {
 }
 function closeUserMenu() { document.getElementById('user-menu').classList.remove('open'); }
 document.addEventListener('click', e => {
-  if(!e.target.closest('#avatar-btn') && !e.target.closest('#user-menu')) closeUserMenu();
+  if(!e.target.closest('#avatar-btn') && !e.target.closest('#dash-avatar-btn') && !e.target.closest('#user-menu')) closeUserMenu();
 });
 
 // No longer doing health checks// ── XP SYSTEM ────────────────────────────────────────────────
@@ -1535,7 +1535,9 @@ async function uploadAvatar(inp) {
     const url=e.target.result;
     localStorage.setItem('kivo_avatar_'+(currentUser?.username||''),url);
     document.getElementById('prof-av').innerHTML=`<img src="${url}">`;
-    document.getElementById('avatar-btn').innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    const imgHtml=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    document.getElementById('avatar-btn').innerHTML=imgHtml;
+    const dashAv=document.getElementById('dash-avatar-btn'); if(dashAv) dashAv.innerHTML=imgHtml;
     if(currentUser){try{await sb.from('profiles').update({avatar_url:url}).eq('id',currentUser.id);}catch(e){}}
     toast('✓ Profilbild gespeichert');
   };
@@ -1887,7 +1889,7 @@ function openSettings(){
       ${currentUser?`
       <div class="k-group"><label class="k-label">Angemeldet als</label><div style="padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--text)">${currentUser.email}</div></div>
       <div class="k-group"><label class="k-label">Passwort ändern</label><input class="k-input" id="sett-pw" type="password" placeholder="Neues Passwort"><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="changePw()">Speichern</button></div>`:'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Nicht angemeldet</div>'}
-      <div class="k-group"><label class="k-label">KI-Funktionen</label><div style="padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--muted)">API-Schlüssel laufen sicher über Supabase Edge Functions.</div></div>
+      
       <div class="k-group"><label class="k-label">Tagesziel</label><select class="k-input" id="sett-goal" onchange="this.parentElement.querySelector('small').textContent=''"><option value="10">10 XP / Tag</option><option value="30" selected>30 XP / Tag</option><option value="50">50 XP / Tag</option></select><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="lsSet('kivo_goal',parseInt(document.getElementById('sett-goal').value));updateHomeStats();toast('Ziel gespeichert')">Speichern</button></div>
       ${currentUser?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-danger btn-sm" onclick="doLogout();closeModal('settings-modal')">↩ Abmelden</button></div>`:''}
     </div>
@@ -1959,7 +1961,9 @@ function updateUserUi(user){
   document.getElementById('um-logout').style.display=loggedIn?'flex':'none';
   document.querySelector('[onclick="closeUserMenu();openModal(\'auth-modal\')"]').style.display=loggedIn?'none':'flex';
   const av=user?localStorage.getItem('kivo_avatar_'+(user.username||''))||'':null;
-  document.getElementById('avatar-btn').innerHTML=av?`<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤';
+  const avHtml=av?`<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤';
+  document.getElementById('avatar-btn').innerHTML=avHtml;
+  const dashAv=document.getElementById('dash-avatar-btn'); if(dashAv) dashAv.innerHTML=avHtml;
   updateCurrencyDisplay();
 }
 async function hydrateSession(session){
