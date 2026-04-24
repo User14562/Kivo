@@ -26,13 +26,15 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-he
 .shell{display:flex;height:100vh;overflow:hidden;background:var(--page)}
 .rail{width:176px;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between;padding:22px 12px;border-right:1px solid var(--line);background:var(--page)}
 .rail-top,.rail-bot{display:flex;flex-direction:column;gap:8px}
-.rail-btn{width:100%;height:42px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;font-weight:650;cursor:pointer;transition:all .15s;flex-shrink:0;text-align:left}
+.rail-btn{width:100%;height:42px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--muted);display:flex;align-items:center;gap:12px;padding:0 12px;font-size:12px;font-weight:650;cursor:pointer;transition:all .15s;flex-shrink:0;text-align:left}
 .rail-btn:hover{border-color:var(--line);color:var(--text);background:color-mix(in srgb,#E6E6E6 3%,transparent)}
 .rail-btn.active{border-color:color-mix(in srgb,#6AC28A 28%,transparent);background:linear-gradient(135deg,color-mix(in srgb,#6AC28A 32%,transparent),color-mix(in srgb,#6AC28A 12%,transparent));color:var(--text);box-shadow:0 10px 28px color-mix(in srgb,#6AC28A 8%,transparent)}
 .rail-btn.lime-active{border-color:var(--lime);background:var(--lime-d2);color:var(--lime)}
+.rail-ico{width:20px;height:20px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:currentColor}
+.rail-ico svg{width:20px;height:20px;display:block;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rail-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
 .brand-btn{width:132px;height:42px;border-radius:0;background:transparent;border:none;cursor:pointer;flex-shrink:0;background-image:url('kivo-logo.png');background-size:contain;background-position:left center;background-repeat:no-repeat;margin:0 0 14px 8px;color:transparent;font-size:0}
 .brand-btn::after{content:''}
-.rail-btn::after{content:attr(title)}
 
 .main-area{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--page);position:relative}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 26px 10px;border-bottom:0;flex-shrink:0;gap:10px}
@@ -56,7 +58,8 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-he
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--panel);border-top:1px solid var(--line);z-index:60;flex-direction:row;padding-bottom:env(safe-area-inset-bottom,0)}
 .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:var(--muted);cursor:pointer;border:none;background:none;font-family:Inter,sans-serif;padding:6px 0;transition:all .15s}
 .bn-item.active{color:var(--lime)}
-.bn-icon{font-size:17px;line-height:1}
+.bn-icon{font-size:17px;line-height:1;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px}
+.bn-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── SCREENS ─────────────────────────── */
 .screen{display:none}
@@ -337,16 +340,16 @@ textarea.k-input{resize:vertical;min-height:70px}
   <nav class="rail" id="rail">
     <div class="rail-top">
       <button class="brand-btn" onclick="goTo('home')" title="Kivo">K</button>
-      <button class="rail-btn active" id="rb-home" data-s="home" onclick="goTo('home')" title="Dashboard">🏠</button>
-      <button class="rail-btn" id="rb-courses" data-s="courses" onclick="goTo('courses')" title="Kurse">▣</button>
-      <button class="rail-btn" id="rb-challenges" data-s="challenges" onclick="goTo('challenges')" title="Challenges">🛡️</button>
-      <button class="rail-btn" id="rb-community" data-s="community" onclick="goTo('community')" title="Community">👥</button>
-      <button class="rail-btn" id="rb-shop" data-s="shop" onclick="goTo('shop')" title="Belohnungen">🏆</button>
-      <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil">👤</button>
+      <button class="rail-btn active" id="rb-home" data-s="home" onclick="goTo('home')" title="Dashboard"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span><span class="rail-lbl">Dashboard</span></button>
+      <button class="rail-btn" id="rb-courses" data-s="courses" onclick="goTo('courses')" title="Kurse"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="rail-lbl">Kurse</span></button>
+      <button class="rail-btn" id="rb-challenges" data-s="challenges" onclick="goTo('challenges')" title="Challenges"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="rail-lbl">Challenges</span></button>
+      <button class="rail-btn" id="rb-community" data-s="community" onclick="goTo('community')" title="Community"><span class="rail-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M15 19c0-2.3 1.6-4 3.5-4s2.5 1.3 2.5 3"/></svg></span><span class="rail-lbl">Community</span></button>
+      <button class="rail-btn" id="rb-shop" data-s="shop" onclick="goTo('shop')" title="Belohnungen"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M9 12v2M15 12v2"/></svg></span><span class="rail-lbl">Belohnungen</span></button>
+      <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil"><span class="rail-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span><span class="rail-lbl">Profil</span></button>
     </div>
     <div class="rail-bot">
-      <button class="rail-btn" id="rb-aibot" data-s="aibot" onclick="goTo('aibot')" title="KI-Assistent">💬</button>
-      <button class="rail-btn" id="rb-overview" data-s="overview" onclick="goTo('overview')" title="Pool-Verwaltung">📋</button>
+      <button class="rail-btn" id="rb-aibot" data-s="aibot" onclick="goTo('aibot')" title="KI-Assistent"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4V5z"/><circle cx="9" cy="10.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10.5" r="1.1" fill="currentColor" stroke="none"/></svg></span><span class="rail-lbl">KI-Assistent</span></button>
+      <button class="rail-btn" id="rb-overview" data-s="overview" onclick="goTo('overview')" title="Pool-Verwaltung"><span class="rail-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.2"/><rect x="13" y="4" width="7" height="7" rx="1.2"/><rect x="4" y="13" width="7" height="7" rx="1.2"/><rect x="13" y="13" width="7" height="7" rx="1.2"/></svg></span><span class="rail-lbl">Pool-Verwaltung</span></button>
     </div>
   </nav>
 
@@ -578,11 +581,11 @@ textarea.k-input{resize:vertical;min-height:70px}
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bn-item active" data-s="home" onclick="goTo('home')"><span class="bn-icon">🏠</span>Dashboard</button>
-  <button class="bn-item" data-s="courses" onclick="goTo('courses')"><span class="bn-icon">▣</span>Kurse</button>
-  <button class="bn-item" data-s="challenges" onclick="goTo('challenges')"><span class="bn-icon">🛡️</span>Quests</button>
-  <button class="bn-item" data-s="community" onclick="goTo('community')"><span class="bn-icon">👥</span>Community</button>
-  <button class="bn-item" data-s="profile" onclick="goTo('profile')"><span class="bn-icon">👤</span>Profil</button>
+  <button class="bn-item active" data-s="home" onclick="goTo('home')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>Dashboard</button>
+  <button class="bn-item" data-s="courses" onclick="goTo('courses')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>Kurse</button>
+  <button class="bn-item" data-s="challenges" onclick="goTo('challenges')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg></span>Quests</button>
+  <button class="bn-item" data-s="community" onclick="goTo('community')"><span class="bn-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M15 19c0-2.3 1.6-4 3.5-4s2.5 1.3 2.5 3"/></svg></span>Community</button>
+  <button class="bn-item" data-s="profile" onclick="goTo('profile')"><span class="bn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span>Profil</button>
 </nav>
 
 <!-- TOAST -->
