@@ -127,6 +127,65 @@ textarea.k-input{resize:vertical;min-height:70px}
 .auth-tab{flex:1;padding:7px;border-radius:8px;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s}
 .auth-tab.active{background:var(--panel);color:var(--text);box-shadow:var(--shadow-sm)}
 
+/* ── AUTH SCREEN (split layout w/ avatar) ── */
+.auth-modal{width:min(960px,96vw)!important;max-width:96vw!important;padding:0!important;overflow:hidden;background:var(--panel)!important;border-radius:28px!important;border:1px solid var(--line)}
+.auth-split{display:flex;min-height:560px;position:relative}
+.auth-split.swap{flex-direction:row-reverse}
+.auth-side{flex:1;background:radial-gradient(circle at 30% 25%,#3a6b54 0%,#264a3a 55%,#1b3528 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:48px 32px 32px;position:relative;color:#fff;overflow:hidden}
+.auth-side::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 90%,rgba(106,194,138,.25),transparent 55%),radial-gradient(circle at 15% 85%,rgba(168,213,178,.18),transparent 50%);pointer-events:none}
+.auth-side > *{position:relative;z-index:1}
+.auth-split:not(.swap) .auth-side{border-radius:120px 120px 120px 120px;margin:10px 0 10px 10px}
+.auth-split.swap .auth-side{border-radius:120px 120px 120px 120px;margin:10px 10px 10px 0}
+.auth-side h2{font-size:30px;font-weight:900;letter-spacing:.01em;margin-bottom:6px}
+.auth-side .as-sub{font-size:11.5px;opacity:.85;margin-bottom:14px}
+.auth-side .as-switch{padding:8px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+.auth-side .as-switch:hover{background:rgba(255,255,255,.15)}
+.auth-form{flex:1;background:#2D2D2D;display:flex;flex-direction:column;justify-content:center;padding:48px 56px;color:#E6E6E6;position:relative}
+.auth-form h1{font-size:32px;font-weight:900;text-align:center;color:#E6E6E6;margin-bottom:4px;letter-spacing:.01em}
+.auth-form .af-sub{text-align:center;font-size:12px;color:#A8D5B2;margin-bottom:22px;opacity:.85}
+.af-input{position:relative;margin-bottom:14px}
+.af-input input{width:100%;height:46px;border-radius:999px;border:1px solid rgba(106,194,138,.35);background:rgba(106,194,138,.12);padding:0 44px 0 22px;font-size:13px;color:#E6E6E6;font-family:inherit;outline:none;transition:box-shadow .15s,border-color .15s,background .15s}
+.af-input input:focus{border-color:#6AC28A;background:rgba(106,194,138,.18);box-shadow:0 0 0 3px rgba(106,194,138,.18)}
+.af-input input::placeholder{color:#A8D5B2;opacity:.65}
+.af-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:28px;height:28px;color:#A8D5B2;display:flex;align-items:center;justify-content:center;cursor:default;background:transparent;border:0;padding:0;line-height:0}
+.af-icon.btn{cursor:pointer;border-radius:50%;transition:background .15s,color .15s}
+.af-icon.btn:hover{color:#6AC28A;background:rgba(106,194,138,.15)}
+.af-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.af-forgot{text-align:center;font-size:11.5px;color:#A8D5B2;background:none;border:none;cursor:pointer;font-family:inherit;margin:2px 0 16px;display:block;width:100%;opacity:.85}
+.af-forgot:hover{color:#6AC28A;opacity:1}
+.af-primary{width:100%;height:48px;border-radius:999px;border:none;background:linear-gradient(180deg,#6AC28A,#4E8B6E);color:#1E1E1E;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 8px 22px rgba(78,139,110,.35);transition:transform .1s,box-shadow .15s}
+.af-primary:hover{box-shadow:0 10px 28px rgba(78,139,110,.55)}
+.af-primary:active{transform:translateY(1px)}
+.af-foot{text-align:center;font-size:11.5px;color:#A8D5B2;margin-top:14px;opacity:.85}
+.af-foot a{color:#6AC28A;font-weight:800;cursor:pointer;text-decoration:none}
+.af-msg{font-size:11.5px;text-align:center;margin-top:10px;min-height:14px;color:#6AC28A}
+.af-msg.err{color:#E58A7A}
+.auth-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(30,30,30,.7);color:#E6E6E6;cursor:pointer;display:grid;place-items:center;font-size:14px;z-index:5;transition:background .15s}
+.auth-close:hover{background:rgba(30,30,30,.95)}
+
+/* User menu items with SVG icons */
+.um-item{display:flex;align-items:center;gap:10px}
+.um-ico{width:16px;height:16px;flex:0 0 16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+
+/* Avatar character (SVG-based, eye tracking) */
+.av-stage{margin-top:18px;width:240px;height:300px;position:relative;display:flex;align-items:flex-end;justify-content:center}
+.av-svg{width:100%;height:100%;overflow:visible}
+.av-eye-pupil{transition:transform .08s linear}
+.av-hand{transition:transform .35s cubic-bezier(.5,1.6,.4,1);transform-origin:center}
+.av-hand.hidden{transform:translateY(160px) scale(.6);opacity:0}
+.av-eyelid{transition:transform .25s ease;transform-origin:center}
+
+@media (max-width:760px){
+  .auth-split{flex-direction:column!important;min-height:auto}
+  .auth-split.swap{flex-direction:column!important}
+  .auth-split:not(.swap) .auth-side,.auth-split.swap .auth-side{border-radius:0}
+  .auth-side{padding:28px 22px 18px}
+  .av-stage{width:170px;height:200px;margin-top:10px}
+  .auth-side h2{font-size:22px}
+  .auth-form{padding:28px 22px}
+  .auth-form h1{font-size:24px}
+}
+
 /* ── FLASHCARD ───────────────────────── */
 .fc-wrap{perspective:1000px;margin-bottom:16px}
 .fc{width:100%;height:200px;position:relative;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.4,0,.2,1);cursor:pointer;border-radius:var(--r-lg)}
@@ -359,16 +418,16 @@ textarea.k-input{resize:vertical;min-height:70px}
     <div class="user-menu" id="user-menu">
       <div class="um-name" id="um-name">Gast</div>
       <div class="um-email" id="um-email"></div>
-      <div class="um-item" onclick="closeUserMenu();openModal('auth-modal')">🔑 Anmelden</div>
+      <div class="um-item" onclick="closeUserMenu();openModal('auth-modal')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg><span>Anmelden</span></div>
       <div class="um-sep"></div>
-      <div class="um-item" onclick="closeUserMenu();openSettings()">⚙ Einstellungen</div>
-      <div class="um-item" onclick="closeUserMenu();goTo('profile')">👤 Mein Profil</div>
-      <div class="um-item" onclick="closeUserMenu();goTo('shop')">🛍 Shop</div>
+      <div class="um-item" onclick="closeUserMenu();openSettings()"><svg class="um-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Einstellungen</span></div>
+      <div class="um-item" onclick="closeUserMenu();goTo('profile')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Mein Profil</span></div>
+      <div class="um-item" onclick="closeUserMenu();goTo('shop')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></div>
       <div class="um-sep"></div>
-      <div class="um-item" onclick="closeUserMenu();openModal('photo-modal')">📷 Foto-Import</div>
-      <div class="um-item" onclick="closeUserMenu();showFeedback()">💬 Feedback</div>
+      <div class="um-item" onclick="closeUserMenu();openModal('photo-modal')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Foto-Import</span></div>
+      <div class="um-item" onclick="closeUserMenu();showFeedback()"><svg class="um-ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Feedback</span></div>
       <div class="um-sep"></div>
-      <div class="um-item" id="um-logout" style="display:none;color:var(--danger)" onclick="doLogout()">↩ Abmelden</div>
+      <div class="um-item" id="um-logout" style="display:none;color:var(--danger)" onclick="doLogout()"><svg class="um-ico" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Abmelden</span></div>
     </div>
     <div style="display:none">
       <span id="tb-title">Dashboard</span>
@@ -426,7 +485,7 @@ textarea.k-input{resize:vertical;min-height:70px}
           <div class="course-tile" onclick="goTo('cards')"><div class="tile-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="16" rx="2"/><path d="M7 5V3h10a4 4 0 0 1 4 4v12"/></svg></div><div class="tile-title">Karteikarten</div><div class="tile-sub">Schnell wiederholen</div></div>
           <div class="course-tile" onclick="goTo('quiz')"><div class="tile-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></div><div class="tile-title">Quiz</div><div class="tile-sub">Wissen testen</div></div>
           <div class="course-tile" onclick="goTo('typing')"><div class="tile-icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></div><div class="tile-title">Tippen</div><div class="tile-sub">Aktiv erinnern</div></div>
-          <div class="course-tile" onclick="goTo('matching')"><div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M10 7H6a3 3 0 0 0 0 6h12a3 3 0 0 1 0 6h-4"/><path d="M7 4l-3 3 3 3M17 14l3 3-3 3"/></svg></div><div class="tile-title">Zuordnen</div><div class="tile-sub">Logisch verbinden</div></div>
+          <div class="course-tile" onclick="goTo('matching')"><div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M20.5 11H19V7a2 2 0 0 0-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4a2 2 0 0 0-2 2v3.8h1.5a2.2 2.2 0 0 1 0 4.4H2V19a2 2 0 0 0 2 2h3.8v-1.5a2.2 2.2 0 0 1 4.4 0V21H17a2 2 0 0 0 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z"/></svg></div><div class="tile-title">Zuordnen</div><div class="tile-sub">Logisch verbinden</div></div>
         </div>
 
         <div class="k-grid" style="margin-top:18px">
@@ -605,31 +664,108 @@ textarea.k-input{resize:vertical;min-height:70px}
 
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="auth-modal" onclick="if(event.target===this)closeModal('auth-modal')">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">Anmelden / Registrieren</div><button class="modal-close" onclick="closeModal('auth-modal')">✕</button></div>
-    <div class="auth-tabs"><button class="auth-tab active" id="at-login" onclick="switchAuthTab('login')">Anmelden</button><button class="auth-tab" id="at-register" onclick="switchAuthTab('register')">Registrieren</button><button class="auth-tab" id="at-magic" onclick="switchAuthTab('magic')">Magic Link</button></div>
-    <div id="auth-login-form">
-      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="login-email" type="email" placeholder="deine@email.de"></div>
-      <div class="k-group"><label class="k-label">Passwort</label><input class="k-input" id="login-pw" type="password" placeholder="Passwort"></div>
-      <button class="btn btn-lime" style="width:100%" onclick="doLogin()">Anmelden</button>
-      <div style="text-align:center;margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="switchAuthTab('forgot')">Passwort vergessen?</button></div>
+  <div class="modal auth-modal">
+    <button class="auth-close" onclick="closeModal('auth-modal')" aria-label="Schließen">✕</button>
+    <div class="auth-split" id="auth-split">
+      <!-- AVATAR SIDE -->
+      <div class="auth-side">
+        <h2 id="as-title">Willkommen zurück</h2>
+        <div class="as-sub" id="as-sub">Noch kein Konto?</div>
+        <button class="as-switch" id="as-switch" onclick="authSwitchMode()">Registrieren</button>
+        <div class="av-stage" id="av-stage">
+          <svg class="av-svg" viewBox="0 0 240 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- shoulders / shirt -->
+            <path d="M30 300 C30 230, 90 210, 120 210 C150 210, 210 230, 210 300 Z" fill="#3A5C7A"/>
+            <!-- neck -->
+            <rect x="104" y="180" width="32" height="30" rx="6" fill="#E8B89A"/>
+            <!-- head -->
+            <ellipse cx="120" cy="130" rx="68" ry="78" fill="#F0C0A0"/>
+            <!-- hair -->
+            <path d="M58 110 C58 60, 95 38, 120 38 C150 38, 184 60, 184 108 C184 112, 182 116, 178 118 C170 96, 150 84, 120 84 C92 84, 70 96, 62 118 C58 116, 58 113, 58 110 Z" fill="#3A2418"/>
+            <!-- eyebrows -->
+            <path d="M82 112 Q96 104 110 112" stroke="#2A1810" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M130 112 Q144 104 158 112" stroke="#2A1810" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <!-- eyes (whites) -->
+            <ellipse cx="96" cy="132" rx="11" ry="9" fill="#fff"/>
+            <ellipse cx="144" cy="132" rx="11" ry="9" fill="#fff"/>
+            <!-- pupils (animated) -->
+            <g id="av-pupil-l" class="av-eye-pupil"><circle cx="96" cy="132" r="4.5" fill="#2A1810"/></g>
+            <g id="av-pupil-r" class="av-eye-pupil"><circle cx="144" cy="132" r="4.5" fill="#2A1810"/></g>
+            <!-- nose -->
+            <path d="M120 140 Q116 158 120 162 Q124 160 124 156" stroke="#C99A78" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <!-- mouth -->
+            <path d="M104 178 Q120 188 136 178" stroke="#8B4A3A" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <!-- HANDS over eyes (hidden by default) -->
+            <g id="av-hands" class="av-hand hidden">
+              <ellipse cx="92" cy="134" rx="22" ry="16" fill="#F0C0A0" stroke="#C99A78" stroke-width="1.5"/>
+              <ellipse cx="148" cy="134" rx="22" ry="16" fill="#F0C0A0" stroke="#C99A78" stroke-width="1.5"/>
+              <path d="M70 136 L78 130 M76 142 L84 138 M108 138 L116 134" stroke="#C99A78" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+              <path d="M126 136 L134 130 M132 142 L140 138 M164 138 L172 134" stroke="#C99A78" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <!-- FORM SIDE -->
+      <div class="auth-form">
+        <!-- LOGIN -->
+        <div id="auth-login-form">
+          <h1>Anmelden</h1>
+          <div class="af-sub">Bitte gib deine Daten ein</div>
+          <div class="af-input">
+            <input id="login-email" type="email" placeholder="E-Mail" autocomplete="username">
+            <span class="af-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+          </div>
+          <div class="af-input">
+            <input id="login-pw" type="password" placeholder="Passwort" autocomplete="current-password">
+            <span class="af-icon btn" id="login-pw-toggle" onclick="authTogglePw('login-pw',this)" title="Anzeigen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </div>
+          <button class="af-forgot" onclick="authShowForgot()">Passwort vergessen?</button>
+          <button class="af-primary" onclick="doLogin()">Einloggen</button>
+          <div class="af-foot">Noch kein Konto? <a onclick="authSwitchMode()">Registrieren</a></div>
+        </div>
+        <!-- REGISTER -->
+        <div id="auth-register-form" style="display:none">
+          <h1>Registrieren</h1>
+          <div class="af-sub">Erstelle dein Konto</div>
+          <div class="af-input">
+            <input id="reg-username" placeholder="Benutzername" autocomplete="username">
+            <span class="af-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          </div>
+          <div class="af-input">
+            <input id="reg-email" type="email" placeholder="E-Mail" autocomplete="email">
+            <span class="af-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+          </div>
+          <div class="af-input">
+            <input id="reg-pw" type="password" placeholder="Passwort" autocomplete="new-password">
+            <span class="af-icon btn" onclick="authTogglePw('reg-pw',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </div>
+          <div class="af-input">
+            <input id="reg-pw2" type="password" placeholder="Passwort bestätigen" autocomplete="new-password">
+            <span class="af-icon btn" onclick="authTogglePw('reg-pw2',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </div>
+          <button class="af-primary" onclick="doRegister()">Konto erstellen</button>
+          <div class="af-foot">Schon registriert? <a onclick="authSwitchMode()">Anmelden</a></div>
+        </div>
+        <!-- FORGOT -->
+        <div id="auth-forgot-form" style="display:none">
+          <h1>Passwort zurücksetzen</h1>
+          <div class="af-sub">Wir senden dir einen Link</div>
+          <div class="af-input">
+            <input id="forgot-email" type="email" placeholder="E-Mail">
+            <span class="af-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+          </div>
+          <button class="af-primary" onclick="doForgotPw()">Reset-Link senden</button>
+          <div class="af-foot"><a onclick="authShowLogin()">← Zurück zum Login</a></div>
+        </div>
+        <div class="af-msg" id="auth-msg"></div>
+      </div>
     </div>
-    <div id="auth-register-form" style="display:none">
-      <div class="k-group"><label class="k-label">Nutzername</label><input class="k-input" id="reg-username" placeholder="nutzername"></div>
-      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="reg-email" type="email" placeholder="deine@email.de"></div>
-      <div class="k-group"><label class="k-label">Passwort</label><input class="k-input" id="reg-pw" type="password" placeholder="mind. 6 Zeichen"></div>
-      <button class="btn btn-lime" style="width:100%" onclick="doRegister()">Registrieren</button>
-    </div>
-    <div id="auth-magic-form" style="display:none">
-      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="magic-email" type="email" placeholder="deine@email.de"></div>
-      <button class="btn btn-lime" style="width:100%" onclick="doMagicLink()">Magic Link senden</button>
-    </div>
-    <div id="auth-forgot-form" style="display:none">
-      <div class="k-group"><label class="k-label">E-Mail</label><input class="k-input" id="forgot-email" type="email" placeholder="deine@email.de"></div>
-      <button class="btn btn-lime" style="width:100%" onclick="doForgotPw()">Reset-Link senden</button>
-      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="switchAuthTab('login')">← Zurück</button>
-    </div>
-    <div id="auth-msg" style="font-size:11px;margin-top:10px;text-align:center"></div>
   </div>
 </div>
 
@@ -1910,14 +2046,84 @@ async function changePw(){
 function saveNvKey(){ toast('KI-Schlüssel werden serverseitig verwaltet'); }
 
 // ── AUTH ──────────────────────────────────────────────────────
-function switchAuthTab(tab){
-  ['login','register','magic','forgot'].forEach(t=>{
-    document.getElementById('auth-'+t+'-form').style.display=t===tab?'block':'none';
-    document.getElementById('at-'+t)?.classList.toggle('active',t===tab);
+function _authShow(which){
+  ['login','register','forgot'].forEach(t=>{
+    const el=document.getElementById('auth-'+t+'-form'); if(el) el.style.display=t===which?'block':'none';
   });
-  document.getElementById('auth-msg').textContent='';
+  const split=document.getElementById('auth-split');
+  const title=document.getElementById('as-title');
+  const sub=document.getElementById('as-sub');
+  const sw=document.getElementById('as-switch');
+  if(which==='register'){
+    split?.classList.add('swap');
+    if(title)title.textContent='Willkommen!';
+    if(sub)sub.textContent='Schon ein Konto?';
+    if(sw)sw.textContent='Anmelden';
+  } else {
+    split?.classList.remove('swap');
+    if(title)title.textContent='Willkommen zurück';
+    if(sub)sub.textContent='Noch kein Konto?';
+    if(sw)sw.textContent='Registrieren';
+  }
+  const msg=document.getElementById('auth-msg'); if(msg){msg.textContent='';msg.classList.remove('err');}
 }
-function authMsg(m,ok){const el=document.getElementById('auth-msg');el.textContent=m;el.style.color=ok?'var(--lime)':'var(--danger)';}
+function switchAuthTab(tab){ _authShow(tab==='magic'?'login':tab); }
+function authSwitchMode(){
+  const reg=document.getElementById('auth-register-form');
+  _authShow(reg && reg.style.display!=='none' ? 'login':'register');
+}
+function authShowForgot(){ _authShow('forgot'); }
+function authShowLogin(){ _authShow('login'); }
+function authMsg(m,ok){const el=document.getElementById('auth-msg');if(!el)return;el.textContent=m;el.classList.toggle('err',!ok);}
+
+// Password show/hide + hands-over-eyes
+function authTogglePw(id,btn){
+  const inp=document.getElementById(id); if(!inp)return;
+  const showing=inp.type==='text';
+  inp.type=showing?'password':'text';
+  _authHands(!showing);
+  if(btn){
+    btn.innerHTML = showing
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a19.77 19.77 0 0 1 4.22-5.36"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a19.86 19.86 0 0 1-3.17 4.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  }
+}
+function _authHands(up){
+  const h=document.getElementById('av-hands'); if(!h)return;
+  h.classList.toggle('hidden', !up);
+}
+
+// Eye tracking — pupils follow cursor
+let _authEyeBound=false;
+function _authBindEyes(){
+  if(_authEyeBound) return;
+  const stage=document.getElementById('av-stage'); if(!stage) return;
+  _authEyeBound=true;
+  const pl=document.getElementById('av-pupil-l');
+  const pr=document.getElementById('av-pupil-r');
+  const eyes=[{el:pl,cx:96,cy:132},{el:pr,cx:144,cy:132}];
+  const MAX=4.5;
+  function move(e){
+    const r=stage.getBoundingClientRect();
+    if(!r.width) return;
+    const sx=r.width/240, sy=r.height/300;
+    const mx=(e.clientX-r.left)/sx, my=(e.clientY-r.top)/sy;
+    eyes.forEach(eye=>{
+      const dx=mx-eye.cx, dy=my-eye.cy;
+      const d=Math.hypot(dx,dy)||1;
+      const tx=(dx/d)*Math.min(MAX,d/10);
+      const ty=(dy/d)*Math.min(MAX,d/10);
+      if(eye.el) eye.el.style.transform=`translate(${tx}px,${ty}px)`;
+    });
+  }
+  window.addEventListener('mousemove',move,{passive:true});
+  window.addEventListener('touchmove',ev=>{if(ev.touches&&ev.touches[0])move(ev.touches[0]);},{passive:true});
+}
+const _origOpenModal_auth=window.openModal;
+window.openModal=function(id){
+  if(typeof _origOpenModal_auth==='function') _origOpenModal_auth(id);
+  if(id==='auth-modal'){ _authShow('login'); _authHands(false); requestAnimationFrame(_authBindEyes); }
+};
 
 async function doLogin(){
   const email=document.getElementById('login-email')?.value.trim();
@@ -1935,11 +2141,13 @@ async function doRegister(){
   const username=document.getElementById('reg-username')?.value.trim();
   const email=document.getElementById('reg-email')?.value.trim();
   const pw=document.getElementById('reg-pw')?.value;
+  const pw2=document.getElementById('reg-pw2')?.value;
   if(!username||!email||!pw){authMsg('Bitte alle Felder ausfüllen');return;}
   if(pw.length<6){authMsg('Passwort mind. 6 Zeichen');return;}
-  authMsg('Registrieren...');
+  if(pw2!==undefined && pw2!==pw){authMsg('Passwörter stimmen nicht überein');return;}
+  authMsg('Registrieren...',true);
   try{
-    const{data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username}}});
+    const{data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username},emailRedirectTo:window.location.origin}});
     if(error)throw error;
     authMsg('✓ Konto erstellt! Bitte E-Mail bestätigen.',true);
   }catch(e){authMsg('Fehler: '+e.message);}
