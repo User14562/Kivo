@@ -128,7 +128,7 @@ textarea.k-input{resize:vertical;min-height:70px}
 .auth-tab.active{background:var(--panel);color:var(--text);box-shadow:var(--shadow-sm)}
 
 /* ── AUTH SCREEN (split layout w/ avatar) ── */
-.auth-modal{width:min(960px,96vw)!important;max-width:96vw!important;padding:0!important;overflow:hidden;background:var(--panel)!important;border-radius:28px!important;border:1px solid var(--line)}
+.auth-modal{width:min(960px,96vw)!important;max-width:96vw!important;padding:0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;background:var(--panel)!important;border-radius:28px!important;border:1px solid var(--line);max-height:90vh!important}
 .auth-split{display:flex;min-height:560px;position:relative}
 .auth-split.swap{flex-direction:row-reverse}
 .auth-side{flex:1;background:radial-gradient(circle at 30% 25%,#3a6b54 0%,#264a3a 55%,#1b3528 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:48px 32px 32px;position:relative;color:#fff;overflow:hidden}
@@ -190,14 +190,17 @@ textarea.k-input{resize:vertical;min-height:70px}
 .av-eyelid{transition:transform .25s ease;transform-origin:center}
 
 @media (max-width:760px){
+  .auth-modal{width:100%!important;max-width:100%!important;max-height:100vh!important;height:100vh!important;border-radius:var(--r-lg) var(--r-lg) 0 0!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
   .auth-split{flex-direction:column!important;min-height:auto}
   .auth-split.swap{flex-direction:column!important}
-  .auth-split:not(.swap) .auth-side,.auth-split.swap .auth-side{border-radius:0}
-  .auth-side{padding:28px 22px 18px}
-  .av-stage{width:170px;height:200px;margin-top:10px}
-  .auth-side h2{font-size:22px}
-  .auth-form{padding:28px 22px}
-  .auth-form h1{font-size:24px}
+  .auth-split:not(.swap) .auth-side,.auth-split.swap .auth-side{border-radius:0;margin:0!important}
+  .auth-side{padding:24px 22px 14px}
+  .av-stage{width:140px;height:160px;margin-top:6px}
+  .auth-side h2{font-size:20px}
+  .auth-side .as-sub{margin-bottom:10px}
+  .auth-form{padding:22px 22px 36px}
+  .auth-form h1{font-size:22px}
+  .auth-close{top:10px;right:10px}
 }
 
 /* ── FLASHCARD ───────────────────────── */
@@ -331,6 +334,22 @@ textarea.k-input{resize:vertical;min-height:70px}
 
 /* ── SHOP ────────────────────────────── */
 .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.pass-list{display:flex;flex-direction:column;gap:6px;max-height:62vh;overflow-y:auto;padding-right:4px}
+.pass-track-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;padding:0 6px}
+.pass-track-head>div:first-child{width:42px}
+.pass-row{display:flex;align-items:center;gap:10px;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel);transition:all .15s}
+.pass-row.reached{background:linear-gradient(90deg,color-mix(in srgb,#6AC28A 8%,transparent),var(--panel))}
+.pass-lvl{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:15px;background:var(--panel-2);border:1px solid var(--line);flex-shrink:0;color:var(--muted)}
+.pass-row.reached .pass-lvl{color:var(--lime);border-color:color-mix(in srgb,#6AC28A 40%,transparent);background:var(--lime-d2)}
+.pass-tracks{display:flex;gap:10px;flex:1;min-width:0}
+.pass-tier{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);text-align:center;transition:all .15s}
+.pass-tier.empty{opacity:.35;background:transparent;border-style:dashed}
+.pass-tier.locked{opacity:.55}
+.pass-tier.ready{border-color:color-mix(in srgb,#E5A74A 50%,transparent);background:var(--orange-d);cursor:pointer}
+.pass-tier.ready:hover{transform:translateY(-1px);border-color:var(--orange)}
+.pass-tier.claimed{border-color:color-mix(in srgb,#6AC28A 40%,transparent);background:var(--lime-d2)}
+.pass-tier-name{font-size:10px;font-weight:700;line-height:1.2;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.pass-tier-status{font-size:9px}
 .shop-item{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;transition:all .15s}
 .shop-item:hover{border-color:var(--lime);background:var(--lime-d2)}
 .shop-item-icon{font-size:32px;margin-bottom:8px}
@@ -417,6 +436,7 @@ textarea.k-input{resize:vertical;min-height:70px}
       <button class="rail-btn" id="rb-courses" data-s="courses" onclick="goTo('courses')" title="Kurse"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="rail-lbl">Kurse</span></button>
       <button class="rail-btn" id="rb-challenges" data-s="challenges" onclick="goTo('challenges')" title="Challenges"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="rail-lbl">Challenges</span></button>
       <button class="rail-btn" id="rb-community" data-s="community" onclick="goTo('community')" title="Community"><span class="rail-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M15 19c0-2.3 1.6-4 3.5-4s2.5 1.3 2.5 3"/></svg></span><span class="rail-lbl">Community</span></button>
+      <button class="rail-btn" id="rb-pass" data-s="pass" onclick="goTo('pass')" title="Lern-Pass"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="rail-lbl">Lern-Pass</span></button>
       <button class="rail-btn" id="rb-shop" data-s="shop" onclick="goTo('shop')" title="Belohnungen"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M9 12v2M15 12v2"/></svg></span><span class="rail-lbl">Belohnungen</span></button>
       <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil"><span class="rail-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span><span class="rail-lbl">Profil</span></button>
     </div>
@@ -436,6 +456,7 @@ textarea.k-input{resize:vertical;min-height:70px}
       <div class="um-sep"></div>
       <div class="um-item" onclick="closeUserMenu();openSettings()"><svg class="um-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Einstellungen</span></div>
       <div class="um-item" onclick="closeUserMenu();goTo('profile')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Mein Profil</span></div>
+      <div class="um-item" onclick="closeUserMenu();goTo('pass')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg><span>Lern-Pass</span></div>
       <div class="um-item" onclick="closeUserMenu();goTo('shop')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg><span>Shop</span></div>
       <div class="um-sep"></div>
       <div class="um-item" onclick="closeUserMenu();openModal('photo-modal')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Foto-Import</span></div>
@@ -478,11 +499,12 @@ textarea.k-input{resize:vertical;min-height:70px}
             </div>
           </div>
           <div class="k-card dash-card challenge-card">
-            <div style="font-size:17px;font-weight:850;margin-bottom:18px">Tägliche Challenge</div>
-            <div style="font-size:13px;margin-bottom:14px">Löse 3 Lern-Aufgaben</div>
-            <div style="font-size:18px;font-weight:850;margin-bottom:10px"><span id="hm-k">0</span> / <span id="hm-t">0</span></div>
+            <div style="font-size:17px;font-weight:850;margin-bottom:8px">Tägliche Quests</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Erledige alle 3, um deine Belohnungen einzusacken.</div>
+            <div style="font-size:30px;font-weight:900;margin-bottom:6px"><span id="hm-k">0</span> / <span id="hm-t">3</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Quests heute erledigt</div>
             <div class="daily-goal-bar"><div class="daily-goal-fill" id="hm-bar" style="width:0%"></div></div>
-            <button class="btn btn-lime" style="margin-top:28px" onclick="goTo('challenges')">Zur Challenge</button>
+            <button class="btn btn-lime" style="margin-top:22px" onclick="goTo('challenges')">Zu den Quests</button>
           </div>
           <div class="k-card dash-card">
             <div style="font-size:17px;font-weight:850">Empfohlener Kurs</div>
@@ -506,8 +528,8 @@ textarea.k-input{resize:vertical;min-height:70px}
         <div class="k-grid" style="margin-top:18px">
           <div class="k-card full">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-              <div><div class="k-section-title">Aktueller Pool</div><div style="font-size:13px;color:var(--muted)"><span id="hm-sr">0</span> Wiederholungen fällig · <span id="hm-goal-lbl">0 / 30 XP</span></div></div>
-              <div class="btn-row" style="margin-top:0"><button class="btn btn-sm" onclick="openModal('pool-modal')">Pool wählen</button><button class="btn btn-sm" onclick="openModal('photo-modal')">Foto-Import</button><select class="k-input" id="goal-sel" style="width:auto;padding:5px 8px;font-size:10px" onchange="saveDailyGoal()"><option value="10">10 XP</option><option value="30" selected>30 XP</option><option value="50">50 XP</option></select></div>
+              <div><div class="k-section-title">Aktueller Pool</div><div style="font-size:13px;color:var(--muted)"><span id="hm-sr">0</span> Wiederholungen fällig · <span id="hm-goal-lbl">0 XP heute</span></div></div>
+              <div class="btn-row" style="margin-top:0"><button class="btn btn-sm" onclick="openModal('pool-modal')">Pool wählen</button><button class="btn btn-sm" onclick="openModal('photo-modal')">Foto-Import</button></div>
             </div>
             <div class="daily-goal-bar" style="margin-top:12px"><div class="daily-goal-fill" id="daily-goal-fill" style="width:0%"></div></div>
             <div id="hm-sessions" style="font-size:10px;color:var(--muted);margin-top:10px">–</div>
@@ -527,8 +549,7 @@ textarea.k-input{resize:vertical;min-height:70px}
       <!-- CHALLENGES ────────────────────────────── -->
       <div class="screen" id="screen-challenges">
         <div class="app-page-head">
-          <div><div class="app-page-title">Challenges</div><div class="app-page-sub">Daily und Weekly Quests als Vorschau.</div></div>
-          <span class="tag orange">Beispiele</span>
+          <div><div class="app-page-title">Challenges</div><div class="app-page-sub">Daily & Weekly Quests — Belohnungen werden automatisch ausgezahlt.</div></div>
         </div>
         <div id="challenges-content"></div>
       </div>
@@ -647,6 +668,12 @@ textarea.k-input{resize:vertical;min-height:70px}
       <div class="screen" id="screen-shop">
         <div class="app-page-head"><div><div class="app-page-title">Belohnungen</div><div class="app-page-sub">Ein Shop für Items, Badges und kosmetische Belohnungen.</div></div></div>
         <div id="shop-content"></div>
+      </div>
+
+      <!-- PASS ────────────────────────────────── -->
+      <div class="screen" id="screen-pass">
+        <div class="app-page-head"><div><div class="app-page-title">Lern-Pass</div><div class="app-page-sub">Schalte Avatar-Items frei, indem du Level aufsteigst.</div></div></div>
+        <div id="pass-content"></div>
       </div>
 
     </div><!-- /screens -->
@@ -831,7 +858,7 @@ textarea.k-input{resize:vertical;min-height:70px}
 <div class="modal-overlay" id="avatar-builder-modal" onclick="if(event.target===this)closeModal('avatar-builder-modal')">
   <div class="modal" style="max-width:560px">
     <div class="modal-head">
-      <div class="modal-title">Avatar gestalten <span style="font-size:10px;background:var(--lime);color:#0a0a0a;padding:2px 8px;border-radius:6px;margin-left:6px;font-weight:800">DEV PREVIEW</span></div>
+      <div class="modal-title">Avatar gestalten</div>
       <button class="modal-close" onclick="closeModal('avatar-builder-modal')">✕</button>
     </div>
     <div id="ab-content">
@@ -916,6 +943,41 @@ let userItems = [];
 let equippedItems = [];
 let selectedCourseLang = null;
 
+// ── ICON LIBRARY (Lucide-style inline SVGs) ──────────────────
+// Ersetzt alle Emojis durch konsistente Stroke-Icons.
+const ICONS = {
+  coin:    '<circle cx="12" cy="12" r="9"/><path d="M12 6v12M9 9h4.5a2 2 0 0 1 0 4H9.5a2 2 0 0 0 0 4H15"/>',
+  flame:   '<path d="M12 2c1 4 5 5 5 10a5 5 0 1 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3 1-6 1-9z"/>',
+  target:  '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>',
+  zap:     '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  trophy:  '<path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M5 4H3v3a3 3 0 0 0 3 3M19 4h2v3a3 3 0 0 1-3 3"/>',
+  book:    '<path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5z"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+  cards:   '<rect x="3" y="6" width="13" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  check:   '<polyline points="20 6 9 17 4 12"/>',
+  cross:   '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  medal:   '<circle cx="12" cy="14" r="6"/><path d="M8 14l-2-8 6 4 6-4-2 8"/>',
+  lock:    '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  unlock:  '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7-2.5"/>',
+  star:    '<polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/>',
+  crown:   '<path d="M3 18h18l-2-10-4 4-3-7-3 7-4-4-2 10z"/>',
+  gift:    '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+  sparkles:'<path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4L12 3z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"/>',
+  users:   '<circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M15 19c0-2.3 1.6-4 3.5-4s2.5 1.3 2.5 3"/>',
+  rocket:  '<path d="M5 19l-2 2M9 15l-3 3M14 4s5 0 6 6c-6 1-6 6-6 6L8 10s5 0 6-6z"/><path d="M14 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>',
+  pen:     '<path d="M12 19l7-7 3 3-7 7H12v-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18"/>',
+  shield:  '<path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"/>',
+  party:   '<path d="M3 21l4-12 9 9-13 3z"/><path d="M14 3l1 2M19 4l-1 2M21 9l-2 1M16 12l2 2"/>',
+  fire:    '<path d="M12 2c1 4 5 5 5 10a5 5 0 1 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3 1-6 1-9z"/>',
+};
+// Render Lucide-Style SVG. Inline für use-anywhere im innerHTML.
+function ic(name, size=14, extra=''){
+  const p=ICONS[name]||ICONS.star;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;${extra}">${p}</svg>`;
+}
+// Pass-Helfer
+function levelUpReward(){ return 10; }
+
 // ── STORAGE ──────────────────────────────────────────────────
 const lsGet = (k,d) => { try { return JSON.parse(localStorage.getItem(k)??d); } catch(e) { return JSON.parse(d); } };
 const lsSet = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch(e){} };
@@ -976,10 +1038,12 @@ function setActivePool(key) {
 
 function updateHomeStats() {
   const t=vocab.length, k=vocab.filter(v=>v.known).length;
-  const pct=t>0?Math.round(k/t*100):0;
-  document.getElementById('hm-k').textContent=Math.min(k,3);
-  document.getElementById('hm-t').textContent=Math.min(Math.max(t,3),3);
-  document.getElementById('hm-bar').style.width=Math.min(100,Math.round(Math.min(k,3)/3*100))+'%';
+  // Daily-Quest-Fortschritt für Dashboard-Karte
+  const dDone=dailyQuestsDone();
+  const dTotal=DAILY_QUESTS.length;
+  document.getElementById('hm-k').textContent=dDone;
+  document.getElementById('hm-t').textContent=dTotal;
+  document.getElementById('hm-bar').style.width=Math.round(dDone/dTotal*100)+'%';
   document.getElementById('hm-sr').textContent=srDueCount(activeKey);
   const s=calcStreak();
   const xpTotal=getTotalXp();
@@ -992,26 +1056,23 @@ function updateHomeStats() {
   document.getElementById('hm-ring').style.setProperty('--ring-pct',Math.max(4,levelPct)+'%');
   document.getElementById('currency-val-home').textContent=userCurrency;
   document.getElementById('home-user-name').textContent=currentUser?.username||'Lerner';
-  // Daily goal
-  const goal=parseInt(lsGet('kivo_goal','30'));
-  const sel=document.getElementById('goal-sel'); if(sel)sel.value=goal;
+  // Heute gesammelte XP (nur Anzeige)
   const today=new Date().toISOString().slice(0,10);
   const xpData=lsGet('kivo_xp','{}');
   const todayXp=xpData[today]||0;
-  document.getElementById('hm-goal-lbl').textContent=todayXp+' / '+goal+' XP';
-  document.getElementById('daily-goal-fill').style.width=Math.min(100,Math.round(todayXp/goal*100))+'%';
+  const lbl=document.getElementById('hm-goal-lbl'); if(lbl) lbl.textContent=todayXp+' XP heute';
+  // Pool-Fortschrittsbalken (Aktueller Pool)
+  const poolPct=t>0?Math.round(k/t*100):0;
+  const poolBar=document.getElementById('daily-goal-fill'); if(poolBar) poolBar.style.width=poolPct+'%';
   // Sessions mini
   const rec=sessions.slice(-5);
   document.getElementById('hm-sessions').innerHTML=rec.length?rec.map(s=>`<span style="margin-right:6px">${s.pct}% (${s.ok}✓)</span>`).join(''):'Noch keine Sessions';
 }
 
-function saveDailyGoal(){
-  const v=document.getElementById('goal-sel')?.value||'30';
-  lsSet('kivo_goal',parseInt(v)); updateHomeStats(); toast('Tagesziel: '+v+' XP');
-}
+function saveDailyGoal(){ /* deprecated */ }
 
 // ── SCREEN ROUTER ────────────────────────────────────────────
-const SCREEN_TITLES = { home:'Dashboard', courses:'Kurse', challenges:'Challenges', community:'Community', cards:'Karteikarten', quiz:'Quiz', typing:'Tippen', matching:'Zuordnen', overview:'Pool-Verwaltung', stats:'Statistiken', gap:'KI-Lückentext', aibot:'KI-Assistent', profile:'Profil', shop:'Belohnungen' };
+const SCREEN_TITLES = { home:'Dashboard', courses:'Kurse', challenges:'Challenges', community:'Community', cards:'Karteikarten', quiz:'Quiz', typing:'Tippen', matching:'Zuordnen', overview:'Pool-Verwaltung', stats:'Statistiken', gap:'KI-Lückentext', aibot:'KI-Assistent', profile:'Profil', shop:'Belohnungen', pass:'Lern-Pass' };
 
 function goTo(name, opts={}) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -1035,6 +1096,7 @@ function goTo(name, opts={}) {
   else if(name==='aibot')   renderAiBot();
   else if(name==='profile'&&!opts.keepProfileContent) renderProfile();
   else if(name==='shop')    renderShop();
+  else if(name==='pass')    renderPass();
   else if(name==='home')    updateHomeStats();
 }
 
@@ -1064,21 +1126,43 @@ document.addEventListener('click', e => {
 });
 
 // No longer doing health checks// ── XP SYSTEM ────────────────────────────────────────────────
+// Münzen kommen NUR durch (a) abgeschlossene Quests und (b) Level-Ups (+10 pro Stufe).
+// XP selbst geben keine Münzen mehr.
+function _xpToLevel(xp){ return Math.max(1, Math.floor((xp||0)/500)+1); }
 async function addXp(pts, reason='learn') {
+  const prevLevel = _xpToLevel(getTotalXp());
+  // Quest-Tracking (außer wenn die XP selbst aus einer Quest stammen, sonst Endlos-Loop)
+  if(reason!=='quest'){
+    const s=getQuestState(); s.daily.xp=(s.daily.xp||0)+pts; s.weekly.xp=(s.weekly.xp||0)+pts; saveQuestState(s);
+  }
   if(currentUser){
     try{
       const clientEventId='evt_'+Date.now()+'_'+Math.random().toString(36).slice(2);
       const r=await fetch(SUPABASE_URL+'/functions/v1/kivo-xp',{method:'POST',headers:await edgeHeaders(),body:JSON.stringify({points:pts,reason,clientEventId})});
-      if(r.ok){const d=await r.json(); lsSet('kivo_xp',d.xp_data||{}); userCurrency=Math.floor((d.xp_total||0)/5); lsSet('kivo_currency',userCurrency); calcStreak(); updateHomeStats(); updateCurrencyDisplay(); return;}
+      if(r.ok){const d=await r.json(); lsSet('kivo_xp',d.xp_data||{});
+        _handleLevelUp(prevLevel, _xpToLevel(d.xp_total||getTotalXp()));
+        calcStreak(); updateHomeStats(); updateCurrencyDisplay();
+        if(reason!=='quest') trackQuest('xp',pts);
+        return;}
     }catch(e){}
   }
   const today=new Date().toISOString().slice(0,10);
   const xp=lsGet('kivo_xp','{}');
   xp[today]=(xp[today]||0)+pts; lsSet('kivo_xp',xp);
-  userCurrency=Math.floor(getTotalXp()/5);
-  lsSet('kivo_currency',userCurrency);
+  _handleLevelUp(prevLevel, _xpToLevel(getTotalXp()));
   updateCurrencyDisplay();
   calcStreak(); updateHomeStats();
+  if(reason!=='quest') trackQuest('xp',pts);
+}
+function _handleLevelUp(prev, now){
+  if(now<=prev) return;
+  const gained = now-prev;
+  const reward = gained * levelUpReward();
+  userCurrency = (parseInt(lsGet('kivo_currency','0'))||0) + reward;
+  lsSet('kivo_currency', userCurrency);
+  toast(`${ic('star',14)} Level ${now}! +${reward} Münzen`);
+  // Pass-Items neu anzeigen
+  if(document.getElementById('screen-pass')?.classList.contains('active')) renderPass();
 }
 function getTotalXp() { return Object.values(lsGet('kivo_xp','{}')).reduce((a,b)=>a+b,0); }
 function calcStreak() {
@@ -1096,6 +1180,66 @@ function updateCurrencyDisplay() {
 }
 async function syncXpToServer() { return; }
 
+// ── DAILY / WEEKLY QUESTS ───────────────────────────────────
+// Trackt Lernfortschritt pro Tag/Woche. Quests sind feste Ziele, die durch
+// normale Lernaktionen erfüllt werden (kein extra Klick nötig).
+// Belohnungen werden EINMAL pro Quest-Periode automatisch ausgezahlt.
+const DAILY_QUESTS = [
+  {id:'q_cards',  icon:'cards',  name:'10 Karten lernen',     target:10, metric:'cards',   xp:15, coins:5},
+  {id:'q_quiz',   icon:'target', name:'Quiz oder Tipp-Runde', target:1,  metric:'sessions',xp:20, coins:8},
+  {id:'q_streak', icon:'flame',  name:'Heute aktiv lernen',   target:5,  metric:'xp',      xp:10, coins:5},
+];
+const WEEKLY_QUESTS = [
+  {id:'wq_xp',      icon:'trophy', name:'250 XP sammeln',           target:250, metric:'xp',      xp:50, coins:25},
+  {id:'wq_sess',    icon:'book',   name:'5 Lern-Sessions',          target:5,   metric:'sessions',xp:40, coins:20},
+  {id:'wq_streak',  icon:'zap',    name:'5-Tage-Streak',            target:5,   metric:'streak',  xp:60, coins:30},
+];
+function _todayKey(){ return new Date().toISOString().slice(0,10); }
+function _weekKey(){
+  const d=new Date(); const onejan=new Date(d.getFullYear(),0,1);
+  const week=Math.ceil(((d-onejan)/86400000+onejan.getDay()+1)/7);
+  return d.getFullYear()+'-W'+String(week).padStart(2,'0');
+}
+function getQuestState(){
+  const raw=lsGet('kivo_quests','{}');
+  const tk=_todayKey(), wk=_weekKey();
+  if(raw.day!==tk) raw.daily={cards:0,sessions:0,xp:0,claimed:[]}, raw.day=tk;
+  if(raw.week!==wk) raw.weekly={cards:0,sessions:0,xp:0,claimed:[]}, raw.week=wk;
+  return raw;
+}
+function saveQuestState(s){ lsSet('kivo_quests',s); }
+function questProgress(q, scope){
+  const s=getQuestState();
+  if(q.metric==='streak') return Math.min(q.target, calcStreak());
+  return Math.min(q.target, (scope==='weekly'?s.weekly:s.daily)[q.metric]||0);
+}
+function trackQuest(metric, amount=1){
+  const s=getQuestState();
+  s.daily[metric]=(s.daily[metric]||0)+amount;
+  s.weekly[metric]=(s.weekly[metric]||0)+amount;
+  saveQuestState(s);
+  // auto-claim
+  [...DAILY_QUESTS.map(q=>['daily',q]),...WEEKLY_QUESTS.map(q=>['weekly',q])].forEach(([scope,q])=>{
+    const claimed=(scope==='weekly'?s.weekly.claimed:s.daily.claimed)||[];
+    if(claimed.includes(q.id)) return;
+    if(questProgress(q,scope)>=q.target){
+      claimed.push(q.id);
+      if(scope==='weekly') s.weekly.claimed=claimed; else s.daily.claimed=claimed;
+      saveQuestState(s);
+      // belohnen (XP via addXp, Münzen direkt)
+      if(q.coins){ userCurrency+=q.coins; lsSet('kivo_currency',userCurrency); updateCurrencyDisplay(); }
+      if(q.xp){ addXp(q.xp,'quest'); }
+      toast(`${ic('check',13)} Quest: ${q.name} (+${q.xp} XP, +${q.coins} ${ic('coin',13)})`);
+    }
+  });
+  updateHomeStats();
+  if(document.getElementById('screen-challenges')?.classList.contains('active')) renderChallenges();
+}
+function dailyQuestsDone(){
+  const s=getQuestState();
+  return DAILY_QUESTS.filter(q=>questProgress(q,'daily')>=q.target).length;
+}
+
 // ── SPACED REPETITION (SM-2) ─────────────────────────────────
 const srKey=(pk,id)=>'kivo_sr_'+esc(pk)+'_'+id;
 function srGet(pk,id) { return lsGet(srKey(pk,id),'{"ef":2.5,"interval":1,"due":0,"reps":0}'); }
@@ -1105,6 +1249,7 @@ function srUpdate(pk,id,quality,awardXp=true) {
   else{if(reps===0)interval=1;else if(reps===1)interval=6;else interval=Math.round(interval*ef);reps++;ef=Math.max(1.3,ef+0.1-(5-quality)*(0.08+(5-quality)*0.02));}
   lsSet(srKey(pk,id),{ef,interval,due:Date.now()+interval*86400000,reps});
   if(awardXp) addXp(quality>=3?5:1);
+  trackQuest('cards',1);
 }
 function srDueCount(pk) {
   const flat=flattenPool(getPoolObj(pk));
@@ -1195,7 +1340,7 @@ function answerQuiz(chosen,correct,btn) {
 function endQuiz() {
   const el=document.getElementById('quiz-area');
   const pct=qDeck.length?Math.round(qOk/qDeck.length*100):0;
-  sessions.push({ok:qOk,no:qNo,n:qDeck.length,pct}); lsSet('kivo_sess',sessions);
+  sessions.push({ok:qOk,no:qNo,n:qDeck.length,pct}); lsSet('kivo_sess',sessions); trackQuest('sessions',1);
   el.innerHTML=`
     <div class="quiz-result">
       <div class="big-score" style="color:${pct>=70?'var(--lime)':pct>=40?'var(--orange)':'var(--danger)'}">${pct}%</div>
@@ -1247,7 +1392,7 @@ function checkTyping() {
 function endTyping() {
   const el=document.getElementById('typing-area');
   const pct=tDeck.length?Math.round(tOk/tDeck.length*100):0;
-  sessions.push({ok:tOk,no:tNo,n:tDeck.length,pct}); lsSet('kivo_sess',sessions);
+  sessions.push({ok:tOk,no:tNo,n:tDeck.length,pct}); lsSet('kivo_sess',sessions); trackQuest('sessions',1);
   el.innerHTML=`<div class="quiz-result">
     <div class="big-score" style="color:${pct>=70?'var(--lime)':pct>=40?'var(--orange)':'var(--danger)'}">${pct}%</div>
     <div style="margin:10px 0;font-size:14px;color:var(--muted)">${tOk} richtig · ${tNo} falsch</div>
@@ -1309,8 +1454,44 @@ function selectCourseLang(lang){selectedCourseLang=lang;renderCourses();}
 // ── CHALLENGE HUB ──────────────────────────────────────────────
 function renderChallenges(){
   const el=document.getElementById('challenges-content'); if(!el)return;
-  const known=vocab.filter(v=>v.known).length, total=vocab.length||1;
-  el.innerHTML=`<div class="quest-grid"><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Daily Quests</div><div class="quest-row"><div class="quest-icon">🎯</div><div style="flex:1"><div class="f-name">3 Aufgaben lösen</div><div class="f-pts">${Math.min(known,3)} / 3 erledigt</div></div><span class="tag lime">+15 XP</span></div><div class="quest-row"><div class="quest-icon">🃏</div><div style="flex:1"><div class="f-name">10 Karten wiederholen</div><div class="f-pts">Beispiel-Quest</div></div><span class="tag orange">+10 Münzen</span></div><div class="quest-row"><div class="quest-icon">🔥</div><div style="flex:1"><div class="f-name">Streak halten</div><div class="f-pts">Heute lernen</div></div><span class="tag lime">Aktiv</span></div><button class="btn btn-lime" style="width:100%;margin-top:14px" onclick="goTo('courses')">Jetzt lernen</button></div><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Weekly Quests</div><div class="quest-row"><div class="quest-icon">🏆</div><div style="flex:1"><div class="f-name">250 XP sammeln</div><div class="f-pts">${getTotalXp()%250} / 250 diese Woche</div></div></div><div class="quest-row"><div class="quest-icon">📚</div><div style="flex:1"><div class="f-name">Einen Kurs abschließen</div><div class="f-pts">${Math.round(known/total*100)}% im aktiven Kurs</div></div></div><div class="quest-row"><div class="quest-icon">👥</div><div style="flex:1"><div class="f-name">Mit Freund vergleichen</div><div class="f-pts">Community-Quest Vorschau</div></div></div></div></div>`;
+  const renderQuest=(q,scope)=>{
+    const prog=questProgress(q,scope);
+    const done=prog>=q.target;
+    const pct=Math.round(prog/q.target*100);
+    return `<div class="quest-row" style="${done?'opacity:.7':''}">
+      <div class="quest-icon" style="color:var(--lime)">${ic(q.icon,22)}</div>
+      <div style="flex:1">
+        <div class="f-name">${q.name}</div>
+        <div class="f-pts">${prog} / ${q.target} ${done?`· ${ic('check',11)} erledigt`:''}</div>
+        <div class="daily-goal-bar" style="margin-top:6px"><div class="daily-goal-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        <span class="tag lime">+${q.xp} XP</span>
+        <span class="tag orange">+${q.coins} ${ic('coin',11)}</span>
+      </div>
+    </div>`;
+  };
+  const dDone=dailyQuestsDone();
+  el.innerHTML=`
+    <div class="quest-grid">
+      <div class="k-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:17px;font-weight:850;display:flex;align-items:center;gap:8px;color:var(--text)"><span style="color:var(--lime)">${ic('target',18)}</span> Daily Quests</div>
+          <span class="tag ${dDone===DAILY_QUESTS.length?'lime':''}">${dDone} / ${DAILY_QUESTS.length}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Reset um Mitternacht. Belohnungen werden automatisch ausgezahlt.</div>
+        ${DAILY_QUESTS.map(q=>renderQuest(q,'daily')).join('')}
+        <button class="btn btn-lime" style="width:100%;margin-top:14px" onclick="goTo('courses')">Jetzt lernen</button>
+      </div>
+      <div class="k-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:17px;font-weight:850;display:flex;align-items:center;gap:8px;color:var(--text)"><span style="color:var(--orange)">${ic('trophy',18)}</span> Weekly Quests</div>
+          <span class="tag">Diese Woche</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Größere Belohnungen — eine Woche Zeit.</div>
+        ${WEEKLY_QUESTS.map(q=>renderQuest(q,'weekly')).join('')}
+      </div>
+    </div>`;
 }
 
 // ── COMMUNITY HUB ──────────────────────────────────────────────
@@ -1453,12 +1634,12 @@ function renderStats() {
   const avg=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.pct,0)/sessions.length):0;
   el.innerHTML=`
     <div class="stats-grid">
-      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">${streak>=3?'🔥':'📅'}</div><div class="stat-big" style="color:var(--orange)">${streak}</div><div class="stat-lbl">Streak</div></div>
-      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">⚡</div><div class="stat-big" style="color:var(--lime)">${totalXp.toLocaleString()}</div><div class="stat-lbl">XP</div></div>
-      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">✅</div><div class="stat-big" style="color:var(--lime)">${k}</div><div class="stat-lbl">Gekonnt</div></div>
-      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">📚</div><div class="stat-big">${t}</div><div class="stat-lbl">Gesamt</div></div>
-      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">🎯</div><div class="stat-big" style="color:var(--blue)">${avg}%</div><div class="stat-lbl">Ø Quiz</div></div>
-      <div class="stat-box"><div style="font-size:22px;margin-bottom:3px">🏃</div><div class="stat-big" style="color:var(--purple)">${sessions.length}</div><div class="stat-lbl">Sessions</div></div>
+      <div class="stat-box"><div style="margin-bottom:3px;color:var(--orange)">${ic(streak>=3?'flame':'calendar',22)}</div><div class="stat-big" style="color:var(--orange)">${streak}</div><div class="stat-lbl">Streak</div></div>
+      <div class="stat-box"><div style="margin-bottom:3px;color:var(--lime)">${ic('zap',22)}</div><div class="stat-big" style="color:var(--lime)">${totalXp.toLocaleString()}</div><div class="stat-lbl">XP</div></div>
+      <div class="stat-box"><div style="margin-bottom:3px;color:var(--lime)">${ic('check',22)}</div><div class="stat-big" style="color:var(--lime)">${k}</div><div class="stat-lbl">Gekonnt</div></div>
+      <div class="stat-box"><div style="margin-bottom:3px">${ic('book',22)}</div><div class="stat-big">${t}</div><div class="stat-lbl">Gesamt</div></div>
+      <div class="stat-box"><div style="margin-bottom:3px;color:var(--blue)">${ic('target',22)}</div><div class="stat-big" style="color:var(--blue)">${avg}%</div><div class="stat-lbl">Ø Quiz</div></div>
+      <div class="stat-box"><div style="margin-bottom:3px;color:var(--purple)">${ic('rocket',22)}</div><div class="stat-big" style="color:var(--purple)">${sessions.length}</div><div class="stat-lbl">Sessions</div></div>
     </div>
     <div class="k-card" style="margin-bottom:12px">
       <div class="k-section-title">Lernaktivität (12 Wochen)</div>
@@ -1665,6 +1846,134 @@ const SHOP_ITEMS = [
   {id:'bg_night',   cat:'bg',      value:'#2D2D2D', icon:'🌑',  name:'Mitternacht',     price:30, desc:'Dunkel & edel'},
 ];
 
+// ── PASS SYSTEM ──────────────────────────────────────────────
+// Free Pass: alle 5 Level 1 Item, festgelegt.
+// Pro Pass: jedes Level 1 Item. Kostet einmalig 1000 Münzen.
+// Belohnungen werden manuell beansprucht.
+const PASS_MAX_LEVEL = 50;
+const PASS_PRO_PRICE = 1000;
+
+// Deterministische Auswahl der Belohnungs-Items pro Level
+function _passItemFor(level, track){
+  // unterschiedlicher Pool je Track, deterministisch sortiert
+  const ordered = [...SHOP_ITEMS].sort((a,b)=>a.id.localeCompare(b.id));
+  const offset = track==='pro' ? 7 : 3;
+  return ordered[(level*offset + (track==='pro'?1:0)) % ordered.length];
+}
+function passLevels(){
+  const arr=[];
+  for(let lvl=2; lvl<=PASS_MAX_LEVEL; lvl++){
+    const free = (lvl%5===0) ? _passItemFor(lvl,'free') : null;
+    const pro  = _passItemFor(lvl,'pro');
+    arr.push({lvl, free, pro});
+  }
+  return arr;
+}
+function getPassState(){
+  const raw=lsGet('kivo_pass','{}');
+  if(!raw.claimed) raw.claimed={free:[],pro:[]};
+  if(typeof raw.proOwned!=='boolean') raw.proOwned=false;
+  return raw;
+}
+function savePassState(s){ lsSet('kivo_pass',s); }
+function buyProPass(){
+  const s=getPassState();
+  if(s.proOwned){toast('Pro Pass ist bereits aktiv');return;}
+  if(userCurrency<PASS_PRO_PRICE){toast('Nicht genug Münzen ('+PASS_PRO_PRICE+' nötig)');return;}
+  confirm2('Pro Pass kaufen?','Pro Pass für '+PASS_PRO_PRICE+' Münzen freischalten? Du erhältst dann auf jedem Level eine Belohnung.',()=>{
+    userCurrency-=PASS_PRO_PRICE; lsSet('kivo_currency',userCurrency);
+    s.proOwned=true; savePassState(s);
+    toast('Pro Pass aktiviert!');
+    renderPass(); updateCurrencyDisplay();
+  });
+}
+function claimPass(track, lvl){
+  const s=getPassState();
+  const userLvl=_xpToLevel(getTotalXp());
+  if(lvl>userLvl){toast('Erst Level '+lvl+' erreichen');return;}
+  if(track==='pro' && !s.proOwned){toast('Pro Pass erforderlich');return;}
+  const claimed=s.claimed[track]||[];
+  if(claimed.includes(lvl)){toast('Bereits beansprucht');return;}
+  const reward = track==='free' ? _passItemFor(lvl,'free') : _passItemFor(lvl,'pro');
+  if(!reward) return;
+  // Item gewähren (auch wenn schon im Inventar - dann +50 Münzen statt Duplikat)
+  userItems = JSON.parse(localStorage.getItem('kivo_items')||'[]');
+  if(userItems.includes(reward.id)){
+    userCurrency += 50; lsSet('kivo_currency',userCurrency);
+    toast(reward.name+' bereits besessen — +50 Münzen!');
+  } else {
+    userItems.push(reward.id);
+    localStorage.setItem('kivo_items',JSON.stringify(userItems));
+    toast(reward.name+' freigeschaltet!');
+  }
+  claimed.push(lvl); s.claimed[track]=claimed; savePassState(s);
+  renderPass(); updateCurrencyDisplay();
+}
+
+function renderPass(){
+  const el=document.getElementById('pass-content'); if(!el) return;
+  if(!currentUser){
+    el.innerHTML=`<div class="k-card" style="text-align:center;padding:42px"><div style="color:var(--lime);margin-bottom:12px">${ic('lock',42)}</div><div style="font-size:14px;font-weight:800;margin-bottom:8px">Anmeldung erforderlich</div><button class="btn btn-lime" onclick="openModal('auth-modal')">Anmelden</button></div>`;
+    return;
+  }
+  const xp=getTotalXp(); const lvl=_xpToLevel(xp);
+  const s=getPassState();
+  const levels=passLevels();
+  const nextXp=lvl*500; const lvlStart=(lvl-1)*500;
+  const lvlPct=Math.round((xp-lvlStart)/(nextXp-lvlStart)*100);
+  const userOwnedItems=JSON.parse(localStorage.getItem('kivo_items')||'[]');
+
+  const headerHtml=`
+    <div class="k-card" style="margin-bottom:16px;background:linear-gradient(135deg,var(--lime-d2),var(--panel))">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="color:var(--lime)">${ic('shield',38)}</div>
+        <div style="flex:1;min-width:160px">
+          <div style="font-size:18px;font-weight:900">Lern-Pass</div>
+          <div style="font-size:11px;color:var(--muted)">Level ${lvl} · ${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP</div>
+          <div class="daily-goal-bar" style="margin-top:8px"><div class="daily-goal-fill" style="width:${Math.max(4,lvlPct)}%"></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <div class="currency-pill" style="display:inline-flex;align-items:center;gap:6px">${ic('coin',13)} ${userCurrency}</div>
+          ${s.proOwned
+            ? `<span class="tag lime" style="display:inline-flex;align-items:center;gap:4px">${ic('crown',11)} Pro aktiv</span>`
+            : `<button class="btn btn-sm btn-lime" style="display:inline-flex;align-items:center;gap:6px" onclick="buyProPass()">${ic('crown',12)} Pro Pass · ${PASS_PRO_PRICE} ${ic('coin',11)}</button>`}
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">${ic('sparkles',12)} Free Pass: alle 5 Level eine Belohnung. Pro Pass: jedes Level eine extra Belohnung.</div>
+  `;
+
+  const rowHtml=levels.map(({lvl:L,free,pro})=>{
+    const reached = L<=lvl;
+    const renderTier=(item,track)=>{
+      if(!item) return `<div class="pass-tier empty"><span style="opacity:.3">—</span></div>`;
+      const claimed = (s.claimed[track]||[]).includes(L);
+      const owned = userOwnedItems.includes(item.id);
+      const locked = !reached || (track==='pro' && !s.proOwned);
+      const cls = claimed?'claimed':(reached?(track==='pro'&&!s.proOwned?'locked':'ready'):'locked');
+      return `<div class="pass-tier ${cls}" ${!locked&&!claimed?`onclick="claimPass('${track}',${L})"`:''} title="${item.name}">
+        <div class="pass-tier-ico" style="color:${claimed?'var(--lime)':'var(--text)'}">${ic(track==='pro'?'crown':'gift',20)}</div>
+        <div class="pass-tier-name">${item.name}</div>
+        <div class="pass-tier-status">
+          ${claimed?`<span class="tag lime" style="display:inline-flex;align-items:center;gap:3px">${ic('check',10)} Erhalten</span>`
+            : locked?`<span class="tag" style="display:inline-flex;align-items:center;gap:3px">${ic('lock',10)} ${track==='pro'&&!s.proOwned?'Pro':'Lvl '+L}</span>`
+            : `<span class="tag orange" style="display:inline-flex;align-items:center;gap:3px">${ic('gift',10)} Claim</span>`}
+          ${owned&&!claimed?`<span class="tag" style="margin-left:4px;font-size:8px">+50 ${ic('coin',9)}</span>`:''}
+        </div>
+      </div>`;
+    };
+    return `<div class="pass-row ${reached?'reached':''}">
+      <div class="pass-lvl">${L}</div>
+      <div class="pass-tracks">
+        ${renderTier(free,'free')}
+        ${renderTier(pro,'pro')}
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = headerHtml + `<div class="pass-track-head"><div></div><div style="display:flex;gap:10px;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px"><div style="flex:1;text-align:center">Free</div><div style="flex:1;text-align:center;color:${s.proOwned?'var(--lime)':'var(--muted)'}">Pro</div></div></div><div class="pass-list">${rowHtml}</div>`;
+}
+
 // Shop rotiert taeglich um 10 Uhr. Vor 10 Uhr zaehlt der Vortag.
 function getShopDayKey(){
   const now=new Date();
@@ -1715,8 +2024,10 @@ let _abState = {...AB_DEFAULT};
 
 // Liefert die fuer den User verfuegbaren Optionen einer Kategorie
 // (Standard-Optionen aus AB_OPTS + alle gekauften Items derselben Kategorie).
+// Devs (is_dev) erhalten automatisch ALLE Items dieser Kategorie ohne Kauf.
 function abAvailable(cat){
-  const owned=JSON.parse(localStorage.getItem('kivo_items')||'[]');
+  const isDev=!!currentUser?.is_dev;
+  const owned=isDev?SHOP_ITEMS.map(i=>i.id):JSON.parse(localStorage.getItem('kivo_items')||'[]');
   const fromShop=SHOP_ITEMS.filter(it=>it.cat===cat && owned.includes(it.id)).map(it=>it.value);
   return [...(AB_OPTS[cat]||[]), ...fromShop];
 }
@@ -1973,19 +2284,18 @@ function _fmtRotation(){
 
 function renderShop() {
   const el=document.getElementById('shop-content'); if(!el)return;
-  userCurrency=lsGet('kivo_currency',Math.floor(getTotalXp()/5));
+  userCurrency=parseInt(lsGet('kivo_currency','0'))||0;
   userItems=JSON.parse(localStorage.getItem('kivo_items')||'[]');
   const dailyItems = getDailyShopItems(6);
   el.innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <div class="currency-pill">🪙 ${userCurrency} Münzen</div>
-      <div style="font-size:10px;color:var(--muted)">Münzen = XP / 5</div>
-      ${currentUser?`<button class="btn btn-sm btn-lime" style="margin-left:auto" onclick="openAvatarBuilder()">🎨 Avatar gestalten</button>`:''}
+      <div class="currency-pill" style="display:flex;align-items:center;gap:6px">${ic('coin',14)} ${userCurrency} Münzen</div>
+      <div style="font-size:10px;color:var(--muted)">Münzen verdienst du durch Quests &amp; Level-Ups.</div>
+      ${currentUser?`<button class="btn btn-sm btn-lime" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px" onclick="openAvatarBuilder()">${ic('pen',13)} Avatar gestalten</button>`:''}
     </div>
     <div class="k-card-sm" style="margin-bottom:14px;background:var(--lime-d2);border-color:color-mix(in srgb,#6AC28A 35%,transparent)">
       <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--lime)">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Tages-Angebot
+        ${ic('calendar',16)} Tages-Angebot
       </div>
       <div style="font-size:10px;color:var(--muted);margin-top:4px">Der Shop rotiert ${_fmtRotation()} und zeigt dann neue Items.</div>
     </div>
@@ -1993,15 +2303,15 @@ function renderShop() {
     <div class="shop-grid">${dailyItems.map(it=>{
       const owned=userItems.includes(it.id);
       return `<div class="shop-item ${owned?'owned':''}" onclick="${owned?'':`buyItem('${it.id}')`}">
-        <div class="shop-item-icon">${it.icon}</div>
+        <div class="shop-item-icon" style="color:var(--lime)">${ic('sparkles',28)}</div>
         <div class="shop-item-name">${it.name}</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:4px">${CAT_LABEL[it.cat]||''}</div>
         <div style="font-size:9px;color:var(--muted);margin-bottom:6px">${it.desc}</div>
-        ${owned?`<div class="tag lime">✓ Im Besitz</div>`:`<div class="shop-item-price">🪙 ${it.price}</div>`}
+        ${owned?`<div class="tag lime" style="display:inline-flex;align-items:center;gap:4px">${ic('check',11)} Im Besitz</div>`:`<div class="shop-item-price" style="display:inline-flex;align-items:center;gap:4px">${ic('coin',12)} ${it.price}</div>`}
       </div>`;
     }).join('')}</div>
-    <div style="margin-top:18px;padding:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);font-size:11px;color:var(--muted);text-align:center">
-      💡 Gekaufte Items findest du im <strong style="color:var(--text)">Avatar-Builder</strong> als neue Optionen.
+    <div style="margin-top:18px;padding:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);font-size:11px;color:var(--muted);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px">
+      ${ic('sparkles',13)} Gekaufte Items findest du im <strong style="color:var(--text)">Avatar-Builder</strong> als neue Optionen.
     </div>`;
 }
 
@@ -2010,10 +2320,10 @@ function buyItem(id) {
   const it=SHOP_ITEMS.find(i=>i.id===id); if(!it)return;
   if(userItems.includes(id)){toast('Bereits im Besitz');return;}
   if(userCurrency<it.price){toast('Nicht genug Münzen! ('+it.price+' benötigt)');return;}
-  confirm2('Item kaufen?',it.icon+' '+it.name+' für 🪙 '+it.price+' kaufen?',()=>{
+  confirm2('Item kaufen?',it.name+' für '+it.price+' Münzen kaufen?',()=>{
     userCurrency-=it.price; lsSet('kivo_currency',userCurrency);
     userItems.push(id); localStorage.setItem('kivo_items',JSON.stringify(userItems));
-    toast('✓ '+it.icon+' '+it.name+' gekauft! Verfügbar im Avatar-Builder.');
+    toast(it.name+' gekauft! Verfügbar im Avatar-Builder.');
     renderShop(); updateCurrencyDisplay();
   });
 }
@@ -2303,7 +2613,7 @@ function openSettings(){
       <div class="k-group"><label class="k-label">Angemeldet als</label><div style="padding:8px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);font-size:12px;color:var(--text)">${currentUser.email}</div></div>
       <div class="k-group"><label class="k-label">Passwort ändern</label><input class="k-input" id="sett-pw" type="password" placeholder="Neues Passwort"><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="changePw()">Speichern</button></div>`:'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Nicht angemeldet</div>'}
       
-      <div class="k-group"><label class="k-label">Tagesziel</label><select class="k-input" id="sett-goal" onchange="this.parentElement.querySelector('small').textContent=''"><option value="10">10 XP / Tag</option><option value="30" selected>30 XP / Tag</option><option value="50">50 XP / Tag</option></select><button class="btn btn-sm btn-ok" style="margin-top:6px" onclick="lsSet('kivo_goal',parseInt(document.getElementById('sett-goal').value));updateHomeStats();toast('Ziel gespeichert')">Speichern</button></div>
+      <div class="k-group"><label class="k-label">Tägliche Ziele</label><div style="font-size:11px;color:var(--muted);line-height:1.5">Statt eines XP-Ziels gibt es nun <strong>Daily Quests</strong> mit konkreten Aufgaben und automatischen Belohnungen. <a onclick="closeModal('settings-modal');goTo('challenges')" style="color:var(--lime);cursor:pointer;text-decoration:underline">Quests ansehen →</a></div></div>
       ${currentUser?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-danger btn-sm" onclick="doLogout();closeModal('settings-modal')">↩ Abmelden</button></div>`:''}
     </div>
     <div id="sett-cl" style="display:none">
@@ -2527,6 +2837,7 @@ function checkShareUrl(){
 })();
 
 // ── INIT ──────────────────────────────────────────────────────
+userCurrency = parseInt(lsGet('kivo_currency','0'))||0;
 loadState();
 initAuth();
 checkShareUrl();
