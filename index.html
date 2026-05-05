@@ -33,7 +33,22 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);min-he
 .rail-ico{width:20px;height:20px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;color:currentColor}
 .rail-ico svg{width:20px;height:20px;display:block;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .rail-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
-.brand-btn{width:132px;height:42px;border-radius:0;background:transparent;border:none;cursor:pointer;flex-shrink:0;background-image:url('assets/logo.png');background-size:contain;background-position:left center;background-repeat:no-repeat;margin:0 0 14px 8px;color:transparent;font-size:0}
+.brand-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  background-image: url('assets/logo.png');
+  background-size: cover; /* oder 'contain' je nach Wunsch */
+  background-position: center;
+  background-repeat: no-repeat;
+  margin: 0 0 14px 8px;
+  color: transparent;
+  font-size: 0;
+}
 .brand-btn::after{content:''}
 
 .main-area{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--page);position:relative}
@@ -365,10 +380,6 @@ textarea.k-input{resize:vertical;min-height:70px}
 .course-grid-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.course-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:14px}.course-tile{min-height:116px;border-radius:10px;padding:16px;border:1px solid color-mix(in srgb,#E6E6E6 5%,transparent);background:linear-gradient(145deg,#2D2D2D,#1E1E1E);cursor:pointer;transition:transform .15s,border-color .15s}.course-tile:hover{transform:translateY(-2px);border-color:color-mix(in srgb,#6AC28A 35%,transparent)}.tile-icon{margin-bottom:18px;color:var(--lime);display:flex}.tile-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.tile-title{font-size:13px;font-weight:850}.tile-sub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.35}.dash-ico{display:inline-flex;vertical-align:middle}.dash-ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.metric-chip .dash-ico{color:var(--lime)}
 .app-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}.app-page-title{font-size:26px;font-weight:950;letter-spacing:0}.app-page-sub{font-size:12px;color:var(--muted);margin-top:4px}.language-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:18px}.language-card{min-height:126px;border-radius:10px;padding:18px;border:1px solid color-mix(in srgb,#E6E6E6 5%,transparent);background:linear-gradient(145deg,#2D2D2D,#1E1E1E);cursor:pointer;transition:transform .15s,border-color .15s}.language-card:hover,.language-card.active{transform:translateY(-2px);border-color:color-mix(in srgb,#6AC28A 38%,transparent);background:linear-gradient(145deg,#4E8B6E,#1E1E1E)}.learning-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.learn-card{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px;cursor:pointer;transition:all .15s}.learn-card:hover{border-color:color-mix(in srgb,#6AC28A 36%,transparent);transform:translateY(-1px)}.quest-grid,.community-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.quest-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.quest-row:last-child{border-bottom:0}.quest-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--lime-d);flex-shrink:0}.team-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);margin-bottom:8px}.reward-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:18px;border:1px solid color-mix(in srgb,#A8D5B2 16%,transparent);border-radius:10px;background:linear-gradient(145deg,color-mix(in srgb,#A8D5B2 14%,transparent),color-mix(in srgb,#6AC28A 5%,transparent))}
 
-/* ── FEEDBACK ────────────────────────── */
-.feedback-popup{position:fixed;bottom:70px;right:16px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);padding:14px 16px;width:270px;box-shadow:var(--shadow);z-index:100;animation:fadeIn .2s ease}
-.feedback-popup.hidden{display:none}
-
 /* ── CHANGELOG ───────────────────────── */
 .cl-entry{padding:14px 16px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px}
 .cl-ver{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -437,11 +448,10 @@ textarea.k-input{resize:vertical;min-height:70px}
       <button class="rail-btn" id="rb-community" data-s="community" onclick="goTo('community')" title="Community"><span class="rail-ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"></circle><circle cx="17" cy="9.5" r="2.4"></circle><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"></path><path d="M15 19c0-2.3 1.6-4 3.5-4s2.5 1.3 2.5 3"></path></svg></span><span class="rail-lbl">Community</span></button>
       <button class="rail-btn" id="rb-pass" data-s="pass" onclick="goTo('pass')" title="Lern-Pass"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"></path><path d="m9 12 2 2 4-4"></path></svg></span><span class="rail-lbl">Lern-Pass</span></button>
       <button class="rail-btn" id="rb-shop" data-s="shop" onclick="goTo('shop')" title="Belohnungen"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path><path d="M9 12v2M15 12v2"></path></svg></span><span class="rail-lbl">Belohnungen</span></button>
-      <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil"><span class="rail-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg></span><span class="rail-lbl">Profil</span></button>
     </div>
     <div class="rail-bot">
       <button class="rail-btn" id="rb-aibot" data-s="aibot" onclick="goTo('aibot')" title="KI-Assistent"><span class="rail-ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4V5z"></path><circle cx="9" cy="10.5" r="1.1" fill="currentColor" stroke="none"></circle><circle cx="15" cy="10.5" r="1.1" fill="currentColor" stroke="none"></circle></svg></span><span class="rail-lbl">KI-Assistent</span></button>
-      <button class="rail-btn" id="rb-overview" data-s="overview" onclick="goTo('overview')" title="Pool-Verwaltung"><span class="rail-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.2"></rect><rect x="13" y="4" width="7" height="7" rx="1.2"></rect><rect x="4" y="13" width="7" height="7" rx="1.2"></rect><rect x="13" y="13" width="7" height="7" rx="1.2"></rect></svg></span><span class="rail-lbl">Pool-Verwaltung</span></button>
+      <button class="rail-btn" id="rb-profile" data-s="profile" onclick="goTo('profile')" title="Profil"><span class="rail-ico" id="profile-rail-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg></span><span class="rail-lbl">Profil</span></button>
     </div>
   </nav>
 
@@ -460,7 +470,6 @@ textarea.k-input{resize:vertical;min-height:70px}
       <div class="um-sep"></div>
       <div class="um-item" onclick="closeUserMenu();openModal('photo-modal')"><svg class="um-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg><span>Foto-Import</span></div>
       <div class="um-item" id="um-avatar-builder" onclick="closeUserMenu();openAvatarBuilder()"><svg class="um-ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-7 8-7s8 3 8 7"></path><circle cx="18" cy="6" r="2.5" fill="currentColor" stroke="none"></circle></svg><span>Avatar gestalten</span></div>
-      <div class="um-item" onclick="closeUserMenu();showFeedback()"><svg class="um-ico" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Feedback</span></div>
       <div class="um-sep"></div>
       <div class="um-item" id="um-logout" style="display:none;color:var(--danger)" onclick="doLogout()"><svg class="um-ico" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg><span>Abmelden</span></div>
     </div>
@@ -685,7 +694,7 @@ textarea.k-input{resize:vertical;min-height:70px}
   <button class="bn-item" data-s="courses" onclick="goTo('courses')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5z"></path><path d="M8 7h8M8 11h8M8 15h5"></path></svg></span>Kurse</button>
   <button class="bn-item" data-s="challenges" onclick="goTo('challenges')"><span class="bn-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6l8-3z"></path><path d="m9 12 2 2 4-4"></path></svg></span>Quests</button>
   <button class="bn-item" data-s="community" onclick="goTo('community')"><span class="bn-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"></circle><circle cx="17" cy="9.5" r="2.4"></circle><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"></path><path d="M15 19c0-2.3 1.6-4 3.5-4s2.5 1.3 2.5 3"></path></svg></span>Community</button>
-  <button class="bn-item" data-s="profile" onclick="goTo('profile')"><span class="bn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg></span>Profil</button>
+  <button class="bn-item" data-s="profile" onclick="goTo('profile')"><span class="bn-icon" id="profile-nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg></span>Profil</button>
 </nav>
 
 <!-- TOAST -->
@@ -871,19 +880,6 @@ textarea.k-input{resize:vertical;min-height:70px}
       <div id="ab-msg" style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center"></div>
     </div>
   </div>
-</div>
-
-
-<!-- FEEDBACK POPUP -->
-<div class="feedback-popup hidden" id="feedback-popup">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-    <div style="font-size:12px;font-weight:600">💬 Feedback &amp; Ideen</div>
-    <button class="modal-close" onclick="hideFeedback()">✕</button>
-  </div>
-  <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Bug gefunden oder Idee? Schreib es uns!</div>
-  <div class="k-group"><input class="k-input" id="fb-title" placeholder="Titel"></div>
-  <div class="k-group"><textarea class="k-input" id="fb-desc" placeholder="Beschreibung..." style="min-height:60px"></textarea></div>
-  <button class="btn btn-lime" style="width:100%" onclick="submitFeedback()">Absenden ✓</button>
 </div>
 
 <!-- FRIEND PANEL -->
@@ -1732,7 +1728,7 @@ function revealGaps() {
 }
 
 // ── AI BOT ────────────────────────────────────────────────────
-const AI_SYS=`Du bist Kivo-Assistent — ein freundlicher Sprachlern-Helfer. Du hilfst beim Vokabellernen, erstellst Vokabellisten und beantwortest Fragen. Wenn du eine Vokabelliste erstellst, formatiere sie am Ende als JSON: <vocab_list>{"lang":"Englisch","name":"Listenname","pairs":[{"de":"Wort","en":"Translation"}]}</vocab_list>. Antworte auf Deutsch, kurz und freundlich. Wenn der Nutzer Feedback geben möchte, sag ihm: "Nutze gerne das Feedback-Popup unten rechts oder tippe 'feedback'."`;
+const AI_SYS=`Du bist Kivo-Assistent — ein freundlicher Sprachlern-Helfer. Du hilfst beim Vokabellernen, erstellst Vokabellisten und beantwortest Fragen. Wenn du eine Vokabelliste erstellst, formatiere sie am Ende als JSON: <vocab_list>{"lang":"Englisch","name":"Listenname","pairs":[{"de":"Wort","en":"Translation"}]}</vocab_list>. Antworte auf Deutsch, kurz und freundlich. "`;
 const AI_TIPS=['📚 20 Vokabeln zum Thema Essen','🎨 Farben auf Spanisch','✈️ Reise-Vokabeln','💼 Business-Englisch Basics','🏠 Zimmer & Möbel'];
 
 function renderAiBot() {
@@ -1753,7 +1749,6 @@ function aiBotSend(preset) {
   const inp=document.getElementById('aibot-inp');
   const msg=preset||(inp?.value||'').trim(); if(!msg)return;
   if(inp) inp.value='';
-  if(msg.toLowerCase().includes('feedback')){showFeedback();return;}
   const msgs=document.getElementById('aibot-msgs'); if(!msgs)return;
   aiBotHistory.push({role:'user',content:msg});
   msgs.innerHTML+=`<div class="ai-msg user">${msg}</div><div class="ai-msg bot typing" id="ai-typing">✦ Denkt nach...</div>`;
@@ -2165,7 +2160,7 @@ function renderProfile(targetUser=null) {
   const user=targetUser||currentUser;
   if(!user&&!targetUser){
     el.innerHTML=`<div class="k-card" style="text-align:center;padding:40px">
-      <div style="font-size:40px;margin-bottom:12px">👤</div>
+      <div style="font-size:40px;margin-bottom:12px">${'👤'}</div>
       <div style="font-size:14px;margin-bottom:8px">Noch nicht angemeldet</div>
       <button class="btn btn-lime" onclick="openModal('auth-modal')">Jetzt anmelden</button>
     </div>`;
@@ -2177,7 +2172,7 @@ function renderProfile(targetUser=null) {
   const equipped=JSON.parse(localStorage.getItem('kivo_equipped')||'[]');
   el.innerHTML=`
     <div class="profile-hero">
-      <div class="profile-av" id="prof-av" style="${user?.avatar_data?'padding:0':''}">${user?.avatar_data?renderCustomAvatar(user.avatar_data,64):(av?`<img src="${av}">`:'👤')}</div>
+      <div class="profile-av" id="prof-av" style="${user?.avatar_data?'padding:0':''}">${user?.avatar_data?renderCustomAvatar(user.avatar_data,64):(av?`<img src="${av}">`:renderCustomAvatar(currentUser?.avatar_data,64) || '👤')}</div>
       <div style="flex:1">
         <div style="font-size:20px;font-weight:800;margin-bottom:4px">${user?.username||'Gast'}</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${user?.email||''}</div>
@@ -2215,6 +2210,28 @@ function renderProfile(targetUser=null) {
       </div>
       <button class="btn btn-danger btn-sm" onclick="doLogout()">↩ Abmelden</button>
     </div>`:''}`;
+}
+
+function updateNavIcons() {
+  const navIconEl = document.getElementById('profile-nav-icon');
+  const railIconEl = document.getElementById('profile-rail-icon');
+  const defaultIcon = `
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="4"></circle>
+      <path d="M4 21c0-4 4-7 8-7s8 3 8 7"></path>
+    </svg>
+  `;
+
+  const iconHtml = currentUser?.avatar_data
+    ? renderCustomAvatar(currentUser.avatar_data, 24)
+    : defaultIcon;
+
+  if (navIconEl) {
+    navIconEl.innerHTML = iconHtml;
+  }
+  if (railIconEl) {
+    railIconEl.innerHTML = iconHtml;
+  }
 }
 
 function renderStatsVs(otherProfile) {
@@ -2538,24 +2555,6 @@ async function viewFriendProfile(uid,username){
   }catch(e){toast('Fehler: '+e.message);}
 }
 
-// ── FEEDBACK ──────────────────────────────────────────────────
-function showFeedback(){document.getElementById('feedback-popup')?.classList.remove('hidden');}
-function hideFeedback(){document.getElementById('feedback-popup')?.classList.add('hidden');}
-async function submitFeedback(){
-  const title=(document.getElementById('fb-title')?.value||'').trim();
-  const desc=(document.getElementById('fb-desc')?.value||'').trim();
-  if(!title){toast('Titel eingeben');return;}
-  try{
-    if(!currentUser){toast('Bitte anmelden, damit Feedback sicher gespeichert wird');return;}
-    await sb.from('feedback').insert({title,description:desc,user_id:currentUser.id,username:currentUser.username||'anonym',created_at:new Date().toISOString()});
-    toast('✓ Feedback gesendet! Danke 🙏');
-    document.getElementById('fb-title').value=''; document.getElementById('fb-desc').value=''; hideFeedback();
-  }catch(e){
-    const q=lsGet('kivo_fb_q','[]'); q.push({title,desc,ts:Date.now()}); lsSet('kivo_fb_q',q);
-    toast('✓ Gespeichert (wird übertragen)'); hideFeedback();
-  }
-}
-
 // ── PHOTO IMPORT ──────────────────────────────────────────────
 let photoBase64='', photoMime='';
 function handlePhotoFile(inp){
@@ -2843,8 +2842,7 @@ userCurrency = parseInt(lsGet('kivo_currency','0'))||0;
 loadState();
 initAuth();
 checkShareUrl();
-// Show feedback popup after 2 minutes
-setTimeout(showFeedback, 120000);
+updateNavIcons();
 </script>
 
 
