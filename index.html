@@ -642,6 +642,7 @@ textarea.k-input{resize:vertical;min-height:70px}
           <div style="display:flex;gap:6px">
             <button class="btn btn-sm btn-lime" onclick="openNewPoolModal()">+ Neuer Pool</button>
             <button class="btn btn-sm" onclick="openModal('photo-modal')">Foto-Import</button>
+            <button class="btn btn-sm" onclick="goTo('courses')">← Zurück</button>
           </div>
         </div>
         <div id="overview-content"></div>
@@ -2148,9 +2149,10 @@ async function saveAvatarBuilder(){
     msg.textContent='✓ Gespeichert';
     toast('✓ Avatar gespeichert');
     // Dashboard- + Header-Avatar sofort aktualisieren
-    const html=renderCustomAvatar(_abState,40);
-    const ab=document.getElementById('avatar-btn'); if(ab) ab.innerHTML=html;
-    const da=document.getElementById('dash-avatar-btn'); if(da) da.innerHTML=html;
+    const html = getUserAvatar(currentUser, 40);
+    const ab = document.getElementById('avatar-btn'); if(ab) ab.innerHTML = html;
+    const da = document.getElementById('dash-avatar-btn'); if(da) da.innerHTML = html;
+    updateNavIcons();
     setTimeout(()=>{closeModal('avatar-builder-modal');renderProfile();},500);
   }catch(e){msg.textContent='Fehler: '+(e.message||e);}
 }
@@ -2172,7 +2174,7 @@ function renderProfile(targetUser=null) {
   const equipped=JSON.parse(localStorage.getItem('kivo_equipped')||'[]');
   el.innerHTML=`
     <div class="profile-hero">
-      <div class="profile-av" id="prof-av" style="${user?.avatar_data?'padding:0':''}">${user?.avatar_data?renderCustomAvatar(user.avatar_data,64):(av?`<img src="${av}">`:renderCustomAvatar(currentUser?.avatar_data,64) || '👤')}</div>
+      <div class="profile-av" id="prof-av">${getUserAvatar(user, 64)}</div>
       <div style="flex:1">
         <div style="font-size:20px;font-weight:800;margin-bottom:4px">${user?.username||'Gast'}</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${user?.email||''}</div>
@@ -2212,26 +2214,36 @@ function renderProfile(targetUser=null) {
     </div>`:''}`;
 }
 
-function updateNavIcons() {
-  const navIconEl = document.getElementById('profile-nav-icon');
-  const railIconEl = document.getElementById('profile-rail-icon');
+function getUserAvatar(user, size = 24) {
   const defaultIcon = `
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="8" r="4"></circle>
       <path d="M4 21c0-4 4-7 8-7s8 3 8 7"></path>
     </svg>
   `;
 
-  const iconHtml = currentUser?.avatar_data
-    ? renderCustomAvatar(currentUser.avatar_data, 24)
-    : defaultIcon;
+  const avatarKey = user?.username ? `kivo_avatar_${user.username}` : '';
+  const savedAvatar = avatarKey ? localStorage.getItem(avatarKey) : '';
 
-  if (navIconEl) {
-    navIconEl.innerHTML = iconHtml;
+  if (user?.avatar_data) {
+    return renderCustomAvatar(user.avatar_data, size);
   }
-  if (railIconEl) {
-    railIconEl.innerHTML = iconHtml;
+
+  if (savedAvatar) {
+    return `<img src="${savedAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="Profilbild">`;
   }
+
+  return defaultIcon;
+}
+
+function updateNavIcons() {
+  const navIconEl = document.getElementById('profile-nav-icon');
+  const railIconEl = document.getElementById('profile-rail-icon');
+
+  const iconHtml = getUserAvatar(currentUser, 24);
+
+  if (navIconEl) navIconEl.innerHTML = iconHtml;
+  if (railIconEl) railIconEl.innerHTML = iconHtml;
 }
 
 function renderStatsVs(otherProfile) {
@@ -2255,10 +2267,11 @@ async function uploadAvatar(inp) {
   reader.onload=async e=>{
     const url=e.target.result;
     localStorage.setItem('kivo_avatar_'+(currentUser?.username||''),url);
-    document.getElementById('prof-av').innerHTML=`<img src="${url}">`;
-    const imgHtml=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    document.getElementById('avatar-btn').innerHTML=imgHtml;
-    const dashAv=document.getElementById('dash-avatar-btn'); if(dashAv) dashAv.innerHTML=imgHtml;
+    document.getElementById('prof-av').innerHTML = getUserAvatar(currentUser, 64);
+    const imgHtml = getUserAvatar(currentUser, 32);
+    document.getElementById('avatar-btn').innerHTML = imgHtml;
+    const dashAv = document.getElementById('dash-avatar-btn'); if(dashAv) dashAv.innerHTML = imgHtml;
+    updateNavIcons();
     if(currentUser){try{await sb.from('profiles').update({avatar_url:url}).eq('id',currentUser.id);}catch(e){}}
     toast('✓ Profilbild gespeichert');
   };
@@ -2779,18 +2792,11 @@ function updateUserUi(user){
   document.getElementById('um-email').textContent=user?.email||'';
   document.getElementById('um-logout').style.display=loggedIn?'flex':'none';
   document.querySelector('[onclick="closeUserMenu();openModal(\'auth-modal\')"]').style.display=loggedIn?'none':'flex';
-  const av=user?localStorage.getItem('kivo_avatar_'+(user.username||''))||'':null;
-  let avHtml;
-  if(user?.avatar_data){
-    avHtml=renderCustomAvatar(user.avatar_data,32);
-  } else if(av){
-    avHtml=`<img src="${av}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-  } else {
-    avHtml='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>';
-  }
+  const avHtml = getUserAvatar(user, 32);
   document.getElementById('avatar-btn').innerHTML=avHtml;
   const dashAv=document.getElementById('dash-avatar-btn'); if(dashAv) dashAv.innerHTML=avHtml;
   updateCurrencyDisplay();
+  updateNavIcons();
 }
 async function hydrateSession(session){
   if(session?.user){
