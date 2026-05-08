@@ -1759,25 +1759,54 @@ function aiBotSend(preset) {
 }
 
 async function fetchAiReply() {
-  const msgs=document.getElementById('aibot-msgs'); if(!msgs)return;
+  const msgs = document.getElementById('aibot-msgs');
+  if (!msgs) return;
+
+  const botDiv = document.createElement('div');
+  botDiv.className = 'ai-msg bot';
+  msgs.appendChild(botDiv);
+
   try {
-    const resp=await fetch(SUPABASE_URL+'/functions/v1/kivo-ai',{method:'POST',headers:await edgeHeaders(),
-      body:JSON.stringify({mode:'chat',system:AI_SYS,messages:aiBotHistory})});
-    if(!resp.ok) throw new Error('KI-Dienst nicht erreichbar');
-    const data=await resp.json();
-    const reply=data.reply||'Fehler.';
-    aiBotHistory.push({role:'assistant',content:reply});
-    document.getElementById('ai-typing')?.remove();
-    const vocabMatch=reply.match(/<vocab_list>([\s\S]*?)<\/vocab_list>/);
-    let display=reply.replace(/<vocab_list>[\s\S]*?<\/vocab_list>/,'').trim();
-    let importBtn='';
-    if(vocabMatch){try{const p=JSON.parse(vocabMatch[1].trim());const enc=encodeURIComponent(JSON.stringify(p));importBtn=`<button class="ai-import" onclick="importAiList('${enc}')">📥 Liste importieren (${p.pairs?.length||0} Wörter)</button>`;}catch(e){}}
-    msgs.innerHTML+=`<div class="ai-msg bot">${display.replace(/\n/g,'<br>')}${importBtn}</div>`;
-    msgs.scrollTop=msgs.scrollHeight;
-  } catch(e) {
-    document.getElementById('ai-typing')?.remove();
-    msgs.innerHTML+=`<div class="ai-msg bot" style="color:var(--danger)">⚠ Fehler: ${e.message}</div>`;
-    msgs.scrollTop=msgs.scrollHeight;
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/kivo-ai', {
+      method: 'POST',
+      headers: await edgeHeaders(),
+      body: JSON.stringify({
+        mode: 'chat',
+        system: AI_SYS,
+        messages: aiBotHistory
+      })
+    });
+
+    if (!resp.ok || !resp.body) {
+      throw new Error('KI-Dienst nicht erreichbar');
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+
+      fullText += chunk;
+
+      // LIVE RENDER
+      botDiv.innerHTML = fullText.replace(/\n/g, '<br>');
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    aiBotHistory.push({
+      role: 'assistant',
+      content: fullText
+    });
+
+  } catch (e) {
+    botDiv.innerHTML = `⚠ Fehler: ${e.message}`;
+    botDiv.style.color = 'var(--danger)';
   }
 }
 
