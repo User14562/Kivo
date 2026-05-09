@@ -1600,7 +1600,7 @@ function renderCourses() {
   const langs=Object.keys(POOLS);
   if(!selectedCourseLang||!POOLS[selectedCourseLang]) selectedCourseLang=langs[0]||null;
   if(!langs.length){el.innerHTML=`<div class="k-card" style="text-align:center;padding:42px"><div style="font-size:42px;margin-bottom:12px">▣</div><div style="font-size:14px;font-weight:800;margin-bottom:8px">Noch keine Kurse</div><div style="font-size:11px;color:var(--muted);margin-bottom:14px">Erstelle zuerst einen eigenen Pool.</div><button class="btn btn-lime btn-sm" onclick="openNewPoolModal()">+ Kurs erstellen</button></div>`;return;}
-  const langCards=langs.map((lang,i)=>`<div class="language-card ${lang===selectedCourseLang?'active':''}" onclick="selectCourseLang('${lang.replace(/'/g,"\\'")}')"><div style="font-size:30px;margin-bottom:18px">${['🗣️','🌍','📘','💬','✍️'][i%5]}</div><div class="tile-title">${lang}</div><div class="tile-sub">${poolCountForLang(lang)} Lernbereich${poolCountForLang(lang)===1?'':'e'}</div></div>`).join('');
+  const langCards=langs.map((lang,i)=>`<div class="language-card ${lang===selectedCourseLang?'active':''}" onclick="selectCourseLang('${lang.replace(/'/g,"\\'")}')"><div style="font-size:30px;margin-bottom:18px">${['🗣️','🌍','📘','💬','✍️'][i%5]}</div><div class="tile-title">${lang}</div><div class="tile-sub">${poolCountForLang(lang)} Pool${poolCountForLang(lang)===1?'':'s'}</div></div>`).join('');
   const pools=Object.entries(POOLS[selectedCourseLang]||{});
   const poolCards=pools.map(([pname,poolObj])=>{const key=mkKey(selectedCourseLang,pname);const flat=flattenPool(poolObj);const pct=flat.length?Math.round(getKnownIds(key).length/flat.length*100):0;return `<div class="learn-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:10px"><div><div style="font-size:14px;font-weight:850">${pname}</div><div class="tile-sub">${flat.length} Vokabeln · ${pct}% gelernt</div></div>${key===activeKey?'<span class="tag lime">Aktiv</span>':''}</div><div class="daily-goal-bar"><div class="daily-goal-fill" style="width:${pct}%"></div></div><div class="btn-row"><button class="btn btn-lime btn-sm" onclick="setActivePool('${key}');goTo('cards')">Karteikarten</button><button class="btn btn-sm" onclick="setActivePool('${key}');goTo('quiz')">Quiz</button><button class="btn btn-sm" onclick="setActivePool('${key}');goTo('typing')">Tippen</button><button class="btn btn-sm" onclick="setActivePool('${key}');goTo('matching')">Zuordnen</button><button class="btn btn-ghost btn-sm" onclick="setActivePool('${key}');goTo('gap')">KI</button></div></div>`}).join('');
   el.innerHTML=`<div class="language-grid">${langCards}</div><div class="course-grid-head"><div style="font-size:18px;font-weight:900">${selectedCourseLang||'Kurse'} lernen</div><button class="btn btn-ghost btn-sm" onclick="goTo('overview')">Pools bearbeiten</button></div><div class="learning-grid">${poolCards}</div>`;
@@ -1651,20 +1651,217 @@ function renderChallenges(){
 }
 
 // ── COMMUNITY HUB ──────────────────────────────────────────────
-async function renderCommunity(){
-  const el=document.getElementById('community-content'); if(!el)return;
-  if(!currentUser){el.innerHTML=`<div class="k-card" style="text-align:center;padding:42px"><div style="font-size:42px;margin-bottom:12px">👥</div><div style="font-size:14px;font-weight:800;margin-bottom:8px">Anmeldung erforderlich</div><button class="btn btn-lime" onclick="openModal('auth-modal')">Anmelden</button></div>`;return;}
-  el.innerHTML='<div style="padding:20px;font-size:11px;color:var(--muted)">Community wird geladen...</div>';
-  try{
-    const {data:links}=await sb.from('friendships').select('friend_id,user_id,status').or('user_id.eq.'+currentUser.id+',friend_id.eq.'+currentUser.id);
-    const accepted=(links||[]).filter(f=>f.status==='accepted');
-    const friendIds=accepted.map(f=>f.user_id===currentUser.id?f.friend_id:f.user_id);
-    const {data:friends}=friendIds.length?await sb.rpc('get_public_profiles',{_ids:friendIds}):{data:[]};
-    const {data:global}=await sb.rpc('get_global_leaderboard',{_limit:5});
-    const friendHtml=(friends||[]).length?(friends||[]).map(p=>`<div class="friend-row"><div class="f-av profile-link" onclick="viewFriendProfile('${p.id}','${p.username||''}')">${p.avatar_url?`<img src="${p.avatar_url}">`:(p.username||'?')[0].toUpperCase()}</div><div class="f-info profile-link" onclick="viewFriendProfile('${p.id}','${p.username||''}')"><div class="f-name">${p.username||'?'}</div><div class="f-pts">⚡ ${(p.xp_total||0).toLocaleString()} · 🔥 ${p.streak||0}d</div></div></div>`).join(''):`<div style="font-size:11px;color:var(--muted);padding:10px 0">Noch keine Freunde.</div><button class="btn btn-lime btn-sm" onclick="openFriendPanel();switchFpTab('social')">Freund hinzufügen</button>`;
-    const globalHtml=(global||[]).map((p,i)=>`<div class="friend-row ${currentUser&&p.id===currentUser.id?'me':''}"><div class="f-rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div><div class="f-info ${p.id!==currentUser.id?'profile-link':''}" ${p.id!==currentUser.id?`onclick="viewFriendProfile('${p.id}','${p.username||''}')"`:''}><div class="f-name">${p.username||'?'} ${p.id===currentUser.id?'<span class="tag lime">Du</span>':''}</div><div class="f-pts">⚡ ${(p.xp_total||0).toLocaleString()}</div></div></div>`).join('');
-    el.innerHTML=`<div class="community-grid"><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Freunde</div>${friendHtml}</div><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Global Leaderboard</div>${globalHtml||'<div style="font-size:11px;color:var(--muted)">Noch keine Einträge.</div>'}<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openFriendPanel();switchFpTab('global')">Top 10 öffnen</button></div><div class="k-card"><div style="font-size:17px;font-weight:850;margin-bottom:12px">Teams</div><div class="team-card"><div><div class="f-name">Team Grünfuchs</div><div class="f-pts">12 Mitglieder · Beispiel</div></div><span class="tag lime">Offen</span></div><div class="team-card"><div><div class="f-name">XP Hunters</div><div class="f-pts">Weekly Race · Beispiel</div></div><span class="tag orange">Bald</span></div><div class="team-card"><div><div class="f-name">Sprach-Crew</div><div class="f-pts">Gemeinsame Ziele · Beispiel</div></div><span class="tag blue">Bald</span></div></div></div>`;
-  }catch(e){el.innerHTML=`<div style="font-size:11px;color:var(--danger);padding:20px">⚠ ${e.message}</div>`;}
+function withTimeout(promise, ms = 8000, label = 'Request timeout') {
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(label)), ms)
+  );
+
+  return Promise.race([promise, timeout]);
+}
+
+async function renderCommunity() {
+  const el = document.getElementById('community-content');
+  if (!el) return;
+
+  if (!currentUser) {
+    el.innerHTML = `
+      <div class="k-card" style="text-align:center;padding:42px">
+        <div style="font-size:42px;margin-bottom:12px">👥</div>
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px">
+          Anmeldung erforderlich
+        </div>
+        <button class="btn btn-lime" onclick="openModal('auth-modal')">
+          Anmelden
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = makeLoadingHTML(
+    'Community wird geladen...',
+    30,
+    'loading'
+  );
+
+  try {
+    const { data: links } = await withTimeout(
+      sb
+        .from('friendships')
+        .select('friend_id,user_id,status')
+        .or(
+          'user_id.eq.' + currentUser.id +
+          ',friend_id.eq.' + currentUser.id
+        ),
+      8000,
+      'Freunde konnten nicht geladen werden'
+    );
+
+    el.innerHTML = makeLoadingHTML(
+      'Freunde werden geladen...',
+      60,
+      'loading'
+    );
+
+    const accepted = (links || []).filter(f => f.status === 'accepted');
+
+    const friendIds = accepted.map(f =>
+      f.user_id === currentUser.id
+        ? f.friend_id
+        : f.user_id
+    );
+
+    const { data: friends } = friendIds.length
+      ? await withTimeout(
+          sb.rpc('get_public_profiles', { _ids: friendIds }),
+          8000,
+          'Profile konnten nicht geladen werden'
+        )
+      : { data: [] };
+
+    el.innerHTML = makeLoadingHTML(
+      'Leaderboard wird geladen...',
+      85,
+      'loading'
+    );
+
+    const { data: global } = await withTimeout(
+      sb.rpc('get_global_leaderboard', { _limit: 5 }),
+      8000,
+      'Leaderboard konnte nicht geladen werden'
+    );
+
+    const friendHtml = (friends || []).length
+      ? (friends || []).map(p => `
+        <div class="friend-row">
+
+          <div class="f-av profile-link"
+               onclick="viewFriendProfile('${p.id}','${p.username || ''}')">
+
+            ${p.avatar_url
+              ? `<img src="${p.avatar_url}">`
+              : (p.username || '?')[0].toUpperCase()
+            }
+
+          </div>
+
+          <div class="f-info profile-link"
+               onclick="viewFriendProfile('${p.id}','${p.username || ''}')">
+
+            <div class="f-name">${p.username || '?'}</div>
+
+            <div class="f-pts">
+              ⚡ ${(p.xp_total || 0).toLocaleString()}
+              · 🔥 ${p.streak || 0}d
+            </div>
+
+          </div>
+
+        </div>
+      `).join('')
+      : `
+        <div style="font-size:11px;color:var(--muted);padding:10px 0">
+          Noch keine Freunde.
+        </div>
+
+        <button class="btn btn-lime btn-sm"
+                onclick="openFriendPanel();switchFpTab('social')">
+          Freund hinzufügen
+        </button>
+      `;
+
+    const globalHtml = (global || []).map((p, i) => `
+      <div class="friend-row ${currentUser && p.id === currentUser.id ? 'me' : ''}">
+
+        <div class="f-rank
+          ${i === 0 ? 'rank-1' : ''}
+          ${i === 1 ? 'rank-2' : ''}
+          ${i === 2 ? 'rank-3' : ''}">
+
+          ${i === 0 ? '🥇'
+            : i === 1 ? '🥈'
+            : i === 2 ? '🥉'
+            : '#' + (i + 1)
+          }
+
+        </div>
+
+        <div class="f-info ${p.id !== currentUser.id ? 'profile-link' : ''}"
+          ${p.id !== currentUser.id
+            ? `onclick="viewFriendProfile('${p.id}','${p.username || ''}')"`
+            : ''
+          }>
+
+          <div class="f-name">
+            ${p.username || '?'}
+
+            ${p.id === currentUser.id
+              ? '<span class="tag lime">Du</span>'
+              : ''
+            }
+          </div>
+
+          <div class="f-pts">
+            ⚡ ${(p.xp_total || 0).toLocaleString()}
+          </div>
+
+        </div>
+
+      </div>
+    `).join('');
+
+    el.innerHTML = `
+      <div class="community-grid">
+
+        <div class="k-card">
+
+          <div style="font-size:17px;font-weight:850;margin-bottom:12px">
+            Freunde
+          </div>
+
+          ${friendHtml}
+
+        </div>
+
+        <div class="k-card">
+
+          <div style="font-size:17px;font-weight:850;margin-bottom:12px">
+            Global Leaderboard
+          </div>
+
+          ${globalHtml || `
+            <div style="font-size:11px;color:var(--muted)">
+              Noch keine Einträge.
+            </div>
+          `}
+
+          <button class="btn btn-ghost btn-sm"
+                  style="margin-top:10px"
+                  onclick="openFriendPanel();switchFpTab('global')">
+            Top 10 öffnen
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  } catch (e) {
+    const msg =
+      e.message === 'Freunde konnten nicht geladen werden'
+      || e.message === 'Profile konnten nicht geladen werden'
+      || e.message === 'Leaderboard konnte nicht geladen werden'
+        ? e.message
+        : 'Unbekannter Fehler';
+
+    el.innerHTML = makeLoadingHTML(
+      'Fehler beim Laden',
+      0,
+      'error',
+      '',
+      msg
+    );
+  }
 }
 
 // ── OVERVIEW ──────────────────────────────────────────────────
@@ -1811,66 +2008,62 @@ function renderStats() {
 
 // ── GAP FILL ──────────────────────────────────────────────────
 
-async function generateGapText() {
-  console.log('[GapText] Initialisiere Generierung...');
+function renderOfflineGapText() {
+  const fallback = gapVocab
+    .map(v => `Die Übersetzung für "${v.en}" ist [[${v.de}]].`)
+    .join(' ');
+  renderGapUI(fallback);
+}
 
-  document.getElementById('gap-content').innerHTML = `<div id="gap-output"></div>`;
+async function generateGapText() {
+  document.getElementById('gap-content').innerHTML =
+    `<div id="gap-output"></div>`;
+
   const outEl = document.getElementById('gap-output');
-  if (!outEl) {
-    console.error('[GapText] Error: gap-output Element nicht gefunden!');
-    return;
-  }
+  if (!outEl) return;
 
   const flat = flattenPool(getPoolObj(activeKey));
   gapVocab = shuf(flat).slice(0, Math.min(6, flat.length));
   const poolName = spKey(activeKey).p;
-  console.log('[GapText] Vokabeln:', gapVocab.map(v => v.de));
 
-  outEl.innerHTML = `
-    <div class="k-card" style="padding:20px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div class="gap-spinner"></div>
-        <span id="gap-gen-label" style="font-size:11px;color:var(--muted)">KI generiert Text... (0%)</span>
-      </div>
-      <div style="height:8px;width:100%;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden">
-        <div id="gap-gen-bar" style="height:100%;width:0%;border-radius:999px;background:var(--lime);transition:width .15s ease"></div>
-      </div>
-    </div>
-  `;
-
-  const labelEl = document.getElementById('gap-gen-label');
-  const barEl = document.getElementById('gap-gen-bar');
-  console.log('[GapText] UI-Elemente gefunden:', { labelEl: !!labelEl, barEl: !!barEl });
+  // 1️⃣ Einmal HTML erstellen (mit IDs!)
+  outEl.innerHTML = makeLoadingHTML('KI startet... (0%)', 0, 'loading');
 
   const updateProgress = (pct, phase) => {
-    const p = Math.max(0, Math.min(100, Math.round(pct || 0)));
-    console.log(`[GapText] Progress-Update: ${p}% (Phase: ${phase})`);
-    if (labelEl) {
-      labelEl.textContent =
-        phase === 'connected' ? `KI verbindet... (${p}%)` :
-        phase === 'generating' ? `KI generiert Text... (${p}%)` :
-        phase === 'start' ? `KI startet... (${p}%)` :
-        `KI generiert Text... (${p}%)`;
-    }
-    if (barEl) {
-      barEl.style.width = `${p}%`;
-      console.log(`[GapText] Bar-Breite gesetzt auf: ${p}%`);
-    } else {
-      console.error('[GapText] Error: barEl nicht gefunden!');
-    }
+    const p = Math.max(0, Math.min(100, Number(pct) || 0));
+    const labelEl = document.getElementById('loading-label');
+    const barEl = document.getElementById('loading-bar');
+
+    const text =
+      phase === 'connected'
+        ? `KI verbindet... (${p}%)`
+        : phase === 'generating'
+        ? `KI generiert Text... (${p}%)`
+        : phase === 'start'
+        ? `KI startet... (${p}%)`
+        : phase === 'done'
+        ? `Text erfolgreich generiert`
+        : phase === 'error'
+        ? `Fehler beim Generieren`
+        : `KI generiert Text... (${p}%)`;
+
+    if (labelEl) labelEl.textContent = text;
+    if (barEl) barEl.style.width = `${p}%`;
   };
 
   try {
-    console.log('[GapText] Starte Fetch-Anfrage...');
-    const resp = await fetch(SUPABASE_URL + '/functions/v1/kivo-ai', {
-      method: 'POST',
-      headers: await edgeHeaders(),
-      body: JSON.stringify({
-        mode: 'gap',
-        poolName,
-        words: gapVocab.map(v => v.de),
-      }),
-    });
+    const resp = await fetch(
+      SUPABASE_URL + '/functions/v1/kivo-ai',
+      {
+        method: 'POST',
+        headers: await edgeHeaders(),
+        body: JSON.stringify({
+          mode: 'gap',
+          poolName,
+          words: gapVocab.map(v => v.de),
+        }),
+      }
+    );
 
     if (!resp.ok || !resp.body) {
       throw new Error(`KI-Dienst nicht erreichbar (Status: ${resp.status})`);
@@ -1891,8 +2084,8 @@ async function generateGapText() {
       while (idx !== -1) {
         const eventBlock = buffer.slice(0, idx);
         buffer = buffer.slice(idx + 2);
-
         const lines = eventBlock.split(/\r?\n/);
+
         let eventName = 'message';
         let dataLine = '';
 
@@ -1904,38 +2097,44 @@ async function generateGapText() {
         if (dataLine) {
           try {
             const data = JSON.parse(dataLine);
-            console.log(`[GapText] Event: ${eventName}, Daten:`, data);
-
             if (eventName === 'meta' || eventName === 'progress') {
               updateProgress(data.progress, data.phase);
-            } else if (eventName === 'done') {
+            }
+            else if (eventName === 'done') {
               finalText = data.text || '';
               updateProgress(100, 'done');
-            } else if (eventName === 'error') {
+            }
+            else if (eventName === 'error') {
               throw new Error(data.message || 'Unbekannter Fehler');
             }
-          } catch (e) {
-            console.error('[GapText] JSON-Parse-Fehler:', e, 'Daten:', dataLine);
-          }
+          } catch (_) {}
         }
         idx = buffer.indexOf('\n\n');
       }
     }
 
     if (!finalText.trim()) {
-      throw new Error('Keine Antwort erhalten (leerer Text)');
+      throw new Error('Keine Antwort erhalten');
     }
 
-    console.log(`[GapText] Erfolg! Finaler Text (Länge: ${finalText.length}):`, finalText.substring(0, 100) + '...');
     renderGapUI(finalText);
-  } catch (e) {
-    console.error('[GapText] Fehler:', e.message);
-    updateProgress(100, 'error');
-    const fallback = gapVocab
-      .map(v => `Die Übersetzung für "${v.en}" ist [[${v.de}]].`)
-      .join(' ');
-    console.log('[GapText] Fallback-Text generiert:', fallback.substring(0, 100) + '...');
-    renderGapUI(fallback);
+
+  } catch (error) {
+    const errorMsg = error.message || 'Unbekannter Fehler';
+    outEl.innerHTML = makeLoadingHTML(
+      'Fehler beim Generieren',
+      100,
+      'error',
+      `
+        <button class="btn btn-lime btn-sm" onclick="renderOfflineGapText()">
+          Offline-Modus starten
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="generateGapText()">
+          ↺ Erneut generieren
+        </button>
+      `,
+      errorMsg
+    );
   }
 }
 
@@ -2043,11 +2242,11 @@ function checkGapLive(inp) {
 
 
 // ── AI CHATBOT ───────────────────────────────────────────────
-const AI_SYS = `Du bist der Kivo-Assistent Chatty — ein freundlicher Sprachlern-Helfer.
-Du hilfst beim Vokabellernen und beantwortest Fragen.
+const AI_SYS = `Du bist der Kivo-Assistent — ein freundlicher Sprachlern-Helfer.
+Du hilfst beim Vokabellernen und beantwortest Fragen. Dein Benutzer ist ${currentUser?.username}.
 
 Wenn der Benutzer eine Vokabelliste anfordert, beginne deine Antwort mit einer freundlichen, kurzen Bestätigung, gefolgt von einem Block, der die Vokabeln im JSON-Format enthält.
-Das JSON-Format muss immer am Ende sein und muss folgendermaßen formatiert sein: <vocab_list>{"lang":"Englisch","name":"Listenname","pairs":[{"de":"Wort","en":"Translation"}]}</vocab_list>.
+Das JSON-Format muss immer am Ende sein und muss folgendermaßen formatiert sein: <vocab_list>{"lang":"Englisch","name":"Listenname","length":0,"pairs":[{"de":"Wort","en":"Translation"}]}</vocab_list>.
 Verwende dieses JSON-Format immer, um die tatsächliche Liste zu übermitteln.
 
 Tabellen müssen nicht automatisch in Vokabellisten umgewandelt werden es kommt auf die Anfrage an. Wenn der Benutzer beispielsweise nach "20 Vokabeln zum Thema Essen" fragt, solltest du eine Vokabelliste zurückgeben. Wenn er jedoch nach einer "Tabelle zur Stadt Essen" fragt, kannst du die Informationen in einer einfachen Tabelle zurückgeben, ohne sie in das JSON-Format zu packen.
@@ -2154,7 +2353,7 @@ function streamWelcomeMessage() {
   const el = document.getElementById('welcome-msg');
   if (!el) return;
   const text = `
-# 👋 Willkommen
+# 👋 Willkommen ${currentUser?.username}
 
 Ich bin der **Kivo-Assistent**.
 
@@ -2203,53 +2402,55 @@ function renderAiBot() {
   streamWelcomeMessage();
 }
 
-function makeLoadingHTML(label, progress, mode = 'loading', importEnc = '', errorMsg = '') {
+function makeLoadingHTML(
+  label,
+  progress,
+  mode = 'loading',
+  buttonHTML = '',
+  errorMsg = '',
+) {
   const isError = mode === 'error';
   const isDone = mode === 'done';
-  const isLoading = !isError && !isDone;
+  const isLoading = mode === 'loading';
 
-  const barColor = isError ? 'var(--danger)' : 'var(--accent)';
+  const safeProgress = Math.max(0, Math.min(100, Number(progress) || 0));
 
   const statusText = isError
-    ? `${escapeHtml(errorMsg || 'Fehler beim Erstellen')}`
-    : escapeHtml(label || 'KI generiert...');
+    ? escapeHtml(label + ': ' + errorMsg || 'Ein Fehler ist aufgetreten')
+    : escapeHtml(label || (isDone ? 'Fertig' : 'Bitte warten...'));
 
-  const buttonHTML = isDone && importEnc
-    ? `
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-        <button class="btn btn-lime btn-sm" onclick="importAiList('${importEnc}')">
-          📥 Direkt importieren
-        </button>
+  const icon = isLoading
+    ? `<div class="kivo-spinner"></div>`
+    : `
+      <div style="width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:14px;">
+        ${isError ? '⚠' : '✓'}
       </div>
-    `
+    `;
+
+  buttonHTML =  buttonHTML
+    ? `<div style="margin-top:10px;">${buttonHTML}</div>`
     : '';
 
   return `
     <div style="padding:12px 16px;background:rgba(0,0,0,.05);border-radius:12px;margin:4px 0;">
-      
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        
-        ${isLoading ? `
-          <div class="kivo-spinner"></div>
-        ` : `
-          <div style="
-            width:16px;
-            height:16px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:14px;
-          ">
-            ${isError ? '⚠' : '✓'}
-          </div>
-        `}
-
-        <span style="font-size:13px;color:${isError ? 'var(--danger)' : 'var(--muted)'}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${progress !== undefined ? '8px' : '0'};">
+        ${icon}
+        <span id="loading-label" style="font-size:13px;color:${isError ? 'var(--danger)' : 'var(--muted)'}">
           ${statusText}
         </span>
-
       </div>
 
+      ${
+        progress !== undefined && isLoading
+          ? `
+          <div style="height:4px;width:100%;background:rgba(0,0,0,.1);border-radius:999px;overflow:hidden;">
+            <div id="loading-bar"
+              style="height:100%;width:${safeProgress}%;border-radius:999px;background:var(--lime);transition:width .25s ease;">
+            </div>
+          </div>
+        `
+          : ''
+      }
       ${buttonHTML}
     </div>
   `;
@@ -2279,7 +2480,7 @@ function aiBotSend(preset) {
 
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'ai-msg bot';
-  loadingDiv.innerHTML = makeLoadingHTML('KI generiert Antwort...', 0, 'loading');
+  loadingDiv.innerHTML = makeLoadingHTML('KI generiert Antwort...', undefined, 'loading');
   msgs.appendChild(loadingDiv);
 
   msgs.scrollTop = msgs.scrollHeight;
@@ -2299,61 +2500,194 @@ async function fetchAiReply(loadingDiv) {
     return;
   }
 
+  // 👇 Hilfsfunktion zum Extrahieren von Vokabel-Info aus UNVOLLSTÄNDIGEM JSON
+  function extractVocabInfo(rawText) {
+    if (!rawText) return null;
+    try {
+      // 🔥 NEU: Entferne Störzeichen (z. B. ">", "{", Leerzeichen) am Anfang
+      let cleanedText = rawText.trim();
+      while (cleanedText && !cleanedText.startsWith('{') && !cleanedText.startsWith('[')) {
+        cleanedText = cleanedText.slice(1).trim();
+      }
+      if (!cleanedText) return null;
+
+      let name = null;
+      let pairCount = 0;
+      let totalPairs = 0;
+
+      // Name extrahieren
+      const nameMatch = cleanedText.match(/"name"\s*:\s*"([^"]*)"/);
+      if (nameMatch) name = nameMatch[1];
+
+      // Total Pairs extrahieren
+      const totalMatch = cleanedText.match(/"length"\s*:\s*(\d+)/);
+      if (totalMatch) totalPairs = parseInt(totalMatch[1]);
+
+      // 🔥 NEU: Zähle ALLE {}-Objekte im "pairs"-Array (auch unvollständige)
+      const pairsMatch = cleanedText.match(/"pairs"\s*:\s*\[([\s\S]*)/);
+      if (pairsMatch) {
+        const pairsContent = pairsMatch[1];
+        // Zähle alle {, die den Start eines neuen Paars markieren
+        pairCount = (pairsContent.match(/\{[^}]*"/g) || []).length;
+      }
+
+      return { name, pairCount, totalPairs };
+    } catch (e) {
+      return null;
+    }
+  }
+
   let fullText = '';
+  let vocabRawBuffer = '';   // Buffer für den JSON-Inhalt zwischen <vocab_list> und </vocab_list>
+  let inVocabBlock = false;
   let vocabDiv = null;
   let vocabLoaderDiv = null;
   let hasRenderedVocab = false;
 
   const render = (text) => {
     if (!text) return;
-    fullText += text;
-    const state = stripVocabBlock(fullText);
 
-    // Normale Antwort in loadingDiv anzeigen (ohne <vocab_list>-Block)
-    if (state.displayText.trim()) {
-      loadingDiv.innerHTML = renderMarkdown(state.displayText);
+    fullText += text;
+
+    // 🔥 1. Vocab Block Start/Ende erkennen
+    const startTag = '<vocab_list>';
+    const endTag = '</vocab_list>';
+
+    if (fullText.includes(startTag)) inVocabBlock = true;
+
+    if (inVocabBlock) {
+      const startIndex = fullText.indexOf(startTag);
+      const endIndex = fullText.indexOf(endTag, startIndex);
+
+      if (startIndex !== -1) {
+        // Extrahiere den Inhalt NACH dem Start-Tag
+        let jsonStart = startIndex + startTag.length;
+        let jsonContent = fullText.slice(jsonStart);
+
+        // 🔥 NEU: Entferne ">" am Anfang, falls vorhanden
+        if (jsonContent.startsWith('>')) {
+          jsonContent = jsonContent.slice(1);
+        }
+
+        if (endIndex === -1) {
+          // Noch kein Ende: Sammle den JSON-Inhalt
+          vocabRawBuffer = jsonContent;
+        } else {
+          // Ende gefunden: Nimm nur den JSON-Inhalt zwischen den Tags
+          vocabRawBuffer = fullText.slice(jsonStart, endIndex);
+          // 🔥 NEU: Entferne ">" am Anfang, falls vorhanden
+          if (vocabRawBuffer.startsWith('>')) {
+            vocabRawBuffer = vocabRawBuffer.slice(1);
+          }
+        }
+      }
+    }
+
+    // Normale Antwort (Text VOR dem Vocab-Block)
+    const displayText = inVocabBlock
+      ? fullText.slice(0, fullText.indexOf(startTag))
+      : fullText;
+
+    if (displayText.trim()) {
+      loadingDiv.innerHTML = renderMarkdown(displayText);
       renderLatex(loadingDiv);
       highlightCode(loadingDiv);
     }
 
-    // Wenn Vokabel-Block erkannt wird (auch unvollständig)
-    if (state.hasVocab && !vocabLoaderDiv) {
+    // 🔥 2. Loader erstellen
+    if (inVocabBlock && !vocabLoaderDiv) {
       vocabLoaderDiv = document.createElement('div');
       vocabLoaderDiv.className = 'ai-msg bot ai-vocab-loader';
-      vocabLoaderDiv.innerHTML = makeLoadingHTML('KI generiert Vokabelliste...', 0, 'loading');
+      vocabLoaderDiv.innerHTML = makeLoadingHTML(
+        'KI generiert Vokabelliste...',
+        undefined,
+        'loading'
+      );
       msgs.appendChild(vocabLoaderDiv);
       msgs.scrollTop = msgs.scrollHeight;
     }
 
-    // Wenn Vokabel-Block komplett ist: Loader durch fertige Nachricht ersetzen
-    if (state.hasVocab && state.complete && !hasRenderedVocab) {
-      hasRenderedVocab = true;
-      vocabDiv = document.createElement('div');
-      vocabDiv.className = 'ai-msg bot ai-vocab-result';
+    // 🔥 3. LIVE UPDATE (jetzt stabil!)
+    if (inVocabBlock && vocabLoaderDiv) {
       try {
-        const vocabData = JSON.parse(state.vocabRaw);
-        const importEnc = encodeURIComponent(JSON.stringify(vocabData));
-        const label = `Vokabelliste: "${vocabData.name || 'Unbenannt'}" (${vocabData.pairs?.length || 0} Wörter)`;
-        vocabDiv.innerHTML = makeLoadingHTML(label, 100, 'done', importEnc);
-        if (vocabLoaderDiv && vocabLoaderDiv.parentNode) {
-          vocabLoaderDiv.parentNode.replaceChild(vocabDiv, vocabLoaderDiv);
-        } else {
-          msgs.appendChild(vocabDiv);
+        const labelEl = document.getElementById('loading-label');
+        const barEl = document.getElementById('loading-bar');
+
+        const vocabInfo = extractVocabInfo(vocabRawBuffer);
+        if (vocabInfo && vocabInfo.pairCount > 0) {
+          
+          const name = vocabInfo.name || 'Unbenannt';
+          const wordLabel = vocabInfo.totalPairs === 1 ? "Wort" : "Wörter";
+
+          const text = `Vokabelliste: "${name}" (${vocabInfo.pairCount} ${wordLabel})`
+
+          const progress = vocabInfo.totalPairs
+            ? Math.min(100, Math.round((vocabInfo.pairCount / vocabInfo.totalPairs) * 100))
+            : undefined;
+
+          if (!barEl) vocabLoaderDiv.innerHTML = makeLoadingHTML(
+            `Vokabelliste: "${vocabInfo.name || 'Unbenannt'}" (${vocabInfo.pairCount} Wörter)`,
+            progress,
+            'loading'
+          );
+           else {
+          labelEl.textContent = text;
+          barEl.style.width = progress + "%";
+           }
         }
       } catch (e) {
-        console.error('[AI] Fehler beim Parsen der Vokabelliste:', e);
-        vocabDiv.innerHTML = makeLoadingHTML('Fehler beim Verarbeiten der Vokabelliste', 0, 'error', '', e.message);
-        if (vocabLoaderDiv && vocabLoaderDiv.parentNode) {
-          vocabLoaderDiv.parentNode.replaceChild(vocabDiv, vocabLoaderDiv);
-        } else {
-          msgs.appendChild(vocabDiv);
+        // Ignoriere Fehler bei partialem JSON
+        console.log('[AI] Partial JSON (ignored):', e.message);
+      }
+    }
+
+    // 🔥 4. FINAL STATE
+    if (inVocabBlock && fullText.includes(endTag) && !hasRenderedVocab) {
+      hasRenderedVocab = true;
+
+      try {
+        const vocabData = JSON.parse(vocabRawBuffer);
+        const importEnc = encodeURIComponent(JSON.stringify(vocabData));
+
+        const div = document.createElement('div');
+        div.className = 'ai-msg bot ai-vocab-result';
+
+        const label = `Vokabelliste: "${vocabData.name || 'Unbenannt'}" (${vocabData.pairs?.length || 0} Wörter)`;
+
+        div.innerHTML = makeLoadingHTML(
+          label,
+          100,
+          'done',
+          `
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <button class="btn btn-lime btn-sm"
+              onclick="importAiList('${importEnc}')">
+              📥 Direkt importieren
+            </button>
+          </div>`
+        );
+
+        if (vocabLoaderDiv) vocabLoaderDiv.replaceWith(div);
+        else msgs.appendChild(div);
+
+      } catch (e) {
+        console.error('[AI] JSON error:', e);
+        if (vocabLoaderDiv) {
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'ai-msg bot ai-vocab-result';
+          errorDiv.innerHTML = makeLoadingHTML(
+            'Fehler beim Verarbeiten der Vokabelliste',
+            0,
+            'error',
+            '',
+            e.message
+          );
+          vocabLoaderDiv.replaceWith(errorDiv);
         }
       }
-      vocabLoaderDiv = null;
     }
 
     msgs.scrollTop = msgs.scrollHeight;
-    console.log('[AI] ✍️ render text:', text);
   };
 
   const extractText = (json) => {
@@ -2364,8 +2698,24 @@ async function fetchAiReply(loadingDiv) {
 
   const processStream = (chunk) => {
     if (!chunk) return;
-    console.log('[AI] 📥 raw chunk:', chunk.slice(0, 200));
+
+    // 🔥 NEU: LIVE-UPDATE-Logs statt raw chunk-Logs
     render(chunk);
+
+    // Logge den aktuellen Stand des LIVE-UPDATES (nur wenn inVocabBlock aktiv ist)
+    if (inVocabBlock) {
+      const vocabInfo = extractVocabInfo(vocabRawBuffer);
+      if (vocabInfo) {
+        const name = vocabInfo.name || 'Unbenannt';
+        const progressText = vocabInfo.totalPairs
+          ? `[LIVE UPDATE] Vokabelliste: "${name}" (${vocabInfo.pairCount}/${vocabInfo.totalPairs} Wörter - ${Math.round((vocabInfo.pairCount / vocabInfo.totalPairs) * 100)}%)`
+          : `[LIVE UPDATE] Vokabelliste: "${name}" (${vocabInfo.pairCount} Wörter)`;
+        console.log(progressText);
+      } else {
+        // Falls noch kein valides JSON, aber bereits im Vocab-Block
+        console.log('[LIVE UPDATE] Warte auf gültigen JSON-Inhalt...');
+      }
+    }
   };
 
   try {
