@@ -827,7 +827,13 @@ textarea.k-input{resize:vertical;min-height:70px}
 
       <!-- KI-ASSISTENT ────────────────────────── -->
       <div class="screen" id="screen-aibot">
-        <div class="app-page-head"><div><div class="app-page-title">KI-Assistent</div><div class="app-page-sub">Stelle Fragen oder lass dir Lerntipps geben.</div></div></div>
+        <div class="app-page-head">
+          <div>
+            <div class="app-page-title">KI-Assistent</div>
+            <div class="app-page-sub">Stelle Fragen oder lass dir Lerntipps geben.</div>
+          </div>
+          <!-- <button class="btn btn-lime btn-sm" onclick="openChatModal()">Chats</button> -->
+        </div>
         <div class="aibot-wrap" id="aibot-wrap"></div>
       </div>
 
@@ -2249,9 +2255,9 @@ Du hilfst beim Vokabellernen und beantwortest Fragen. Dein Benutzer ist ${curren
 
 Wenn der Benutzer eine Vokabelliste anfordert, beginne deine Antwort mit einer freundlichen, kurzen Bestätigung, gefolgt von einem Block, der die Vokabeln im JSON-Format enthält.
 Das JSON-Format muss immer am Ende sein und muss folgendermaßen formatiert sein: <vocab_list>{"lang":"Englisch","name":"Listenname","length":0,"pairs":[{"de":"Wort","en":"Translation"}]}</vocab_list>.
-Verwende dieses JSON-Format immer, um die tatsächliche Liste zu übermitteln.
+Verwende dieses JSON-Format immer, um die tatsächliche Liste zu übermitteln. Wenn der Benutzer kein feste Anzahl von Vokabeln angibt, gib immer 20 zurück.
 
-Tabellen müssen nicht automatisch in Vokabellisten umgewandelt werden es kommt auf die Anfrage an. Wenn der Benutzer beispielsweise nach "20 Vokabeln zum Thema Essen" fragt, solltest du eine Vokabelliste zurückgeben. Wenn er jedoch nach einer "Tabelle zur Stadt Essen" fragt, kannst du die Informationen in einer einfachen Tabelle zurückgeben, ohne sie in das JSON-Format zu packen.
+Tabellen müssen nicht automatisch in Vokabellisten umgewandelt werden es kommt auf die Anfrage an. Wenn der Benutzer beispielsweise nach "Vokabeln zum Thema Essen" fragt, solltest du eine Vokabelliste zurückgeben. Wenn er jedoch nach einer "Tabelle zur Stadt Essen" fragt, kannst du die Informationen in einer einfachen Tabelle zurückgeben, ohne sie in das JSON-Format zu packen.
 
 Bei Mathefragen erkläre die Konzepte so einfach wie möglich und verwende LaTeX, um Formeln darzustellen. Alle Erklärungen sollten kurz und auf den Punkt gebracht sein.
 
@@ -2329,50 +2335,90 @@ function highlightCode(el) {
   });
 }
 
-function streamText(el, text, speed = 8, done) {
-  let i = 0;
-  const startTime = performance.now();
-  const duration = text.length * speed;
+function streamText(el, text, speed = 10000) {
+  if (!el) return Promise.resolve();
 
-  const animate = (timestamp) => {
-    const elapsed = timestamp - startTime;
-    i = Math.min(Math.floor((elapsed / duration) * text.length), text.length);
-    el.innerHTML = renderMarkdown(text.slice(0, i));
-    renderLatex(el);
-    highlightCode(el);
-    const msgs = document.getElementById('aibot-msgs');
-    if (msgs) msgs.scrollTop = msgs.scrollHeight;
-    if (i < text.length) {
-      requestAnimationFrame(animate);
-    } else if (done) {
-      done();
+  return new Promise((resolve) => {
+
+    if (!el._streamState) {
+      el._streamState = {
+        fullText: '',
+        renderedLength: 0,
+        animating: false,
+        speed
+      };
     }
-  };
-  requestAnimationFrame(animate);
+
+    const state = el._streamState;
+
+    state.fullText += text;
+
+    if (state.animating) return resolve(); // wichtig!
+
+    state.animating = true;
+
+    const step = () => {
+      const targetLength = state.fullText.length;
+
+      state.renderedLength += Math.max(
+        1,
+        Math.ceil((targetLength - state.renderedLength) / speed)
+      );
+
+      state.renderedLength = Math.min(state.renderedLength, targetLength);
+
+      const visibleText = state.fullText.slice(0, state.renderedLength);
+
+      el.innerHTML = renderMarkdown(visibleText);
+
+      renderLatex(el);
+      highlightCode(el);
+
+      const msgs = document.getElementById('aibot-msgs');
+      if (msgs) msgs.scrollTop = msgs.scrollHeight;
+
+      if (state.renderedLength < state.fullText.length) {
+        requestAnimationFrame(step);
+      } else {
+        state.animating = false;
+        resolve(); // 🔥 WICHTIG: Promise beenden
+      }
+    };
+
+    requestAnimationFrame(step);
+  });
 }
 
-function streamWelcomeMessage() {
+async function streamWelcomeMessage() {
   const el = document.getElementById('welcome-msg');
   if (!el) return;
+  // Stream-State zurücksetzen
+  el._streamState = null;
   const text = `
 # 👋 Willkommen ${currentUser.username}
-
 Ich bin der **Kivo-Assistent**.
-
 Ich kann:
-
 - 📚 Vokabellisten erstellen
 - 🧠 Beim Lernen helfen
 - ✍️ Texte erklären
 - ➗ Mathe mit LaTeX darstellen
-
 Zum Beispiel:
-
 $$
 a^2+b^2=c^2
 $$
 `;
-  streamText(el, text);
+
+  const inp = document.getElementById('aibot-inp');
+  if (inp) {
+    inp.value = '';
+    setAiInputLocked(true);
+  }
+
+  await streamText(el, text);
+
+  if (inp) {
+    setAiInputLocked(false);
+  }
 }
 
 function renderAiBot() {
@@ -2386,7 +2432,6 @@ function renderAiBot() {
   }
 
   // Standard-Inhalt, falls eingeloggt
-  aiBotHistory = [];
   wrap.innerHTML = `
     <div class="aibot-msgs" id="aibot-msgs">
       <div class="ai-msg bot" id="welcome-msg"></div>
@@ -2404,12 +2449,31 @@ function renderAiBot() {
         id="aibot-inp"
         placeholder="Frag mich etwas..."
         style="flex:1"
-        onkeydown="if(event.key==='Enter')aiBotSend()"
+        onkeydown="if(event.key==='Enter' && !this.disabled) aiBotSend()"
       >
-      <button class="btn btn-lime btn-sm" onclick="aiBotSend()">➤</button>
+      <button class="btn btn-lime btn-sm" id="aibot-send-btn" onclick="aiBotSend()">
+        ➤
+      </button>
     </div>
   `;
   streamWelcomeMessage();
+}
+
+function setAiInputLocked(locked) {
+  const inp = document.getElementById('aibot-inp');
+  const btn = document.getElementById('aibot-send-btn');
+
+  if (!inp || !btn) return;
+
+  inp.disabled = locked;
+  inp.style.opacity = locked ? '0.6' : '1';
+  inp.style.pointerEvents = locked ? 'none' : 'auto';
+
+  btn.disabled = locked;
+
+  btn.innerHTML = locked
+    ? `<div class="kivo-spinner"></div>`
+    : `➤`;
 }
 
 function makeLoadingHTML(
@@ -2473,9 +2537,7 @@ function aiBotSend(preset) {
 
   if (inp) {
     inp.value = '';
-    inp.disabled = true;
-    inp.style.opacity = '0.6';
-    inp.style.pointerEvents = 'none';
+    setAiInputLocked(true);
   }
 
   const msgs = document.getElementById('aibot-msgs');
@@ -2553,6 +2615,8 @@ async function fetchAiReply(loadingDiv) {
   let vocabDiv = null;
   let vocabLoaderDiv = null;
   let hasRenderedVocab = false;
+  let rafPending = false;
+  let buffer = '';
 
   const render = (text) => {
     if (!text) return;
@@ -2564,6 +2628,23 @@ async function fetchAiReply(loadingDiv) {
     const endTag = '</vocab_list>';
 
     if (fullText.includes(startTag)) inVocabBlock = true;
+    if (inVocabBlock && loadingDiv._streamState) {
+
+      const cleaned = loadingDiv._streamState.fullText
+        .replace(/<vocab_list[\s\S]*$/i, '') // kompletter Tag + Rest
+        .replace(/<vocab[\s\S]*$/i, '')      // fallback
+        .replace(/<voc[\s\S]*$/i, '')        // fallback
+        .replace(/<vo[\s\S]*$/i, '')         // fallback
+        .replace(/<v[\s\S]*$/i, '')          // fallback
+        .replace(/<[\s\S]*$/i, '');          // letzter safety net
+
+      loadingDiv._streamState.fullText = cleaned;
+      loadingDiv._streamState.renderedLength = cleaned.length;
+
+      loadingDiv.innerHTML = renderMarkdown(cleaned);
+      renderLatex(loadingDiv);
+      highlightCode(loadingDiv);
+    }
 
     if (inVocabBlock) {
       const startIndex = fullText.indexOf(startTag);
@@ -2585,6 +2666,7 @@ async function fetchAiReply(loadingDiv) {
         } else {
           // Ende gefunden: Nimm nur den JSON-Inhalt zwischen den Tags
           vocabRawBuffer = fullText.slice(jsonStart, endIndex);
+
           // 🔥 NEU: Entferne ">" am Anfang, falls vorhanden
           if (vocabRawBuffer.startsWith('>')) {
             vocabRawBuffer = vocabRawBuffer.slice(1);
@@ -2599,9 +2681,12 @@ async function fetchAiReply(loadingDiv) {
       : fullText;
 
     if (displayText.trim()) {
-      loadingDiv.innerHTML = renderMarkdown(displayText);
-      renderLatex(loadingDiv);
-      highlightCode(loadingDiv);
+      const alreadyRendered =
+        loadingDiv._streamState?.fullText || '';
+      const newChunk = displayText.slice(alreadyRendered.length);
+      if (newChunk) {
+        streamText(loadingDiv, newChunk);
+      }
     }
 
     // 🔥 2. Loader erstellen
@@ -2709,22 +2794,45 @@ async function fetchAiReply(loadingDiv) {
   const processStream = (chunk) => {
     if (!chunk) return;
 
-    // 🔥 NEU: LIVE-UPDATE-Logs statt raw chunk-Logs
-    render(chunk);
+    // Chunk nur puffern
+    buffer += chunk;
 
-    // Logge den aktuellen Stand des LIVE-UPDATES (nur wenn inVocabBlock aktiv ist)
-    if (inVocabBlock) {
-      const vocabInfo = extractVocabInfo(vocabRawBuffer);
-      if (vocabInfo) {
-        const name = vocabInfo.name || 'Unbenannt';
-        const progressText = vocabInfo.totalPairs
-          ? `[LIVE UPDATE] Vokabelliste: "${name}" (${vocabInfo.pairCount}/${vocabInfo.totalPairs} Wörter - ${Math.round((vocabInfo.pairCount / vocabInfo.totalPairs) * 100)}%)`
-          : `[LIVE UPDATE] Vokabelliste: "${name}" (${vocabInfo.pairCount} Wörter)`;
-        console.log(progressText);
-      } else {
-        // Falls noch kein valides JSON, aber bereits im Vocab-Block
-        console.log('[LIVE UPDATE] Warte auf gültigen JSON-Inhalt...');
-      }
+    // Maximal 1 Render pro Frame
+    if (!rafPending) {
+      rafPending = true;
+
+      requestAnimationFrame(() => {
+
+        const currentChunk = buffer;
+
+        buffer = '';
+        rafPending = false;
+
+        // EINMAL rendern
+        render(currentChunk);
+
+        // LIVE-UPDATE-Logs
+        if (inVocabBlock) {
+
+          const vocabInfo = extractVocabInfo(vocabRawBuffer);
+
+          if (vocabInfo) {
+
+            const name = vocabInfo.name || 'Unbenannt';
+
+            const progressText = vocabInfo.totalPairs
+              ? `[LIVE UPDATE] Vokabelliste: "${name}" (${vocabInfo.pairCount}/${vocabInfo.totalPairs} Wörter - ${Math.round((vocabInfo.pairCount / vocabInfo.totalPairs) * 100)}%)`
+              : `[LIVE UPDATE] Vokabelliste: "${name}" (${vocabInfo.pairCount} Wörter)`;
+
+            console.log(progressText);
+
+          } else {
+
+            console.log('[LIVE UPDATE] Warte auf gültigen JSON-Inhalt...');
+
+          }
+        }
+      });
     }
   };
 
@@ -2757,12 +2865,7 @@ async function fetchAiReply(loadingDiv) {
     console.error('[AI] 💥 ERROR:', e);
     loadingDiv.innerHTML = makeLoadingHTML('Fehler', 0, 'error', '', e.message);
   } finally {
-    if (inp) {
-      inp.disabled = false;
-      inp.style.opacity = '1';
-      inp.style.pointerEvents = 'auto';
-      inp.focus();
-    }
+    setAiInputLocked(false);
   }
 }
 
@@ -2784,7 +2887,7 @@ async function importAiList(encOrRaw) {
     }
     const poolData = {
       subcats: {
-        [name]: pairs.map(x => [x.de, x.en])
+        [name]: pairs.map(x => [x.en, x.de])
       }
     };
     if (!POOLS[lang]) POOLS[lang] = {};
